@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "bitset": "cpp",
+        "algorithm": "cpp",
+        "functional": "cpp"
+    },
+    "cmake.configureOnOpen": true
+}

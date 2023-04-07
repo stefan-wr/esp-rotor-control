@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="utf-8" />
+  <title>ESP32 - %TITLE%</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" type="text/css" href="styles.css" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <script src="ui.js" type="text/javascript"></script>
+</head>
+
+<body>
+  <div class="content-card">
+    <h1>%TITLE%</h1>
+    <ul class="blocks">
+      <li>
+        <div class="network">
+          <span class="l-align wrd-break small">RSSI: %RSSI%</span>
+          <span class="r-align small">Netzwerkverbindung</span>
+          <span class="l-align ssid">%SSID%</span>
+          <a href="%DISCONNECT_URL%" id="disconnect" class="button small">Trennen</a>
+          <hr>
+          <p class="small">
+            <b>ACHTUNG!</b><br>
+            Wird die Verbindung getrennt ist ein Fernzugriff nicht mehr
+            moeglich!
+          </p>
+        </div>
+      </li>
+
+      <li>
+        <div class="reboot">
+          <p class="l-align">
+            ESP32 neustarten.<br>
+            <span class="small">Die Netzwerkeinstellungen bleiben erhalten.</span>
+          </p>
+          <a href="%REBOOT_URL%" class="button small"><span>Neustart</span></a>
+        </div>
+      </li>
+
+      <li>
+        <div class="temp">
+          <div class="C l-align">
+            <span id="adc_v" class="xlarge">--</span><span class="large">&nbsp;V</span>
+          </div>
+          <span class="name r-align small">ADC</span>
+        </div>
+      </li>
+
+      <li>
+        <div class="compass">
+          <div class="compass-svg">
+            <svg id="compass" viewBox="0 0 1000 1000" style="fill-rule:evenodd;">
+              <path d="M500,0C775.958,0 1000,224.042 1000,500C1000,775.958 775.958,1000 500,1000C224.042,1000 0,775.958 0,500C0,224.042 224.042,0 500,0ZM500,50C748.362,50 950,251.638 950,500C950,748.362 748.362,950 500,950C251.638,950 50,748.362 50,500C50,251.638 251.638,50 500,50Z" style="fill:#f7f7f7;"/>
+              <g id="cmp_req_needle">
+                <path d="M500,15L515,40L515,700L485,700L485,40L" style="fill:var(--text-color-accent);"/>
+              </g>
+              <g id="cmp_needle">
+                  <path d="M500,200L550,500L500,650L450,500L500,200" style="fill:#f7f7f7;"/>
+              </g>
+            </svg>
+          </div>
+          <div class="compass-label">
+            <span id="cmp_angle" class="large"></span><span class="large">°</span><br>
+            <span id="cmp_cardinal" class="large">N</span><br>
+            <span><-></span> <span id="cmp_req_angle" class=""></span><span>°</span>
+          </div>
+        </div>
+      </li>
+
+      <li>
+        <div class="reboot">
+          <p class="l-align">
+            Rotor bewegen <br>
+            <span id="direction" class="small">--</span>
+          </p>
+          <button id="rotate_left" class="button small">
+            <span class="no-select"><-N</span>
+          </button>
+          <button id="rotate_right" class="button small">
+            <span class="no-select">N-></span>
+            </button>
+        </div>
+      </li>
+
+      <li>
+        <div class="temp">
+          <div class="C l-align">
+            Geschwindigkeit<br>
+            <input id="spd_slider" class="" type="range" min="0" max="100" step="10" autocomplete="off">
+          </div>
+          <div>
+            <span id="spd_val" class="xlarge">---</span><span class="large"> &#37;</span>
+          </div>
+        </input>
+        </div>
+      </li>
+
+      <li>
+        <div class="reboot">
+          <p class="l-align">
+            Tastatursteuerung <br>
+            <span class="small">Erlaubt die Steuerung des Rotors über die Pfeiltasten.</span>
+          </p>
+          <div class="switch small">
+            <input id="kbsc_switch" type="checkbox" onchange="toggleKbsc(this)" autocomplete="off">
+            <span class="slider"></span>
+            <span class="on">AN</span>
+            <span class="off">AUS</span>
+          </div>
+        </div>
+      </li>
+
+      <li>
+        <div class="temp">
+          <div class="C l-align">
+            Kalibrierung<br>
+            <form>
+              <input type="number" name="a1" min="20", max="40">
+              <label for="a1">A1</label>
+              <input type="number" name="a2" min="430", max="450">
+              <label for="a2">A2</label>
+            </form>
+          </div>
+          <div>
+            
+          </div>
+        </input>
+        </div>
+      </li>
+
+      <!--li>
+        <div class="reboot">
+          <p class="l-align">
+            Schalter 1<br>
+            <span class="small">Beschreibung</span>
+          </p>
+          <div class="switch small">
+            <input id="switch-1" type="checkbox" onchange="toggleSwitch(this)" autocomplete="off">
+            <span class="slider"></span>
+            <span class="on">AN</span>
+            <span class="off">AUS</span>
+          </div>
+        </div>
+      </li-->
+
+      %SWITCHES%
+
+    </ul>
+  </div>
+</body>
+
+<script>
+  // Add confirmation alert to disconnect button
+  // -------------------------------------------
+  function initDisconnectButton() {
+    let msg = "ACHTUNG!\nWirklich die Netzwerkverbindung trennen?\n\n";
+    msg += "Ein Fernzugriff ist dann nicht mehr möglich.\n";
+    msg += "Der ESP muss danach lokal neu eingerichtet werden.";
+
+    var a = document.getElementById("disconnect");
+    a.addEventListener('click', event => {
+      if (!confirm(msg)) event.preventDefault();
+    }, false);
+  }
+
+  // Toggle Switches
+  // Send toggle request and get back switch status
+  // ----------------------------------------------
+  function toggleSwitch(element) {
+    var xhttp = new XMLHttpRequest();
+    var url = "/switch?id=" + element.id + "&checked=" + element.checked;
+    xhttp.open("GET", url, true);
+    xhttp.send();
+    //console.log(element.id + " | Checked: " + element.checked + " | URL: " + url);
+  }
+
+
+  // ********
+  // Settings
+  // ********
+
+  // UI settings & functions
+  // -----------------------
+  // Toggle keyboard-shortcuts on/off
+  function toggleKbsc(element) {
+    UI.kbsc_enabled = element.checked;
+  }
+
+
+  // Rotor settings
+  // --------------
+  var settings = {
+    "offset": 0.0,
+    "cal": {
+      "u1": 0.408,
+      "u2": 4.0099,
+      "a1": 0.0,
+      "a2": 445.0
+    }
+  };
+
+  // Send settings
+  function sendSettings() {
+    sendData(0, `SETTINGS|${JSON.stringify(settings)}`);
+  }
+
+
+  // Init settings
+  // -------------
+  function initSettings() {
+    // Set keyboard-shortcuts checkbox
+    UI.update();
+  }
+
+  // ***********************
+  // Rotor - Event Listeners
+  // ***********************
+  var rotor = {
+    rotation: 0,
+    angle: 0.0,
+    adc_v: 0.0,
+    speed: 0
+  };
+
+  // ==================== Speed
+
+  // Send rotor speed
+  function sendSpeed(speed) {
+    let msg = `ROTOR|{\"speed\":${speed}}`;
+    sendData(0, msg);
+  }
+
+  // Add event listeners for rotor speed
+  function initSpeedListeners() {
+    var spd_slider = document.getElementById("spd_slider");
+    var spd_label = document.getElementById("spd_val");
+    spd_slider.value = "0";
+    spd_label.textContent = "1";
+
+    // Add event listener to slider for setting slider value
+    ['input'].forEach(function(event_type) {
+      spd_slider.addEventListener(event_type, event => {
+        rotor.speed = Number(event.target.value);
+        UI.setSpeed();
+      }, false);
+    });
+
+    // Add event listener to slide for sending speed
+    ['change'].forEach(function(event_type) {
+      spd_slider.addEventListener(event_type, event => {
+        sendSpeed(rotor.speed);
+      }, false);
+    });
+
+    // Disable default keyboard events for speed slider
+    spd_slider.addEventListener("keydown", function(event) {
+      event.preventDefault();
+      return false;
+    });
+
+    // Arrow up and down event listeners for slider
+    document.addEventListener('keydown', function(event) {
+      if (!event.repeat && UI.kbsc_enabled) {
+        switch (event.key) {
+          case "ArrowUp":
+            if (rotor.speed < 100) {
+              rotor.speed += 10;
+              UI.setSpeed();
+              sendSpeed(rotor.speed);
+              event.preventDefault();
+            }
+            break;
+          case "ArrowDown":
+            if (rotor.speed > 0) {
+              rotor.speed -= 10;
+              UI.setSpeed();
+              sendSpeed(rotor.speed);
+              event.preventDefault();
+            }
+            break;
+        }
+      }
+    });
+  }
+  
+  // ==================== Rotation
+
+  // Send rotation: (-1) CCW, (0) Stop, (1) CW
+  function sendRotation(rotation) {
+    let msg = `ROTOR|{\"rotation\":${rotation}}`;
+    sendData(0, msg);
+  }
+
+  // Add event listeners for manual rotation
+  function initRotationListeners() {
+    // >>>>> Buttons
+    var left_btn = document.getElementById("rotate_left");
+    var right_btn = document.getElementById("rotate_right");
+
+    // Press
+    ['mousedown', 'touchstart'].forEach(function(event_type) {
+      // Left
+      left_btn.addEventListener(event_type, event => {
+        document.getElementById("rotate_left").classList.add("button-pressed")
+        sendRotation(-1);
+        event.preventDefault();
+      }, false);
+      // Right
+      right_btn.addEventListener(event_type, event => {
+        document.getElementById("rotate_right").classList.add("button-pressed")
+        sendRotation(1);
+        event.preventDefault();
+      }, false);
+    });
+
+    // Release
+    ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(function(event_type) {
+      // Left
+      left_btn.addEventListener(event_type, event => {
+        document.getElementById("rotate_left").classList.remove("button-pressed")
+        sendRotation(0);
+        event.preventDefault();
+      }, false);
+      // Right
+      right_btn.addEventListener(event_type, event => {
+        document.getElementById("rotate_right").classList.remove("button-pressed")
+        sendRotation(0);
+        event.preventDefault();
+      }, false);
+    });
+  
+    // >>>>> Arrow Keys, key-down
+    document.addEventListener('keydown', function(event) {
+      if (!event.repeat && UI.kbsc_enabled) {
+        switch (event.key) {
+          case "ArrowLeft":
+            document.getElementById("rotate_left").classList.add("button-pressed")
+            sendRotation(-1);
+            break;
+          case "ArrowRight":
+            document.getElementById("rotate_right").classList.add("button-pressed")
+            sendRotation(1);
+            break;
+        }
+      }
+    });
+
+    // >>>>> Arrow Keys, key-up
+    document.addEventListener('keyup', function(event) {
+      if (UI.kbsc_enabled) {
+        if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
+            document.getElementById("rotate_right").classList.remove("button-pressed")
+            document.getElementById("rotate_left").classList.remove("button-pressed")
+            sendRotation(0);
+        }
+      }
+    });
+
+    // >>>>> Compass angle request needle
+    var compass = document.getElementById("compass")
+    compass.addEventListener("mousemove", (event) => {
+      var element = document.getElementById("compass");
+      var angle = calcAngleInElement(element, event.offsetX, event.offsetY);
+      UI.setRequestNeedle(angle);
+    });
+
+    compass.addEventListener("touchmove", (event) => {
+      var element = document.getElementById("compass");
+      var angle = calcAngleInElement(element, event.offsetX, event.offsetY);
+      UI.setRequestNeedle(angle);
+    });
+
+    // Click listener for compass angle request needle
+    compass.addEventListener("click", (event) => {
+      var element = document.getElementById("compass");
+      var angle = calcAngleInElement(element, event.offsetX, event.offsetY);
+      UI.setRequestAngle(angle);
+    });
+  }
+
+  // Calculate compass-angle (0-360°) for an x,y 
+  // mouse-coordinate from inside a given DOM element
+  function calcAngleInElement(element, m_x, m_y) {
+    var rect = element.getBoundingClientRect();
+    var x = (m_x - (rect.width  / 2));
+    var y = (m_y - (rect.height / 2)) * -1;
+    var angle = Math.atan2(x, y) * 180 / Math.PI;
+    if (angle < 0) {
+      angle = 360 + angle;
+    }
+    return angle;
+  }
+
+
+  // **********
+  // WebSockets
+  // **********
+  var sockets2 = [
+    {
+      gateway: `ws://${window.location.host}/ws`,
+      socket: null
+    }
+  ];
+
+  var sockets = [
+    {
+      gateway: `ws://home.wraase.de:1339/ws`,
+      socket: null
+    }
+  ];
+
+  // Initialise a WebSocket
+  // ----------------------
+  function initWebSocket(i) {
+    console.log('[' + sockets[i].gateway + '] Open connection...');
+    sockets[i].socket = new WebSocket(sockets[i].gateway);
+    // Open
+    sockets[i].socket.onopen = function (event) {
+      console.log('[' + sockets[i].gateway + '] Connected.');
+    };
+    // Close
+    sockets[i].socket.onclose = function (event) {
+      console.log('[' + sockets[i].gateway + '] Connection closed. (' + event.reason + ')');
+      setTimeout(initWebSocket, 1000, i);
+    };
+    // Error
+    sockets[i].socket.onerror = function (event) {
+      console.log('[' + sockets[i].gateway + '] Error.');
+      sockets[i].socket.close();
+    };
+    // Receive message
+    sockets[i].socket.onmessage = receiveData;
+  }
+
+  // Receive data from WebSocket
+  // ---------------------------
+  const switchesIdentifier = "SWITCHES";
+  const rotorIdentifier = "ROTOR";
+  const settingsIdentifier = "SETTINGS";
+
+  function receiveData(event) {
+    // Split type-identifier from JSON data
+    var [identifier, data] = event.data.split("|");
+
+    // ROTOR DATA
+    // ..........
+    if (identifier === rotorIdentifier) {
+      console.log('[' + event.origin + '] ' + event.data);
+      var rotor_data = JSON.parse(data);
+
+      // Go through rotor data
+      for (key in rotor_data) {
+
+        // Rotation & Direction
+        if (key === "rotation") {
+          rotor.rotation = rotor_data[key];
+          UI.setRotation();
+          continue;
+        }
+
+        // ADC Voltage
+        if (key === "adc_v") {
+          rotor.adc_v = rotor_data[key];
+          UI.setAdcVoltage();
+          continue;
+        }
+
+        // Angle
+        if (key === "angle") {
+          rotor.angle = rotor_data[key];
+          UI.setAngle()
+          continue;
+        }
+
+        // Speed
+        if (key === "speed") {
+          rotor.speed = rotor_data[key]
+          UI.setSpeed();
+          continue;
+        }
+        
+        // Key == CSS ID
+        element = document.getElementById(key);
+        if (element) {
+          element.innerHTML = rotor_data[key];
+        } else {
+          console.log("ERROR: no element with ID " + key);
+        }
+      }
+    }
+
+
+    // SETTINGS
+    // ........
+    if (identifier === settingsIdentifier) {
+      console.log('[' + event.origin + '] ' + event.data);
+      settings_data = JSON.parse(data);
+
+      // Go through settings data  
+      for (key in settigs_data) {
+        if (key === "cal_u1") {
+          settings.cal_u1
+        }
+      }
+    }
+
+
+    // SWITCHES
+    // ........
+    if (identifier === switchesIdentifier) {
+      console.log('[' + event.origin + '] ' + event.data);
+      var switches = JSON.parse(data);
+
+      // Set switch-positions in HTML
+      for (swtch in switches) {
+        element = document.getElementById(swtch);
+        if (element) {
+          position = switches[swtch];
+          if (element) {
+            if (position === "1" || position === "true") {
+              element.checked = true;
+            } else if (position === "0" || position === "false") {
+              element.checked = false;
+            } else {
+              Console.log("Error: received undefined switch position.")
+            }
+          }
+        } else {
+          console.log("ERROR: no element with ID " + swtch);
+        }
+      }
+    }
+  }
+
+  // Send data over socket[i]
+  // ------------------------
+  function sendData(i, data) {
+    sockets[i].socket.send(data);
+  }
+
+  // Init JS when page loaded
+  // ------------------------
+  window.addEventListener('load', function (event) {
+    initDisconnectButton();
+
+    // Init sockets
+    for (let i = 0; i < sockets.length; i++) {
+      initWebSocket(i);
+    }
+
+    // Listeners
+    initRotationListeners();
+    initSpeedListeners();
+    initSettings();
+  });
+</script>
+
+</html>
