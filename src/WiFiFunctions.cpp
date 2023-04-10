@@ -1,7 +1,11 @@
-#include <SimpleSPIFFS.h>
 #include <WiFiFunctions.h>
 #include <WiFi.h>
 #include <globals.h>
+#include <Preferences.h>
+#include <SPIFFS.h>
+
+// PREFS instance
+Preferences wifi_prefs;
 
 // STATION mode WiFi-credentials
 String wifi_ssid;
@@ -9,31 +13,29 @@ String wifi_bssid;
 String wifi_pw;
 uint8_t wifi_bssid_uint8[6];
 
-// Paths to save credentials to
-const char *ssid_path = "/ssid.txt";
-const char *bssid_path = "/bssid.txt";
-const char *pw_path = "/pw.txt";
-
-// => Load WiFi credentials from SPIFFS
+// => Load WiFi credentials from PREFS
 void loadCredentials() {
-    Serial.println((uint32_t)&n_switches, HEX);
-    wifi_ssid = readFromSPIFFS(ssid_path);
-    wifi_bssid = readFromSPIFFS(bssid_path);
-    wifi_pw = readFromSPIFFS(pw_path);
+  wifi_prefs.begin("wifiPrefs", true);
+  wifi_ssid = wifi_prefs.getString("ssid", "");
+  wifi_bssid = wifi_prefs.getString("bssid", "");
+  wifi_pw = wifi_prefs.getString("pw", "");
+  wifi_prefs.end();
 }
 
-// => Save credentials to SPIFFS
+// => Save credentials to PREFS
 void saveCredentials() {
-    writeToSPIFFS(ssid_path, wifi_ssid);
-    writeToSPIFFS(bssid_path, wifi_bssid);
-    writeToSPIFFS(pw_path, wifi_pw);
+  wifi_prefs.begin("wifiPrefs", false);
+  wifi_prefs.putString("ssid", wifi_ssid);
+  wifi_prefs.putString("bssid", wifi_bssid);
+  wifi_prefs.putString("pw", wifi_pw);
+  wifi_prefs.end();
 }
 
 // => Overwrite the saved credentials with empty strings
 void resetCredentials() {
-    removeFromSPIFFS(ssid_path);
-    removeFromSPIFFS(bssid_path);
-    removeFromSPIFFS(pw_path);
+  wifi_prefs.begin("wifiPrefs", false);
+  wifi_prefs.clear();
+  wifi_prefs.end();
 }
 
 // => Convert wifi_bssid BSSID-String to uint8_t
@@ -56,16 +58,16 @@ void blinkWifiLed(const int n) {
 // => Create HTML <li> item for a scanned network
 // **********************************************
 String networkItemHTML(const String &ssid, const String &bssid, const int &rssi) {
-    String s = "";
-    s += "<li><form class=\"network-form\">";
-    s += "<span class=\"l-align wrd-break\">" + ssid + "</span>";
-    s += "<span class=\"r-align small\">RSSI: " + String(rssi) + "</span>";
-    s += "<input type=\"password\" placeholder=\"Passwort eingeben\" name=\"pw\" required>";
-    s += "<button type=\"submit\" class=\"small\">Verbinden</button>";
-    s += "<input type=\"hidden\" name=\"ssid\" value=\"" + ssid + "\">";
-    s += "<input type=\"hidden\" name=\"bssid\" value=\"" + bssid + "\">";
-    s += "</form></li>";
-    return s;
+  String s = "";
+  s += "<li><form class=\"network-form\">";
+  s += "<span class=\"l-align wrd-break\">" + ssid + "</span>";
+  s += "<span class=\"r-align small\">RSSI: " + String(rssi) + "</span>";
+  s += "<input type=\"password\" placeholder=\"Passwort eingeben\" name=\"pw\" required>";
+  s += "<button type=\"submit\" class=\"small\">Verbinden</button>";
+  s += "<input type=\"hidden\" name=\"ssid\" value=\"" + ssid + "\">";
+  s += "<input type=\"hidden\" name=\"bssid\" value=\"" + bssid + "\">";
+  s += "</form></li>";
+  return s;
 }
 
 
@@ -111,6 +113,10 @@ void scanNetworks(String &networks_html) {
 // => Initialise WiFi connection from saved parameters. Return false when connecting fails.
 // ****************************************************************************************
 bool initWiFi() {
+  // Load WiFi settings from Prefs
+  loadCredentials();
+  Serial.println("WiFi from PREFS: " + wifi_ssid + " | {" + wifi_bssid + "} | PW: " + wifi_pw);
+
   // Check for SSID
   if (wifi_ssid == "") {
     Serial.println("Can not start in STATION-mode. SSID is missing.");

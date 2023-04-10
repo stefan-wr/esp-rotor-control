@@ -9,7 +9,6 @@
 #include <SimpleSPIFFS.h>
 #include <WiFiFunctions.h>
 #include <ToggleSwitch.h>
-//#include <ADS1115.h>
 #include <RotorController.h>
 
 // Title on Website
@@ -274,7 +273,6 @@ void initWebSocket() {
 
 
 
-
 // ----------------------------------------------------------------------------------
 // SETUP ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------
@@ -297,10 +295,6 @@ void setup() {
   initRotorButton();                   // Initialise rotor stop button
   initSwitches();                      // Initialise switches with hard coded default positions
   rotor_ctrl.init();                   // Initialise rotor
-
-  // Load WiFi settings from SPIFFS
-  loadCredentials();
-  Serial.println("WiFi from SPIFFS: " + wifi_ssid + " | {" + wifi_bssid + "} | PW: " + wifi_pw);
 
   // Try the loaded settings
   // -----------------------
@@ -392,7 +386,6 @@ void setup() {
     server.on(RESET_SWITCHES_URL, HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!request->authenticate(http_username, http_password))
         return request->requestAuthentication();
-
       switchesDefault(true);
       request->send(SPIFFS, "/sta-index-esp.html", String(), false, processor);
       socket.textAll("SWITCHES|" + getSwitchesJSON());

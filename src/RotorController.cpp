@@ -1,14 +1,16 @@
 #include <RotorController.h>
+#include <Preferences.h>
 
 namespace Rotor {
+
+    // PREFS instances
+    Preferences cal_prefs;
 
     // *****************************
     // Define Rotation class members
     // *****************************
     Rotation::Rotation() {
-        // Init calibration factors
-        calibrate(0.0408, 4.0099, 0.0, 445.0);
-        setAngleOffset(0);
+
     }
 
     // Initialisation, called from setup()
@@ -27,22 +29,60 @@ namespace Rotor {
         if (!adc.begin()) {
             Serial.println("Failed to initialize ADS1115.");
         }
+
+        // Init calibration factors
+        loadCalibration();
     }
 
-    // Calculate calibration factors
+    // Set calibration factors and apply and save
     void Rotation::calibrate(const float &u1, const float &u2,
                              const float &a1, const float &a2) {
         calibration.u1 = u1;
         calibration.u2 = u2;
         calibration.a1 = a1;
         calibration.a2 = a2;
-        calibration.d_grad = (a2 - a1) / (u2 - u1);             // Gradient
-        calibration.u_0 = a1 - ((a2 - a1) / (u2 - u1) * u1);    // Y-Offset
+        applyCalibration();
+        saveCalibration();
     }
 
-    // Set constant angle-offset
+    // Calculate gradient and offset from calibration factors
+    void Rotation::applyCalibration() {
+        // Gradient, Y-Offset u_0
+        calibration.d_grad = (calibration.a2 - calibration.a1) / (calibration.u2 - calibration.u1);
+        calibration.u_0 = calibration.a1 - ((calibration.a2 - calibration.a1) / (calibration.u2 - calibration.u1) * calibration.u1);
+    }
+
+    // Save calibration factors to PREFS
+    void Rotation::saveCalibration() {
+        cal_prefs.begin("calPrefs", false);
+        cal_prefs.clear();
+        cal_prefs.putFloat("u1", calibration.u1);
+        cal_prefs.putFloat("u2", calibration.u2);
+        cal_prefs.putFloat("a1", calibration.a1);
+        cal_prefs.putFloat("a2", calibration.a2);
+        cal_prefs.putFloat("offset", calibration.offset);
+        cal_prefs.end();
+    }
+
+    // Load calibration factors from PREFS and apply, create storage if it doesnt already exist.
+    void Rotation::loadCalibration() {
+        bool prefs_exists = cal_prefs.begin("calPrefs", true);
+        calibration.u1 = cal_prefs.getFloat("u1", 0.317 );
+        calibration.u2 = cal_prefs.getFloat("u2", 4.095);
+        calibration.a1 = cal_prefs.getFloat("a1", 30.0);
+        calibration.a2 = cal_prefs.getFloat("a2", 445.0);
+        calibration.offset = cal_prefs.getFloat("offset", 0.0);
+        cal_prefs.end();
+        applyCalibration();
+        if (!prefs_exists) {
+            saveCalibration();
+        }
+    }
+
+    // Set constant angle-offset and save
     void Rotation::setAngleOffset(const float &offset) {
         calibration.offset = offset;
+        saveCalibration();
     }
 
     // Get raw ADC value

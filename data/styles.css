@@ -69,6 +69,10 @@ body {
     overflow: hidden;    
 }
 
+.no-break {
+    white-space: nowrap ;
+}
+
 .no-select {
     user-select: none;
 }
@@ -118,6 +122,18 @@ body {
     margin: 0;
 }
 
+.border-box {
+    /*border: 2px solid var(--content-color-0);*/
+    border-radius: 6px;
+    padding: 10px !important;
+    backdrop-filter: brightness(85%);
+    -webkit-backdrop-filter: brightness(85%);
+}
+
+.border-box .border-box {
+    border-radius: 4px;
+}
+
 /* Button design*/
 button, .button {
     border: none;
@@ -150,10 +166,15 @@ button, .button {
     transform: scale(0.96);
 }
 
-button:active, .button:active {
+button:enabled:active,
+.button:enabled:active {
     transform: scale(0.96);
 }
 
+button:disabled {
+    filter: saturate(10%);
+    cursor: not-allowed;
+}
 
 /* Content dependent control styling */
 /* --------------------------------- */
@@ -231,6 +252,25 @@ button:active, .button:active {
     align-self: flex-start;
 }
 
+/* Move Rotor*/
+.rotor {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.rotor-btns {
+    width: 100%;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+#direction {
+    flex-grow: 1;
+}
 
 /* Compass */
 .compass {
@@ -281,6 +321,45 @@ button:active, .button:active {
     transform: rotate(0deg);
 }
 
+/* Calibration */
+.calibration {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.calibration ul {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.calibration li {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.calibration label {
+    flex-grow: 1;
+}
+
+.calibration input {
+    width: 70px;
+    height: 26px;
+    border-radius: 4px;
+    border: none;
+    min-height: 32px;
+    padding: 0;
+    padding-left: 8px;
+}
+
+
 /* Slider */
 input[type="range"] {
     -webkit-appearance: none;
@@ -289,7 +368,7 @@ input[type="range"] {
     border-radius: 4px;
     padding: 4px;
     margin: 0;
-    margin-top: 10px;
+    margin-top: 12px;
     width: 150px;
 }
 

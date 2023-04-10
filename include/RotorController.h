@@ -39,6 +39,10 @@ namespace Rotor {
         void init();
         void calibrate(const float &u1, const float &u2,
                        const float &a1, const float &a2);
+        void applyCalibration();
+        void saveCalibration();
+        void loadCalibration();
+        
         void setAngleOffset(const float &offset);
         int getADCValue();
         float getADCVolts();

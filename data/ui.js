@@ -75,6 +75,24 @@ UI = {
         document.getElementById("kbsc_switch").checked = this.kbsc_enabled;
     },
 
+    setCalU1() {
+        document.getElementById("cal_a1_lbl").textContent = (settings.cal.a1).toFixed(0);
+        document.getElementById("cal_u1_lbl").textContent = (settings.cal.u1 / 1.5).toFixed(3);
+    },
+
+    setCalU2() {
+        document.getElementById("cal_a2_lbl").textContent = (settings.cal.a2).toFixed(0);
+        document.getElementById("cal_u2_lbl").textContent = (settings.cal.u2 / 1.5).toFixed(3);
+    },
+
+    enableCalSubmitBtn() {
+        document.getElementById("cal_submit").disabled = false;
+    },
+
+    disableCalSubmitBtn() {
+        document.getElementById("cal_submit").disabled = true;
+    },
+
     // Update all UI elements by calling all UI setters
     update: function() {
         this.setRotation();

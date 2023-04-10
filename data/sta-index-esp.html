@@ -17,39 +17,6 @@
   <div class="content-card">
     <h1>%TITLE%</h1>
     <ul class="blocks">
-      <li>
-        <div class="network">
-          <span class="l-align wrd-break small">RSSI: %RSSI%</span>
-          <span class="r-align small">Netzwerkverbindung</span>
-          <span class="l-align ssid">%SSID%</span>
-          <a href="%DISCONNECT_URL%" id="disconnect" class="button small">Trennen</a>
-          <hr>
-          <p class="small">
-            <b>ACHTUNG!</b><br>
-            Wird die Verbindung getrennt ist ein Fernzugriff nicht mehr
-            moeglich!
-          </p>
-        </div>
-      </li>
-
-      <li>
-        <div class="reboot">
-          <p class="l-align">
-            ESP32 neustarten.<br>
-            <span class="small">Die Netzwerkeinstellungen bleiben erhalten.</span>
-          </p>
-          <a href="%REBOOT_URL%" class="button small"><span>Neustart</span></a>
-        </div>
-      </li>
-
-      <li>
-        <div class="temp">
-          <div class="C l-align">
-            <span id="adc_v" class="xlarge">--</span><span class="large">&nbsp;V</span>
-          </div>
-          <span class="name r-align small">ADC</span>
-        </div>
-      </li>
 
       <li>
         <div class="compass">
@@ -73,24 +40,29 @@
       </li>
 
       <li>
-        <div class="reboot">
-          <p class="l-align">
-            Rotor bewegen <br>
-            <span id="direction" class="small">--</span>
-          </p>
-          <button id="rotate_left" class="button small">
-            <span class="no-select"><-N</span>
-          </button>
-          <button id="rotate_right" class="button small">
-            <span class="no-select">N-></span>
+        <div class="rotor">
+          <div>
+            <span>Rotor bewegen</span>
+          </div>
+          <div class="rotor-btns">
+            <div id="direction" class="l-align small">--</div>
+            <button id="rotate_left" class="button small">
+              <span class="no-select no-break"><-N</span>
             </button>
+            <button id="rotate_stop" class="button small">
+              <span class="no-select">STOP</span>
+            </button>
+            <button id="rotate_right" class="button small">
+              <span class="no-select no-break">N-></span>
+              </button>
+          </div>
         </div>
       </li>
 
       <li>
         <div class="temp">
           <div class="C l-align">
-            Geschwindigkeit<br>
+            <span>Geschwindigkeit</span><br>
             <input id="spd_slider" class="" type="range" min="0" max="100" step="10" autocomplete="off">
           </div>
           <div>
@@ -102,10 +74,10 @@
 
       <li>
         <div class="reboot">
-          <p class="l-align">
-            Tastatursteuerung <br>
-            <span class="small">Erlaubt die Steuerung des Rotors über die Pfeiltasten.</span>
-          </p>
+          <div class="l-align">
+            <span>Tastatursteuerung</span>
+            <p class="small">Erlaubt die Steuerung des Rotors über die Pfeiltasten.</p>
+          </div>
           <div class="switch small">
             <input id="kbsc_switch" type="checkbox" onchange="toggleKbsc(this)" autocomplete="off">
             <span class="slider"></span>
@@ -118,18 +90,40 @@
       <li>
         <div class="temp">
           <div class="C l-align">
-            Kalibrierung<br>
-            <form>
-              <input type="number" name="a1" min="20", max="40">
-              <label for="a1">A1</label>
-              <input type="number" name="a2" min="430", max="450">
-              <label for="a2">A2</label>
-            </form>
+            <span id="adc_v" class="xlarge">--</span><span class="large">&nbsp;V</span>
           </div>
-          <div>
-            
-          </div>
-        </input>
+          <span class="name r-align small">ADC</span>
+        </div>
+      </li>
+
+      <li>
+        <div class="calibration l-align">
+          <span>Kalibrierung</span>
+          <p class="small">
+            Drehe den Rotor über das Original-Steuergerät auf eine Position zwischen 20° und 40°.
+            Trage den genauen Winkel, abgelesen am Steuergerät, bei Position 1 ein und drücke den Button "Setzen" rechts daneben.
+            Wiederhole den Vorgang für Position 2 mit einem Winkel zwischen 430° und 450°.<br>
+            Danach drücke auf "Bestätigen".
+          </p>
+            <ul class="border-box">
+              <li class="">
+                <label for="a1">Position 1 <span class="small no-break">(20° - 40°)</span></label>
+                <input id="cal_a1_input" type="number" name="a1" min="20", max="40">
+                <button id="cal_a1_btn" class="small">Setzen</button>
+              </li>
+              <li class="">
+                <label for="a2">Position 2 <span class="small no-break">(430° - 450°)</span></label>
+                <input id="cal_a2_input" type="number" name="a2" min="430", max="450">
+                <button id="cal_a2_btn" class="small">Setzen</button>
+              </li>
+              <li class="border-box">
+                <label class="small">
+                  <span class="no-break">Pos. 1 (<span id="cal_a1_lbl">--</span>°),</span> <span class="no-break">Spannung: <span id="cal_u1_lbl">--</span> V</span><br>
+                  <span class="no-break">Pos. 2 (<span id="cal_a2_lbl">--</span>°),</span> <span class="no-break">Spannung: <span id="cal_u2_lbl">--</span> V</span><br>
+                </label>
+                <button  id="cal_submit" class="small" type="submit" disabled="true">Bestätigen</button>
+              </li>
+            </ul>
         </div>
       </li>
 
@@ -148,7 +142,30 @@
         </div>
       </li-->
 
-      %SWITCHES%
+      <li>
+        <div class="reboot">
+          <p class="l-align">
+            ESP32 neustarten.<br>
+            <span class="small">Die Netzwerkeinstellungen bleiben erhalten.</span>
+          </p>
+          <a href="%REBOOT_URL%" class="button small"><span>Neustart</span></a>
+        </div>
+      </li>
+
+      <li>
+        <div class="network">
+          <span class="l-align wrd-break small">RSSI: %RSSI%</span>
+          <span class="r-align small">Netzwerkverbindung</span>
+          <span class="l-align ssid">%SSID%</span>
+          <a href="%DISCONNECT_URL%" id="disconnect" class="button small">Trennen</a>
+          <hr>
+          <p class="small">
+            <b>ACHTUNG!</b><br>
+            Wird die Verbindung getrennt ist ein Fernzugriff nicht mehr
+            moeglich!
+          </p>
+        </div>
+      </li>
 
     </ul>
   </div>
@@ -191,24 +208,32 @@
     UI.kbsc_enabled = element.checked;
   }
 
-
   // Rotor settings
   // --------------
   var settings = {
     "offset": 0.0,
     "cal": {
-      "u1": 0.408,
-      "u2": 4.0099,
+      "u1": 0.0,
+      "u2": 0.0,
       "a1": 0.0,
-      "a2": 445.0
+      "a2": 0.0
     }
   };
 
-  // Send settings
+  // Send all settings
   function sendSettings() {
     sendData(0, `SETTINGS|${JSON.stringify(settings)}`);
   }
 
+  // Send calibration
+  function sendCalibration() {
+    sendData(0, `SETTINGS|${JSON.stringify(settings, ["cal", "u1", "u2", "a1", "a2"])}`);
+  }
+
+  // Send just offset
+  function sendOffset() {
+    sendData(0, `SETTINGS|${JSON.stringify(settings, ["offset"])}`);
+  }
 
   // Init settings
   // -------------
@@ -216,6 +241,50 @@
     // Set keyboard-shortcuts checkbox
     UI.update();
   }
+
+
+  // *****************************
+  // Calibration - Event Listeners
+  // *****************************
+  function initCalibrationListeners() {
+    UI.disableCalSubmitBtn();
+
+    // Set Pos 1 button
+    var cal_a1_input = document.getElementById("cal_a1_input");
+    cal_a1_btn.addEventListener("click", function(event) {
+      var cal_a1_btn = document.getElementById("cal_a1_btn");
+      var a1 = Number(cal_a1_input.value);
+      settings.cal.a1 = a1;
+      settings.cal.u1 = rotor.adc_v * 1.5;
+      UI.setCalU1();
+      if (settings.cal.u2 != 0) {
+        UI.enableCalSubmitBtn();
+      }
+    });
+
+    // Set Pos 2 button
+    var cal_a2_btn = document.getElementById("cal_a2_btn");
+    cal_a2_btn.addEventListener("click", function(event) {
+      var cal_a2_input = document.getElementById("cal_a2_input");
+      var a2 = Number(cal_a2_input.value);
+      settings.cal.a2 = a2;
+      settings.cal.u2 = rotor.adc_v * 1.5;
+      UI.setCalU2();
+      if (settings.cal.u1 != 0) {
+        UI.enableCalSubmitBtn();
+      }
+    });
+
+
+    // Calibration submit button
+    var cal_submit = document.getElementById("cal_submit");
+    cal_submit.addEventListener("click", function(event) {
+      sendCalibration();
+      UI.disableCalSubmitBtn();
+    });
+  }
+
+
 
   // ***********************
   // Rotor - Event Listeners
@@ -272,16 +341,16 @@
               rotor.speed += 10;
               UI.setSpeed();
               sendSpeed(rotor.speed);
-              event.preventDefault();
             }
+            event.preventDefault();
             break;
           case "ArrowDown":
             if (rotor.speed > 0) {
               rotor.speed -= 10;
               UI.setSpeed();
               sendSpeed(rotor.speed);
-              event.preventDefault();
             }
+            event.preventDefault();
             break;
         }
       }
@@ -301,17 +370,23 @@
     // >>>>> Buttons
     var left_btn = document.getElementById("rotate_left");
     var right_btn = document.getElementById("rotate_right");
+    var stop_btn = document.getElementById("rotate_stop");
+
+    var left_btn_active = false;
+    var right_btn_active = false;
 
     // Press
     ['mousedown', 'touchstart'].forEach(function(event_type) {
       // Left
       left_btn.addEventListener(event_type, event => {
+        left_btn_active = true;
         document.getElementById("rotate_left").classList.add("button-pressed")
         sendRotation(-1);
         event.preventDefault();
       }, false);
       // Right
       right_btn.addEventListener(event_type, event => {
+        right_btn_active = true;
         document.getElementById("rotate_right").classList.add("button-pressed")
         sendRotation(1);
         event.preventDefault();
@@ -322,16 +397,27 @@
     ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(function(event_type) {
       // Left
       left_btn.addEventListener(event_type, event => {
-        document.getElementById("rotate_left").classList.remove("button-pressed")
-        sendRotation(0);
-        event.preventDefault();
+        if (left_btn_active) {
+          document.getElementById("rotate_left").classList.remove("button-pressed")
+          sendRotation(0);
+          left_btn_active = false;
+          event.preventDefault();
+        }
       }, false);
       // Right
       right_btn.addEventListener(event_type, event => {
-        document.getElementById("rotate_right").classList.remove("button-pressed")
-        sendRotation(0);
-        event.preventDefault();
+        if (right_btn_active) {
+          document.getElementById("rotate_right").classList.remove("button-pressed")
+          sendRotation(0);
+          right_btn_active = false;
+          event.preventDefault();
+        }
       }, false);
+    });
+
+    // Stop
+    stop_btn.addEventListener("click", function(event) {
+      sendRotation(0);
     });
   
     // >>>>> Arrow Keys, key-down
@@ -400,14 +486,14 @@
   // **********
   // WebSockets
   // **********
-  var sockets2 = [
+  var sockets = [
     {
       gateway: `ws://${window.location.host}/ws`,
       socket: null
     }
   ];
 
-  var sockets = [
+  var sockets2 = [
     {
       gateway: `ws://home.wraase.de:1339/ws`,
       socket: null
@@ -557,6 +643,7 @@
     initRotationListeners();
     initSpeedListeners();
     initSettings();
+    initCalibrationListeners();
   });
 </script>
 
