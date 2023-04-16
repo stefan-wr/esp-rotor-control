@@ -1,87 +1,36 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import { useRotorStore } from '@/stores/rotor'
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import { useUmbrellaStore } from '@/stores/umbrella';
+import './assets/main.scss';
 
-import App from './App.vue'
-import router from './router'
+import App from './App.vue';
+import router from './router';
 
-import './assets/main.css'
+// FontAwesome icons
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import {
+    faPlay,
+    faRotateRight,
+    faRotateLeft,
+    faXmark,
+    faPlus,
+    faCheck,
+    faCaretDown,
+    faCaretUp
+} from '@fortawesome/free-solid-svg-icons';
 
-const app = createApp(App)
+library.add(faPlay, faRotateLeft, faRotateRight, faXmark, faPlus, faCheck, faCaretDown, faCaretUp);
 
-app.use(createPinia())
-app.use(router)
+// Setup app
+const app = createApp(App);
+app.component('Icon', FontAwesomeIcon);
+const pinia = createPinia();
+app.use(pinia);
+app.use(router);
 
-app.mount('#app')
+// Start app
+app.mount('#app');
 
-const store = useRotorStore();
-
-
-
-const sockets = [
-    {
-        gateway: `ws://home.wraase.de:1339/ws`,
-        socket: null
-    }
-];
-
-function initWebSocket(i) {
-    console.log('[' + sockets[i].gateway + '] Open connection...');
-    sockets[i].socket = new WebSocket(sockets[i].gateway);
-    // Open
-    sockets[i].socket.onopen = function (event) {
-        console.log('[' + sockets[i].gateway + '] Connected.');
-    };
-    // Close
-    sockets[i].socket.onclose = function (event) {
-        console.log('[' + sockets[i].gateway + '] Connection closed. (' + event.reason + ')');
-        setTimeout(initWebSocket, 1000, i);
-    };
-    // Error
-    sockets[i].socket.onerror = function (event) {
-        console.log('[' + sockets[i].gateway + '] Error.');
-        sockets[i].socket.close();
-    };
-    // Receive message
-    sockets[i].socket.onmessage = receiveData;
-}
-
-const switchesIdentifier = "SWITCHES";
-const rotorIdentifier = "ROTOR";
-const settingsIdentifier = "SETTINGS";
-
-// Receive data from WebSocket
-// ---------------------------
-function receiveData(event) {
-    // Split type-identifier from JSON data
-    var [identifier, data] = event.data.split("|");
-
-    // ROTOR DATA
-    // ..........
-    if (identifier === "ROTOR") {
-        console.log('[' + event.origin + '] ' + event.data);
-        var rotor_data = JSON.parse(data);
-
-        
-        // Go through rotor data
-        for (let key in rotor_data) {
-            store.rotor[key] = rotor_data[key];
-        }
-    }
-
-    // SETTINGS
-    // ........
-    if (identifier === "SETTINGS") {
-        console.log('[' + event.origin + '] ' + event.data);
-        settings_data = JSON.parse(data);
-
-        // Go through settings data  
-        for (key in settigs_data) {
-            if (key === "cal_u1") {
-                store.settings.u1 = settings_data[key];
-            }
-        }
-    }
-}
-
-initWebSocket(0);
+// Create umbrella store here to init the WebSocket
+const store = useUmbrellaStore();

@@ -1,8 +1,16 @@
 {
   "$schema": "https://json.schemastore.org/prettierrc",
   "semi": true,
-  "tabWidth": 2,
+  "tabWidth": 4,
   "singleQuote": true,
   "printWidth": 100,
-  "trailingComma": "none"
+  "trailingComma": "none",
+  "overrides": [
+    {
+      "files": ["*.vue", "*.html"],
+      "options": {
+        "tabWidth": 2
+      }
+    }
+  ]
 }

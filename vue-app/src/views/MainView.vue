@@ -4,49 +4,57 @@
       <Compass />
     </div>
     <aside>
-      <h1>{{ rotation }}</h1>
-      <button
-        @mousedown.prevent="store.rotor[rot] = -1"
-        @mouseup.prevent="store.setRotation(0, $event)"
-      >
-        &lt;-
-      </button>
-      <button
-        @mousedown.prevent="store.setRotation(1, $event)"
-        @mouseup.prevent="store.setRotation(0, $event)"
-      >
-        -&gt;
-      </button>
+      <ManualRotation></ManualRotation>
+      <SpeedControl></SpeedControl>
+      <Favorites></Favorites>
     </aside>
   </main>
 </template>
 
 <script setup>
-import Header from '@/components/Header.vue';
 import Compass from '@/components/Compass.vue';
+import Card from '@/components/Card.vue';
+import SpeedControl from '@/components/SpeedControl.vue';
+import ManualRotation from '@/components/ManualRotation.vue'
+import Favorites from '@/components/Favorites.vue'
 
 import { ref, computed } from 'vue';
-import { useRotorStore } from '@/stores/rotor';
 
-const store = useRotorStore();
-const rot = 'rotation';
+import { useRotorStore } from '@/stores/rotor';
+import { useUmbrellaStore } from '@/stores/umbrella';
+
+const rotorStore = useRotorStore();
+const umbrellaStore = useUmbrellaStore();
 
 const rotation = computed(() => {
-  var dirs = ['<-N', '-', 'N->'];
-  return dirs[store.rotor.rotation + 1];
+  const dirs = ['<-N', '-', 'N->'];
+  return dirs[rotorStore.rotor.rotation + 1];
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 main {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 2fr 1.4fr;
   gap: 1em;
+
+  @include large {
+    grid-template-columns: 2fr 2fr;
+  }
+
+  @include medium {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+  }
+}
+
+.compass-wrapper {
 }
 
 aside {
-  width: 30%;
-
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
 }
-
 </style>

@@ -1,61 +1,84 @@
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import { defineStore } from 'pinia';
 
-export const useRotorStore = defineStore('rotor', {
-  // >>>>> State
-  state: () => ({
-    rotor: {
-      rotation: 0,
-      angle: 0.0,
-      adc_v: 0.0,
-      speed: 0
-    },
+export const useRotorStore = defineStore('rotor', () => {
+    // Cardinal directions, non-reactive
+    const cardinals = [
+        'N',
+        'NNO',
+        'NO',
+        'ONO',
+        'O',
+        'OSO',
+        'SO',
+        'SSO',
+        'S',
+        'SSW',
+        'SW',
+        'WSW',
+        'W',
+        'WNW',
+        'NW',
+        'NNW'
+    ];
 
-    settings: {
-      offset: 0.0,
-      cal: {
-        u1: 0.0,
-        u2: 0.0,
-        a1: 0.0,
-        a2: 0.0
-      }
-    },
+    // **********************
+    //    State, Reactives
+    // **********************
 
-    ui: {
-      kbsc_enabled: true,
-      show_settings: false,
-      show_calibration: false
-    },
+    const rotor = reactive({
+        rotation: 0,    // -1: CCW, 0:Stop, 1:CW
+        angle: 0.0,
+        adc_v: 0.0,
+        speed: 0        // 0-100
+    });
 
-    cardinals: ["N", "NNO", "NO", "ONO",
-                "O", "OSO", "SO", "SSO",
-                "S", "SSW", "SW", "WSW",
-                "W", "WNW", "NW", "NNW" ]
-  }),
+    // *************
+    //    Getters
+    // *************
 
-  // >>>>> Getters
-  getters: {
     // Get cardinal direction
-    getCardinal: (state) => {
-      var ci = Math.round((state.rotor.angle / (360 / state.cardinals.length)));
-      return state.cardinals[ci % state.cardinals.length];
-    },
+    const cardinal = computed(() => {
+        const ci = Math.round(rotor.angle / (360 / cardinals.length));
+        return cardinals[ci % cardinals.length];
+    });
 
     // Get angle as string with one decimal
-    getAngle1D: (state) => {
-      return state.rotor.angle.toFixed(1);
-    },
+    const angle1D = computed(() => {
+        return rotor.angle.toFixed(1);
+    });
 
     // Get angle as string with two decimals
-    getAngle2D: (state) => {
-      return state.rotor.angle.toFixed(2);
-    }
-  },
+    const angle2D = computed(() => {
+        return rotor.angle.toFixed(2);
+    });
 
-  // >>>>> Actions
-  actions: {
-    setRotation(direction, event) {
-      this.rotor.rotation = direction;
+    // Get wether rotor is in overlap mode
+    const isOverlap = computed(() => {
+        return (rotor.angle > 360);
+    });
+
+
+    // *************
+    //    Actions
+    // *************
+
+    // Get messages for sending to ESP32
+    function getRotationMsg(dir) {
+        return `{\"rotation\":${dir}}`;
     }
-  }
+
+    function getSpeedMsg() {
+        return `{\"speed\":${rotor.speed}}`;
+    }
+
+    return {
+        rotor,
+        cardinal,
+        angle1D,
+        angle2D,
+        isOverlap,
+        getRotationMsg,
+        getSpeedMsg,
+    };
 });

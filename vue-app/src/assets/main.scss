@@ -1,0 +1,248 @@
+/* Inter Font */
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Inter'), local('Inter-Regular'), url('/inter-regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 700;
+    src: local('Inter'), local('Inter-Bold'), url('/inter-700.woff2') format('woff2');
+}
+
+/* HTML and BODY */
+html {
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 14px;
+
+    @include large {
+        font-size: 13px;
+    }
+
+    @include small() {
+        font-size: 12px;
+    }
+
+    /* Color Variables */
+    --background-color: #081214;
+    --content-color-0: #1a3a42;
+    --content-color-1: #214752;
+    --content-color-2: #2c5b68;
+    --accent-color: #f5d33c;
+    --alert-color: #d11534;
+    --text-color: #f7f7f7;
+    --text-color-darker: #a5a5a5;
+    --text-color-accent: #162f36;
+    --button-color: #f5d33c;
+    --button-text-color: #162f36;
+}
+
+body {
+    background-color: white;
+    color: var(--text-color);
+    width: 100%;
+}
+
+#app {
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+    margin: 0;
+    font-family: Inter, Helvetica, Arial, sans-serif;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+p {
+    line-height: 1.5;
+}
+
+/* Links */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Utility Classes */
+.bold {
+    font-weight: bold;
+}
+
+.small {
+    font-size: 0.75rem;
+}
+
+.normal {
+    font-size: 1rem;
+}
+
+.medium {
+    font-size: 1.25rem;
+}
+
+.large {
+    font-size: 1.5rem;
+}
+
+.xlarge {
+    font-size: 2rem;
+}
+
+.xxlarge {
+    font-size: 2.5rem;
+}
+
+.massive {
+    font-size: 3rem;
+}
+
+/*-----*/
+
+.smaller {
+    font-size: 0.75em;
+}
+
+.larger {
+    font-size: 1.25em;
+}
+
+/*-----*/
+
+.r-align {
+    text-align: right;
+}
+
+.l-align {
+    text-align: left;
+}
+
+/* Word-Break and -Wrap Utilities*/
+.wrd-break {
+    word-wrap: break-word;
+    overflow: hidden;
+}
+
+.no-break {
+    white-space: nowrap;
+}
+
+.no-select {
+    user-select: none;
+}
+
+/* Flexbox Utilities */
+.flex-vc {
+    display: flex;
+    align-items: center;
+}
+
+.flex-csp {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.flex-lc {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.flex-rc {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.flex-cc {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.flex-cst {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+}
+
+/* Common & Shared CSS*/
+main {
+    padding: 1em;
+}
+
+.border-box {
+    padding: 1em;
+    border-radius: 1.1em;
+    -webkit-backdrop-filter: brightness(120%);
+    backdrop-filter: brightness(120%);
+}
+
+.border-box .border-box {
+    padding: 0.7em;
+    border-radius: 0.7em;
+}
+
+.hide {
+    display: none;
+}
+
+.hide-vis {
+    visibility: hidden;
+}
+
+/* Button Styling */
+button {
+    box-sizing: border-box;
+    cursor: pointer;
+    padding: 0.25em 0.6em;
+    margin: 0;
+    border: none;
+    border-radius: 0.4em;
+    background: var(--button-color);
+    color: var(--button-text-color);
+    user-select: none;
+}
+
+@media (hover: hover) {
+    button:hover {
+        filter: brightness(130%);
+    }
+}
+
+.btn-pressed {
+    transform: scale(0.95);
+    filter: brightness(130%);
+}
+
+button:enabled:active {
+    transform: scale(0.95);
+}
+
+button:disabled {
+    filter: saturate(10%);
+    cursor: not-allowed;
+}
+
+/* Input */
+input {
+    border-radius: 0.2em;
+    width: 100%;
+    height: 2em;
+    border-radius: 0.4em;
+    border: none;
+    outline: none;
+    padding: 0.25em 0.6em;
+
+}

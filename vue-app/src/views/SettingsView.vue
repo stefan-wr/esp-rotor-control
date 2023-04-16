@@ -1,6 +1,7 @@
 <template>
   <main>
     <h1>Settings page</h1>
+    <a target="_blank" href="https://icons8.com/icon/G3ke6AwujrRv/trash">Trash</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
   </main>
 </template>
 

@@ -1,6 +1,6 @@
 <template>
-  <header class="flex-vc medium">
-    <h1 class="larger">Rotor Controller</h1>
+  <header class="flex-vc">
+    <h1 class="larger hide-s">RotorControl</h1>
     <nav class="flex-cst">
       <RouterLink to="/" class="tab">Controller</RouterLink>
       <RouterLink to="/settings" class="flex-cc tab">Einstellungen</RouterLink>
@@ -14,7 +14,7 @@ import { useRotorStore } from '@/stores/rotor';
 const store = useRotorStore();
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 header {
   width: 100%;
   border-bottom: 2px solid var(--content-color-0);
@@ -34,17 +34,22 @@ nav {
 
 .tab {
     position: relative;
-    padding: 0.5em 0;
-    transition: opacity 0.1s ;
+    padding: 0.5em 0.05em;
+    transition: opacity 0.1s;
+    opacity: 0.8;
 }
  .tab:hover {
-  opacity: 0.8;
+  opacity: 1;
+ }
+
+ .tab.router-link-active {
+  opacity: 1;
  }
 
 .tab.router-link-active::after {
     content: "";
     position: absolute;
-    bottom: -0.0em;
+    bottom: 0;
     left: 0;
     width: 100%;
     border-bottom: 0.1em solid var(--text-color);
@@ -54,7 +59,7 @@ nav {
 }
 
 @keyframes widen {
-  0% { transform: scaleX(0%); opacity: 1; }
-  100% { transform: scaleX(100%); opacity: 1; }
+  0% { transform: scaleX(0%);}
+  100% { transform: scaleX(100%);}
 }
 </style>

@@ -1,81 +1,119 @@
 <template>
   <div class="compass border-box">
     <div id="compass-svg">
-      <div v-if="overlap" class="overlap bold medium">OL</div>
-      <svg id="compass" viewBox="0 0 1000 1000" style="fill-rule: evenodd">
+      <div v-if="rotorStore.isOverlap" id="overlap" class="corner-lbl medium bold">OL</div>
+      <div id="rotation" class="corner-lbl bold medium">{{ rotation }}</div>
+      <svg
+        id="compass"
+        :class="{ 'mouse-inside': uiStore.ui.isMouseInCompass }"
+        viewBox="0 0 1000 1000"
+        style="fill-rule: evenodd"
+      >
         <path
           d="M500,0C775.958,0 1000,224.042 1000,500C1000,775.958 775.958,1000 500,1000C224.042,1000 0,775.958 0,500C0,224.042 224.042,0 500,0ZM500,50C748.362,50 950,251.638 950,500C950,748.362 748.362,950 500,950C251.638,950 50,748.362 50,500C50,251.638 251.638,50 500,50Z"
           style="fill: #f7f7f7"
         />
-        <g id="cmp-req-needle" :style="{ transform: 'rotate(' + req_angle + 'deg)' }">
+        <g id="cmp-req-needle" :style="{ transform: 'rotate(' + uiStore.ui.reqAngle + 'deg)' }">
           <path d="M500,15L515,40L515,700L485,700L485,40L" style="fill: var(--text-color-accent)" />
         </g>
-        <g id="cmp-needle" :style="{ transform: 'rotate(' + store.getAngle1D + 'deg)' }">
+        <g id="cmp-needle" :style="{ transform: 'rotate(' + rotorStore.angle1D + 'deg)' }">
           <path d="M500,200L550,500L500,650L450,500L500,200" style="fill: #f7f7f7" />
         </g>
       </svg>
     </div>
     <div class="compass-label border-box">
-      <span id="cmp_angle" class="large"></span><span class="large">{{ store.getAngle2D }}°</span
+      <span id="cmp_angle" class="large"></span><span class="large">{{ rotorStore.angle2D }}°</span
       ><br />
-      <span id="cmp_cardinal" class="large">{{ store.getCardinal }}</span
+      <span id="cmp_cardinal" class="large">{{ rotorStore.cardinal }}</span
       ><br />
-      <span>--</span> <span id="cmp_req_angle" class=""></span><span>°</span>
+      <span>{{ uiStore.ui.reqAngle.toFixed(1) }}</span> <span id="cmp_req_angle" class=""></span>
+      <span>°</span>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+
+import { useUmbrellaStore } from '@/stores/umbrella';
 import { useRotorStore } from '@/stores/rotor';
+import { useSettingsStore } from '@/stores/settings';
+import { useUIStore } from '@/stores/ui';
 
-const store = useRotorStore();
+const umbrellaStore = useUmbrellaStore();
+const rotorStore = useRotorStore();
+const uiStore = useUIStore();
 
-const req_angle = ref(0);
-
-function setRequestAngle(event) {
-  var rect = document.getElementById("compass-svg").getBoundingClientRect();
-  var x = event.offsetX - rect.width / 2;
-  var y = (event.offsetY - rect.height / 2) * -1;
-  var angle = (Math.atan2(x, y) * 180) / Math.PI;
-  if (angle < 0) {
-    angle = 360 + angle;
-  }
-  req_angle.value = angle;
-}
-
-const overlap = computed(() => {
-  if (store.rotor.angle > 360.0) {
-    return true;
-  }
-  return false;
+const rotation = computed(() => {
+  const dirs = ['<-N', 'STOP', 'N->'];
+  return dirs[rotorStore.rotor.rotation + 1];
 });
 
+function setRequestAngle(event) {
+  // Transform mouse position from insde compass
+  // bounding-rectangle to polar coordinates.
+  const rect = document.getElementById('compass').getBoundingClientRect();
+  const x = event.offsetX - rect.width / 2;
+  const y = (event.offsetY - rect.height / 2) * -1;
+  const radius = Math.sqrt(x * x + y * y);
+
+  // Check wether mouse is outside of compass circle
+  if (radius < rect.width / 2) {
+    uiStore.ui.isMouseInCompass = true;
+    let angle = (Math.atan2(x, y) * 180) / Math.PI;
+    if (angle < 0) {
+      angle = 360 + angle;
+    }
+    uiStore.ui.reqAngle = angle;
+  } else {
+    uiStore.ui.isMouseInCompass = false;
+  }
+}
+
 onMounted(() => {
-  document.getElementById("compass-svg").addEventListener("mousemove", (event) =>{
-    console.log(event.target.id);
-    setRequestAngle(event);
+  const compass = document.getElementById('compass');
+  compass.addEventListener('mousemove', (event) => {
+    if (!uiStore.ui.reqAngleLocked) {
+      setRequestAngle(event);
+    }
   });
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 #compass-svg {
   margin-bottom: 1em;
   position: relative;
   z-index: 1;
+}
+
+.mouse-inside {
   cursor: pointer;
 }
 
-.overlap {
+.corner-lbl {
   position: absolute;
-  top: 0;
-  right: 0;
-  color: var(--alert-color);
-  border: 0.2em solid var(--alert-color);
   border-radius: 0.5em;
   padding: 0.25em;
   z-index: -1;
+  border: 0.2em solid var(--text-color);
+
+  @include large {
+    font-size: 1rem;
+  }
+}
+
+#overlap {
+  top: 0;
+  right: 0;
+  color: var(--alert-color);
+  border-color: var(--alert-color);
+}
+
+#rotation {
+  top: 0;
+  left: 0;
+  width: 4em;
 }
 
 #cmp-req-needle {

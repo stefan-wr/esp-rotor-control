@@ -1,0 +1,44 @@
+/* Break Points */
+$max-width: 1100px;
+$min-width: 300px;
+
+$break-l: $max-width - 200px;
+$break-m: 600px;
+$break-s: $min-width + 40px;
+  
+/* SCSS Mixins & Classes for Responsiveness */
+@mixin small() {
+  @media only screen and (max-width: $break-s) {
+      @content;
+  }
+}
+
+@mixin medium() {
+  @media only screen and (max-width: $break-m) {
+      @content;
+  }
+}
+
+@mixin large() {
+  @media only screen and (max-width: $break-l) {
+      @content;
+  }
+}
+
+.hide-s {
+  @include small {
+    display: none !important;
+  }
+}
+
+.hide-m {
+  @include medium {
+    display: none !important;
+  }
+}
+
+.hide-l {
+  @include large {
+    display: none !important;
+  }
+}
