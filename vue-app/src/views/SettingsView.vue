@@ -1,16 +1,33 @@
 <template>
-  <main>
-    <h1>Settings page</h1>
-    <a target="_blank" href="https://icons8.com/icon/G3ke6AwujrRv/trash">Trash</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
-  </main>
+    <main class="gap-one">
+      <Settings></Settings>
+      <Calibration></Calibration>
+      <Footer id="footer"></Footer>
+    </main>
 </template>
 
-<style>
-@media (min-width: 1024px) {
-  .about {
-    min-height: 100vh;
+<script setup>
+import Settings from '@/components/settings/Settings.vue';
+import Calibration from '@/components/settings/Calibration.vue';
+import Footer from '@/components/Footer.vue';
+</script>
+
+<style lang="scss" scoped>
+main {
+  display: grid;
+  align-items: start;
+  justify-items: stretch;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+
+  @include medium {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: start;
   }
+}
+
+#footer {
+  grid-column: 1 / 3;
+  width: 100%;
 }
 </style>

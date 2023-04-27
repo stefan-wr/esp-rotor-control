@@ -15,6 +15,31 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     const settingsStore = useSettingsStore();
     const uiStore = useUIStore();
 
+    // Check Connection
+    // ****************
+    const connectionTimeout = 5000;
+    const hasLostConnection = ref(false);
+    let timeOfLastMsg = (new Date()).getTime();
+
+    function updateTimeOfLastMsg() {
+        const date = new Date();
+        timeOfLastMsg = date.getTime();
+    }
+
+    // Check for loss of connection by checking for incoming messages
+    // Close socket if connection lost -> this will trigger initWebSocket
+    function checkConnection() {
+        const date = new Date();
+        const now = date.getTime();
+        if (now - timeOfLastMsg >= connectionTimeout) {
+            hasLostConnection.value = true;
+            console.log("Connection lost. Closing WebSocket.")
+            socket.socket.close();
+        }
+    }
+
+    setInterval(checkConnection, connectionTimeout);
+
     // Socket
     // ******
     const socket = 
@@ -26,7 +51,9 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     // Initialise Socket
     // -----------------
     function initWebSocket() {
+        console.log(socket)
         console.log('[' + socket.gateway + '] Open connection...');
+        updateTimeOfLastMsg();
         socket.socket = new WebSocket(socket.gateway);
         // Open
         socket.socket.onopen = function (event) {
@@ -53,6 +80,9 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     const uiIdentifier = 'UI';
 
     function receiveData(event) {
+        hasLostConnection.value = false;
+        updateTimeOfLastMsg();
+        
         // Split type-identifier from JSON data
         var [identifier, msg] = event.data.split('|');
 
@@ -132,12 +162,12 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     // ----------------------------------------
 
 
-
     return {
         rotorStore,
         settingsStore,
         uiStore,
+        hasLostConnection,
         sendRotation,
-        sendSpeed,
+        sendSpeed
     };
 });

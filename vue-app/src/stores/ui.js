@@ -17,12 +17,11 @@ export const useUIStore = defineStore('ui', () => {
         showSettings: false,
         showCalibration: false,
 
-        hasSpeedKeyListener: false,
-        hasRotationKeyListener: false,
-
         reqAngle: 0,
         reqAngleLocked: false,
-        isMouseInCompass: false
+        isMouseInCompass: false,
+
+        cards: {}
     });
 
     // *************

@@ -43,6 +43,11 @@ export const useRotorStore = defineStore('rotor', () => {
         return cardinals[ci % cardinals.length];
     });
 
+    // Get angle as string with zero decimals
+    const angle = computed(() => {
+        return rotor.angle.toFixed(0);
+    });
+
     // Get angle as string with one decimal
     const angle1D = computed(() => {
         return rotor.angle.toFixed(1);
@@ -75,6 +80,7 @@ export const useRotorStore = defineStore('rotor', () => {
     return {
         rotor,
         cardinal,
+        angle,
         angle1D,
         angle2D,
         isOverlap,

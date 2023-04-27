@@ -13,20 +13,53 @@ import {
     faPlay,
     faRotateRight,
     faRotateLeft,
+    faArrowDown,
     faXmark,
     faPlus,
     faCheck,
-    faCaretDown,
-    faCaretUp
+    faGaugeHigh,
+    faArrowsSpin,
+    faCompass,
+    faBookmark,
+    faGear,
+    faWrench,
+    faKeyboard,
+    faWifi,
+    faPowerOff,
+    faBolt
 } from '@fortawesome/free-solid-svg-icons';
 
-library.add(faPlay, faRotateLeft, faRotateRight, faXmark, faPlus, faCheck, faCaretDown, faCaretUp);
+library.add(
+    faPlay,
+    faRotateLeft,
+    faRotateRight,
+    faArrowDown,
+    faXmark,
+    faPlus,
+    faCheck,
+    faGaugeHigh,
+    faArrowsSpin,
+    faCompass,
+    faBookmark,
+    faGear,
+    faWrench,
+    faKeyboard,
+    faWifi,
+    faPowerOff,
+    faBolt
+);
 
 // Setup app
 const app = createApp(App);
+
+// Add ofontawesome
 app.component('Icon', FontAwesomeIcon);
+
+// Add Pinia
 const pinia = createPinia();
 app.use(pinia);
+
+// Add router
 app.use(router);
 
 // Start app

@@ -22,12 +22,12 @@
       </svg>
     </div>
     <div class="compass-label border-box">
-      <span id="cmp_angle" class="large"></span><span class="large">{{ rotorStore.angle2D }}°</span
-      ><br />
-      <span id="cmp_cardinal" class="large">{{ rotorStore.cardinal }}</span
-      ><br />
-      <span>{{ uiStore.ui.reqAngle.toFixed(1) }}</span> <span id="cmp_req_angle" class=""></span>
-      <span>°</span>
+      <span class="small">Position</span>
+      <span class="small">Richtung</span>
+      <span class="small">Autom. Rotation</span>
+      <span id="cmp_angle" class="large bold">{{ rotorStore.angle1D }}°</span>
+      <span id="cmp_cardinal" class="large bold">{{ rotorStore.cardinal }}</span>
+      <span id="cmp_req_angle" class="bold">{{ uiStore.ui.reqAngle.toFixed(1) }}°</span>
     </div>
   </div>
 </template>
@@ -125,5 +125,14 @@ onMounted(() => {
   transform-origin: center;
   transform: rotate(0deg);
   transition: transform 0.1s;
+}
+
+.compass-label {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  justify-content: center;
+  column-gap: 1em;
+  row-gap: 0.5em;
 }
 </style>

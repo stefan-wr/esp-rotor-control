@@ -1,9 +1,11 @@
 <template>
   <Card title="Manuelle Rotation">
-    <div class="flex-cc buttons-wrap">
+    <template #icon><Icon icon="fa-solid fa-arrows-spin"></Icon></template>
+    <div class="flex-hc gap-one buttons-wrap">
       <button
         class="medium bold"
         :class="{ 'btn-pressed': isLeftBtnPressed }"
+        title="Drehe den Rotor gegen den Uhrzeigersinn"
         @mousedown.prevent="rotateLeft()"
         @touchstart.prevent="rotateLeft()"
         @mouseup.prevent="stopRotation()"
@@ -11,14 +13,17 @@
         @touchend.prevent="stopRotation()"
         @touchcancel.prevent="stopRotation()"
       >
-      <Icon icon="fa-solid fa-rotate-left" />
+        <Icon icon="fa-solid fa-rotate-left" />
       </button>
 
-      <button class="medium bold" @click.prevent="stopRotation()">Stop</button>
+      <button class="medium bold" title="Stoppe den Rotor" @click.prevent="stopRotation()">
+        Stop
+      </button>
 
       <button
         class="medium bold"
         :class="{ 'btn-pressed': isRightBtnPressed }"
+        title="Drehe den Rotor mit dem Uhrzeigersinn"
         @mousedown.prevent="rotateRight()"
         @touchstart.prevent="rotateRight()"
         @mouseup.prevent="stopRotation()"
@@ -35,7 +40,7 @@
 <script setup>
 import Card from '@/components/Card.vue';
 
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
 import { useRotorStore } from '@/stores/rotor';
@@ -45,8 +50,8 @@ const umbrellaStore = useUmbrellaStore();
 const rotorStore = useRotorStore();
 const uiStore = useUIStore();
 
-let isLeftBtnPressed = ref(false);
-let isRightBtnPressed = ref(false);
+const isLeftBtnPressed = ref(false);
+const isRightBtnPressed = ref(false);
 
 function rotateLeft() {
   stopRotation();
@@ -68,44 +73,43 @@ function stopRotation() {
   }
 }
 
+function startRotationKeyEventListener(event) {
+  if (!event.repeat && uiStore.ui.kbscEnabled && event.target.tagName !== 'INPUT') {
+    switch (event.key) {
+      case 'ArrowLeft':
+        rotateLeft();
+        break;
+      case 'ArrowRight':
+        rotateRight();
+        break;
+    }
+  }
+}
+
+function stopRotationKeyEventListener(event) {
+  if (uiStore.ui.kbscEnabled && event.target.tagName !== 'INPUT') {
+    if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+      stopRotation();
+    }
+  }
+}
+
 onMounted(() => {
   // Add arrow left/right listeners for manual rotation
-  if (!uiStore.ui.hasRotationKeyListener) {
-    // >>>>> Arrow Keys, key-down
-    document.addEventListener('keydown', function (event) {
-      if (!event.repeat && uiStore.ui.kbscEnabled) {
-        switch (event.key) {
-          case 'ArrowLeft':
-            rotateLeft();
-            break;
-          case 'ArrowRight':
-            rotateRight();
-            break;
-        }
-      }
-    });
+  document.addEventListener('keydown', startRotationKeyEventListener);
+  document.addEventListener('keyup', stopRotationKeyEventListener);
+});
 
-    // >>>>> Arrow Keys, key-up;
-    document.addEventListener('keyup', function (event) {
-      if (uiStore.ui.kbscEnabled) {
-        if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
-          stopRotation();
-        }
-      }
-    });
-    uiStore.ui.hasRotationKeyListener = true;
-  }
+onBeforeUnmount(() => {
+  // Remove arrow left/right listeners
+  document.removeEventListener('keydown', startRotationKeyEventListener);
+  document.removeEventListener('keyup', stopRotationKeyEventListener);
 });
 </script>
 
 <style lang="scss">
-.buttons-wrap {
-  gap: 1em;
-  justify-content: stretch;
-}
-
 .buttons-wrap button {
-  flex-grow: 1;
+  flex: 1 1 33%;
   padding-top: 0.5em;
   padding-bottom: 0.5em;
 }

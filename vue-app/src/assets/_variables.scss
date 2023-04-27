@@ -1,10 +1,25 @@
 /* Break Points */
 $max-width: 1100px;
-$min-width: 300px;
+$min-width: 290px;
 
 $break-l: $max-width - 200px;
-$break-m: 600px;
+$break-m: 660px;
 $break-s: $min-width + 40px;
+
+/* Sizes */
+$content-radius: 1.8em;
+$border-box-bradius: 1.1em;
+
+$button-height: 2em;
+$button-bradius: 0.4em;
+
+$input-height: 2em;
+$input-bradius: 0.4em;
+
+$ol-left-padding: 2.2em;
+
+/* Styles */
+$text-light-opacity: 0.6;
   
 /* SCSS Mixins & Classes for Responsiveness */
 @mixin small() {
@@ -25,6 +40,10 @@ $break-s: $min-width + 40px;
   }
 }
 
+.hide {
+  display: none;
+}
+
 .hide-s {
   @include small {
     display: none !important;
@@ -40,5 +59,11 @@ $break-s: $min-width + 40px;
 .hide-l {
   @include large {
     display: none !important;
+  }
+}
+
+.show-s-only {
+  @media only screen and (min-width: calc($break-s + 1px)) {
+    display: none;
   }
 }

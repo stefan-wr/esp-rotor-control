@@ -1,9 +1,10 @@
 <template>
   <Card title="Geschwindigkeit">
+    <template #icon><Icon icon="fa-solid fa-gauge-high"></Icon></template>
     <div class="range-wrap">
       <input
         v-model.number="rotorStore.rotor.speed"
-        class=""
+        id="speed"
         type="range"
         name="speed"
         min="0"
@@ -25,7 +26,7 @@
 <script setup>
 import Card from '@/components/Card.vue';
 
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
 import { useRotorStore } from '@/stores/rotor';
@@ -44,32 +45,36 @@ const speedLabel = computed(() => {
   }
 });
 
-onMounted(() => {
-  // Arrow up and down event listeners for speed
-  if (!uiStore.ui.hasSpeedKeyListener) {
-    document.addEventListener('keydown', function (event) {
-      if (!event.repeat && uiStore.ui.kbscEnabled) {
-        switch (event.key) {
-          case 'ArrowUp':
-            if (rotorStore.rotor.speed < 100) {
-              rotorStore.rotor.speed += 10;
-              umbrellaStore.sendSpeed();
-            }
-            event.preventDefault();
-            break;
-          case 'ArrowDown':
-            if (rotorStore.rotor.speed > 0) {
-              rotorStore.rotor.speed -= 10;
-              umbrellaStore.sendSpeed();
-            }
-            event.preventDefault();
-            break;
+function speedKeyEventListener(event) {
+  if (!event.repeat && uiStore.ui.kbscEnabled && event.target.tagName !== 'INPUT') {
+    switch (event.key) {
+      case 'ArrowUp':
+        if (rotorStore.rotor.speed < 100) {
+          rotorStore.rotor.speed += 10;
+          umbrellaStore.sendSpeed();
         }
-      }
-    });
-    uiStore.ui.hasSpeedKeyListener = true;
+        event.preventDefault();
+        break;
+      case 'ArrowDown':
+        if (rotorStore.rotor.speed > 0) {
+          rotorStore.rotor.speed -= 10;
+          umbrellaStore.sendSpeed();
+        }
+        event.preventDefault();
+        break;
+    }
   }
+}
+
+onMounted(() => {
+  // Add arrow up and down key event listeners for speed
+    document.addEventListener('keydown', speedKeyEventListener);
 });
+
+onBeforeUnmount(() => {
+  // Remove key event listeners for speed
+  document.removeEventListener('keydown', speedKeyEventListener);
+})
 </script>
 
 <style lang="scss">
@@ -105,6 +110,7 @@ onMounted(() => {
 
   input[type='range'] {
     -webkit-appearance: none;
+    appearance: none;
     background: var(--content-color-1);
     height: var(--range-total-height);
     padding: var(--range-total-padding);

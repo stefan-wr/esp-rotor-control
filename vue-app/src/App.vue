@@ -1,6 +1,18 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router';
+import { RouterView } from 'vue-router';
 import Header from '@/components/Header.vue';
+
+import { watch } from 'vue';
+
+import { useRotorStore } from '@/stores/rotor';
+
+const rotorStore = useRotorStore();
+
+// Show current rotor angle in browser tab title.
+watch(rotorStore.rotor, () => {
+  document.title = `RotorControl [ ${rotorStore.angle}°, ${rotorStore.cardinal} ]`;
+})
+
 </script>
 
 <template>
@@ -12,23 +24,13 @@ import Header from '@/components/Header.vue';
 
 <style lang="scss" scoped>
 .content {
+  flex-grow: 1;
+  border-radius: $content-radius;
   background-color: var(--content-color-1);
-  margin: 2em;
-  border-radius: 2em;
-  box-shadow: 0px 2em 3em #9e9e9e;
-  width: 100vw;
-  max-width: $max-width;
-  min-width: $min-width;
+  box-shadow: 0px 2em 3em var(--app-shadow-color);
 
-  @include small(){
-    margin: 0.5em;
-    font-size: 12px;
-  }
-
-  @include medium() {
-    margin: 1em;
+  @include small() {
+    border-radius: 0;
   }
 }
-
-
 </style>

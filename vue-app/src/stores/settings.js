@@ -25,18 +25,23 @@ export const useSettingsStore = defineStore('settings', () => {
         favorites: [
             {   
                 id: 1,
+                name: 'Norden',
+                angle: 0
+            },
+            {
+                id: 2,
                 name: 'Osten',
                 angle: 90
             },
             {
-                id: 2,
-                name: 'Superlanger Bezeichner für einen Favoriten',
+                id: 3,
+                name: 'Süden',
                 angle: 180
             },
             {
-                id: 3,
-                name: 'Megalangeswortohneuntebrechung',
-                angle: 360
+                id: 4,
+                name: 'Westen',
+                angle: 270
             }
         ]
     });

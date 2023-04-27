@@ -1,28 +1,22 @@
 <template>
   <Card id="favorites" title="Favoriten">
-    <template #icon><Icon icon="fa-solid fa-bookmark"></Icon></template>
-    <CardToggleContentTransition :toggle="isAddingFavorite">
-      <!-- CHILD A -->
-      <!-- Description and add favorite button -->
-      <template #childA>
-        <div class="flex-cc gap" ref="favDscr" v-show="!isAddingFavorite">
-          <p>
-            Lege bis zu 10 Favoriten an, die per Tastendruck automatisch angefahren werden können.
-          </p>
+    <div class="trans-wrap" ref="transWrap">
+      <Transition name="dscr-trans" @enter="applyCurrentWrapHeight">
+        <!-- Description and add favorite button -->
+        <div id="fav-dscr" class="flex-cc" ref="favDscr" v-show="!isAddingFavorite">
+          <p>Lege bis zu 10 Favoriten an, die per Tastendruck automatisch angefahren werden können.</p>
           <button
-            class="btn-std-resp"
-            title="Neuen Favoriten anlegen."
             @click="toggleAddingFavorite"
+            title="Neuen Favoriten anlegen."
             :disabled="settingsStore.settings.favorites.length >= settingsStore.maxFavorites"
           >
             <Icon icon="fa-solid fa-plus" />
           </button>
         </div>
-      </template>
+      </Transition>
 
-      <!-- CHILD B -->
       <!-- New favorite form -->
-      <template #childB>
+      <Transition name="form-trans" @enter="applyCurrentWrapHeight">
         <div
           id="fav-form"
           ref="favForm"
@@ -36,7 +30,6 @@
           <!-- Name -->
           <input
             id="fav-name-input"
-            class="input-std-resp"
             type="text"
             name="fav-name"
             placeholder="Bezeichner"
@@ -44,12 +37,10 @@
             v-model="newName"
             @keypress="restrictNameInput($event)"
             @paste="restrictNamePaste($event)"
-            @keyup.enter="angleInput.focus()"
           />
           <!-- Angle-->
           <input
             id="fav-angle-input"
-            class="input-std-resp"
             type="Number"
             name="fav-angle"
             min="0"
@@ -65,16 +56,16 @@
 
           <!-- Buttons -->
           <!-- Cancel Button -->
-          <button class="btn-std-resp bold no-wrap-ellip" title="Abbrechen" @click="toggleAddingFavorite">
-            <Icon icon="fa-solid btn-std-resp fa-xmark" />&nbsp;Abbrechen
+          <button class="bold" title="Abbrechen" @click="toggleAddingFavorite">
+            <Icon icon="fa-solid fa-xmark" />&nbsp;Abbrechen
           </button>
           <!-- Add Button -->
-          <button class="btn-std-resp bold no-wrap-ellip" title="Favoriten anlegen." @click="addFavorite">
+          <button class="bold" title="Favoriten anlegen." @click="addFavorite">
             <Icon icon="fa-solid fa-check"></Icon>&nbsp;Anlegen
           </button>
         </div>
-      </template>
-    </CardToggleContentTransition>
+      </Transition>
+    </div>
 
     <!-- Favorites List Head-->
     <ul v-if="settingsStore.settings.favorites.length" id="favorites-list">
@@ -104,17 +95,17 @@
       </li>
 
       <!-- Favorites List Items-->
-      <li v-for="(fav, index) in settingsStore.settings.favorites" :key="fav" class="flex-csp">
+      <li v-for="(fav, index) in settingsStore.settings.favorites" class="flex-csp">
         <span class="fav-index fav-head small">{{ fav.id }}</span>
-        <span class="fav-name no-wrap-ellip">{{ fav.name }}</span>
+        <span class="fav-name wrd-break">{{ fav.name }}</span>
         <span class="fav-angle">{{ fav.angle }}°</span>
-        <button class="fav-rot btn-std-resp flex-cc" title="Favoriten anfahren.">
+        <button class="fav-rot flex-cc" title="Favoriten anfahren.">
           <span>
             <Icon icon="fa-solid fa-play" />
           </span>
         </button>
         <button
-          class="fav-del btn-std-resp flex-cc"
+          class="fav-del flex-cc"
           @click="settingsStore.remFavorite(index)"
           title="Favoriten löschen."
         >
@@ -128,7 +119,6 @@
 
 <script setup>
 import Card from '@/components/Card.vue';
-import CardToggleContentTransition from '@/components/CardToggleContentTransition.vue';
 
 import { ref, reactive, computed, onMounted } from 'vue';
 
@@ -229,24 +219,61 @@ function addFavorite() {
     newNameValue = newNameValue.substring(0, maxNameLength);
   }
   // Add favorite
-  settingsStore.addFavorite(newNameValue, newAngleValue);
+  settingsStore.addFavorite(newName.value, newAngle.value);
   toggleAddingFavorite();
   return true;
 }
+
+// Transition between description and adding new favorites form.
+// For a smooth transition, adjust the height of the wrapping
+// div to the height of the new child when it starts to fly in.
+// -------------------------------------------------------------
+const transWrap = ref(null);
+const favDscr = ref(null);
+const favForm = ref(null);
+
+// Initially, set wrapper height to height of initial child and
+// reapply height when th browser window resizes
+onMounted(() => {
+  applyCurrentWrapHeight();
+  window.addEventListener('resize', applyCurrentWrapHeight);
+});
+
+// Adjust height of wrapper to height of currently shown child
+function applyCurrentWrapHeight() {
+  if (isAddingFavorite.value) {
+    transWrap.value.style.height = String(favForm.value.offsetHeight) + 'px';
+  } else {
+    transWrap.value.style.height = String(favDscr.value.offsetHeight) + 'px';
+  }
+}
+
 </script>
 
 <style lang="scss" scoped>
-#favorites {
-  min-width: 100%;
-}
 .card-dscr {
   margin-bottom: 1em;
+}
+
+#favorites {
+  button {
+    height: 2em;
+    padding: 0 1em;
+
+    @media (hover: none) {
+      font-size: 1.25rem;
+    }
+  }
+}
+
+#fav-dscr {
+  gap: 1em;
 }
 
 /* Add-Favorite Dialog */
 #fav-form {
   display: grid;
-  grid-template-rows: auto auto  auto;
+  grid-template-rows: auto 1fr auto;
   grid-template-columns: 1fr 1fr;
   justify-items: stretch;
   align-items: stretch;
@@ -254,12 +281,21 @@ function addFavorite() {
   width: 100%;
 
   label {
-    opacity: $text-light-opacity;
+    opacity: 0.6;
+  }
+
+  button {
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
   }
 
   input {
     margin-top: 0.3em;
     margin-bottom: 1em;
+    @media (hover: none) {
+      font-size: 1.25rem;
+    }
   }
 }
 
@@ -275,14 +311,17 @@ function addFavorite() {
   li {
     display: contents;
     width: 100%;
+    gap: 1em;
   }
 
   hr {
     grid-column: 1 / span 5;
+    border: none;
+    border-top: 1px solid var(--content-color-1);
   }
 
   .fav-head {
-    opacity: $text-light-opacity
+    opacity: 0.6;
   }
 
   .fav-head-sort {
@@ -298,6 +337,12 @@ function addFavorite() {
     margin-top: 0.2em;
   }
 
+  .fav-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .fav-angle {
     justify-self: end;
     margin-right: 0.5em;
@@ -311,5 +356,66 @@ function addFavorite() {
   button.fav-rot {
     justify-self: end;
   }
+}
+
+/* Form shake animation*/
+.form-shake {
+  animation: shake 0.3s;
+}
+
+@keyframes shake {
+  0% {
+    transform: translateX(0%);
+  }
+  20% {
+    transform: translateX(-8%);
+  }
+  40% {
+    transform: translateX(5%);
+  }
+  60% {
+    transform: translateX(-3%);
+  }
+  80% {
+    transform: translateX(2%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+/* Vue Transition animation, sliding in
+   and out the add favorite form */
+$speed: 0.2s;
+.trans-wrap {
+  transition: height $speed;
+}
+
+/* Description */
+.dscr-trans-leave-active,
+.dscr-trans-enter-active {
+  transition: transform $speed, opacity $speed;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.dscr-trans-leave-to,
+.dscr-trans-enter-from {
+  opacity: 0;
+  transform: translateX(-80%) scaleY(70%);
+}
+
+/* Add favorite form */
+.form-trans-leave-active,
+.form-trans-enter-active {
+  transition: transform $speed, opacity $speed;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.form-trans-leave-to,
+.form-trans-enter-from {
+  opacity: 0;
+  transform: translateX(80%) scaleY(70%);
 }
 </style>
