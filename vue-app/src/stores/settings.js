@@ -17,10 +17,10 @@ export const useSettingsStore = defineStore('settings', () => {
     const settings = reactive({
         offset: 0.0,
         cal: {
-            u1: 0.0,
-            u2: 0.0,
-            a1: 0.0,
-            a2: 0.0
+            u1: 0.301,
+            u2: 3.001,
+            a1: 20.105,
+            a2: 445.101
         },
         favorites: [
             {   

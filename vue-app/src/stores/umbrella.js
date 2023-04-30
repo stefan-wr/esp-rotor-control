@@ -51,7 +51,6 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     // Initialise Socket
     // -----------------
     function initWebSocket() {
-        console.log(socket)
         console.log('[' + socket.gateway + '] Open connection...');
         updateTimeOfLastMsg();
         socket.socket = new WebSocket(socket.gateway);

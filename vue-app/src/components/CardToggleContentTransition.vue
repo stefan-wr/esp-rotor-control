@@ -1,11 +1,11 @@
 <template>
   <div class="trans-wrap" ref="transWrap">
-    <Transition name="childA-trans" @enter="applyCurrentWrapHeight">
+    <Transition name="childA-trans" @enter="applyCurrentWrapHeight" v-show="!toggle">
       <slot name="childA"></slot>
     </Transition>
 
     <!-- New favorite form -->
-    <Transition name="childB-trans" @enter="applyCurrentWrapHeight">
+    <Transition name="childB-trans" @enter="applyCurrentWrapHeight" v-show="toggle">
       <slot name="childB"></slot>
     </Transition>
   </div>
@@ -14,8 +14,9 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 
+// Toggle prop: false -> show Child A, true -> show Child B
 const props = defineProps({
-  toggle: false,
+  toggle: false
 });
 
 // Transition between child-A and child-B.
@@ -39,10 +40,10 @@ onBeforeUnmount(() => {
 // Adjust height of wrapper to height of currently shown child
 function applyCurrentWrapHeight() {
   if (props.toggle) {
-    const childB = transWrap.value.children.item(1)
+    const childB = transWrap.value.children.item(1);
     transWrap.value.style.height = String(childB.offsetHeight) + 'px';
   } else {
-    const childA = transWrap.value.children.item(0)
+    const childA = transWrap.value.children.item(0);
     transWrap.value.style.height = String(childA.offsetHeight) + 'px';
   }
 }

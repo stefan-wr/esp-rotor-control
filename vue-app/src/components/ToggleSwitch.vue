@@ -1,9 +1,9 @@
 <template>
-  <div class="switch small">
+  <div class="switch">
     <input type="checkbox" @change="$emit('toggle')" autocomplete="off" :checked="toggle" />
     <span class="switch-slider"></span>
-    <span class="switch-on">AN</span>
-    <span class="switch-off">AUS</span>
+    <span class="switch-on small">AN</span>
+    <span class="switch-off small">AUS</span>
   </div>
 </template>
 
@@ -21,12 +21,24 @@ const props = defineProps({
 $slider-trans: 0.2s;
 
 .switch {
+  /*
   --switch-height: 32px;
   --switch-width: calc(var(--switch-height) * 2);
   --switch-padding: 4px;
   --switch-bradius: 6px;
   --switch-thumb-size: calc(var(--switch-height) - 2 * var(--switch-padding));
   --switch-thumb-bradius: 4px;
+  --switch-thumb-translateX: calc(
+    var(--switch-width) - 2 * var(--switch-padding) - var(--switch-thumb-size)
+  );
+  */
+
+  --switch-height: 2.3em;
+  --switch-width: calc(var(--switch-height) * 2);
+  --switch-padding: 0.3em;
+  --switch-bradius: 0.4em;
+  --switch-thumb-size: calc(var(--switch-height) - 2 * var(--switch-padding));
+  --switch-thumb-bradius: 0.3em;
   --switch-thumb-translateX: calc(
     var(--switch-width) - 2 * var(--switch-padding) - var(--switch-thumb-size)
   );
@@ -97,13 +109,13 @@ $slider-trans: 0.2s;
 }
 
 .switch > .switch-on {
-  left: calc(var(--switch-padding) + 2px);
+  left: calc(var(--switch-padding) + 0.3em);
   color: var(--text-color-accent);
   opacity: 0;
 }
 
 .switch > .switch-off {
-  right: calc(var(--switch-padding) + 2px);
+  right: calc(var(--switch-padding) + 0.3em);
   opacity: 0.2;
 }
 

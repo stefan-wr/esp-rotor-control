@@ -10,7 +10,7 @@
 
     <template #content>
       <p class="txt-dark">
-        Zeigt die gemessene Positions-Spannung des Rotors. Mithilfe der Kalibrierung wird aus dieser Spannung die Rotor-Position berechnet.
+        Die aktuell gemessene Positions-Spannung des Rotors. Mithilfe der Kalibrierung wird aus dieser Spannung die Rotor-Position berechnet.
       </p>
     </template>
   </SettingCard>

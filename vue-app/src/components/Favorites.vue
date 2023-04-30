@@ -5,7 +5,7 @@
       <!-- CHILD A -->
       <!-- Description and add favorite button -->
       <template #childA>
-        <div class="flex-cc gap" ref="favDscr" v-show="!isAddingFavorite">
+        <div class="flex-cc gap" ref="favDscr">
           <p>
             Lege bis zu 10 Favoriten an, die per Tastendruck automatisch angefahren werden können.
           </p>
@@ -26,7 +26,6 @@
         <div
           id="fav-form"
           ref="favForm"
-          v-show="isAddingFavorite"
           :class="{ 'form-shake': formFailed }"
         >
           <!-- Input Labels -->

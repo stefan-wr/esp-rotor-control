@@ -18,14 +18,15 @@ html {
     background-color: var(--background-color);
     box-sizing: border-box;
     text-align: center;
-    font-size: 14px;
+    --font-size: 14px;
+    font-size: var(--font-size);
 
     @include large {
-        font-size: 13px;
+        font-size: calc(var(--font-size) - 1px);
     }
 
     @include small {
-        font-size: 12px;
+        font-size: calc(var(--font-size) - 2px);
     }
 
     /* Color Variables */
@@ -56,20 +57,21 @@ body {
     color: var(--text-color);
     width: 100%;
     min-height: 100vh;
-}
-
-#app {
-    max-width: $max-width;
-    min-width: $min-width;
-    margin: 2em;
+    padding: 2em;
 
     @include medium() {
-        margin: 1em;
+        padding: 1em;
     }
 
     @include small() {
-        margin: 0em;
+        padding: 0em;
     }
+}
+
+#app {
+    min-width: $min-width;
+    width: 100%;
+    max-width: $max-width;
 }
 
 *,
@@ -381,6 +383,10 @@ input[type='number'] {
             font-size: 1.2rem !important;
         }
     }
+}
+
+.red-outline {
+    outline: 0.2em solid var(--alert-color) !important;
 }
 
 /* Form shake animation*/
