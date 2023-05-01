@@ -13,7 +13,7 @@
             class="btn-std-resp"
             title="Neuen Favoriten anlegen."
             @click="toggleAddingFavorite"
-            :disabled="settingsStore.settings.favorites.length >= settingsStore.maxFavorites"
+            :disabled="settingsStore.hasMaxFavorites"
           >
             <Icon icon="fa-solid fa-plus" />
           </button>
@@ -23,11 +23,7 @@
       <!-- CHILD B -->
       <!-- New favorite form -->
       <template #childB>
-        <div
-          id="fav-form"
-          ref="favForm"
-          :class="{ 'form-shake': formFailed }"
-        >
+        <div id="fav-form" ref="favForm" :class="{ 'form-shake': formFailed }">
           <!-- Input Labels -->
           <label for="fav-name" class="small">Favoriten-Bezeichner</label>
           <label for="fav-angle" class="small">Azimuth (0° - 450°)</label>
@@ -49,10 +45,11 @@
           <input
             id="fav-angle-input"
             class="input-std-resp"
+            :class="{ 'red-outline': isAngleWrong }"
             type="Number"
             name="fav-angle"
             min="0"
-            max="360"
+            :max="maxAngle"
             pattern="\d*"
             placeholder="Winkel"
             ref="angleInput"
@@ -64,11 +61,20 @@
 
           <!-- Buttons -->
           <!-- Cancel Button -->
-          <button class="btn-std-resp bold no-wrap-ellip" title="Abbrechen" @click="toggleAddingFavorite">
+          <button
+            class="btn-std-resp bold no-wrap-ellip"
+            title="Abbrechen"
+            @click="toggleAddingFavorite"
+          >
             <Icon icon="fa-solid btn-std-resp fa-xmark" />&nbsp;Abbrechen
           </button>
           <!-- Add Button -->
-          <button class="btn-std-resp bold no-wrap-ellip" title="Favoriten anlegen." @click="addFavorite">
+          <button
+            class="btn-std-resp bold no-wrap-ellip"
+            title="Favoriten anlegen."
+            @click="addFavorite"
+            :disabled="settingsStore.hasMaxFavorites"
+          >
             <Icon icon="fa-solid fa-check"></Icon>&nbsp;Anlegen
           </button>
         </div>
@@ -76,7 +82,7 @@
     </CardToggleContentTransition>
 
     <!-- Favorites List Head-->
-    <ul v-if="settingsStore.settings.favorites.length" id="favorites-list">
+    <ul v-if="settingsStore.favorites.length" id="favorites-list">
       <li class="small">
         <span
           class="fav-index fav-head fav-head-sort"
@@ -103,7 +109,7 @@
       </li>
 
       <!-- Favorites List Items-->
-      <li v-for="(fav, index) in settingsStore.settings.favorites" :key="fav" class="flex-csp">
+      <li v-for="(fav, index) in settingsStore.favorites" :key="fav" class="flex-csp">
         <span class="fav-index fav-head small">{{ fav.id }}</span>
         <span class="fav-name no-wrap-ellip">{{ fav.name }}</span>
         <span class="fav-angle">{{ fav.angle }}°</span>
@@ -119,7 +125,7 @@
         >
           <Icon icon="fa-solid fa-xmark" />
         </button>
-        <hr v-if="index !== settingsStore.settings.favorites.length - 1" />
+        <hr v-if="index !== settingsStore.favorites.length - 1" />
       </li>
     </ul>
   </Card>
@@ -129,20 +135,14 @@
 import Card from '@/components/Card.vue';
 import CardToggleContentTransition from '@/components/CardToggleContentTransition.vue';
 
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 
-import { useUmbrellaStore } from '@/stores/umbrella';
-import { useRotorStore } from '@/stores/rotor';
 import { useSettingsStore } from '@/stores/settings';
-import { useUIStore } from '@/stores/ui';
 
-const umbrellaStore = useUmbrellaStore();
-const rotorStore = useRotorStore();
 const settingsStore = useSettingsStore();
-const uiStore = useUIStore();
 
-// Toggle between description and 'add new favorite form'
-// ------------------------------------------------------
+// Toggle between dscr and 'add new favorite form'
+// -----------------------------------------------
 const isAddingFavorite = ref(false);
 const nameInput = ref(null);
 const angleInput = ref(null);
@@ -152,8 +152,6 @@ function toggleAddingFavorite() {
     // When form leaves -> clear inputs, loose focus
     newName.value = '';
     newAngle.value = '';
-    nameInput.value.value = '';
-    angleInput.value.value = '';
     nameInput.value.blur();
     isAddingFavorite.value = false;
   } else {
@@ -164,22 +162,30 @@ function toggleAddingFavorite() {
   }
 }
 
-// Add new favorite
-// ----------------
+// Favorite parameters
+// -------------------
+const maxNameLength = 30;
+const maxAngle = 450;
+
+// V-Models
 const newName = ref('');
 const newAngle = ref('');
 
-const maxNameLength = 30;
+// Used to highlight outline if value is not allowed
+const isAngleWrong = computed(() => {
+  return newAngle.value > 450;
+});
 
 // Prevent input of wrong angles
-// -> restrict to full numbers between 0-450
+// -> restrict to full numbers
 // -> prevent leading zeros
+// -> prevent input if max angle already reached
 function restrictAngleInput(event) {
   if (!/\d/.test(event.key)) {
     event.preventDefault();
   } else if (event.key === '0' && !newAngle.value) {
     event.preventDefault();
-  } else if (Number(newAngle.value + event.key) > 450) {
+  } else if (newAngle.value > maxAngle) {
     event.preventDefault();
   }
 }
@@ -201,7 +207,9 @@ function restrictNamePaste(event) {
 }
 
 // Shake form
+// ----------
 const formFailed = ref(false);
+
 function shakeForm() {
   formFailed.value = true;
   setTimeout(() => {
@@ -210,27 +218,35 @@ function shakeForm() {
 }
 
 // Add favorite
+// ------------
 function addFavorite() {
   // Inputs should not be empty and angle should be a number
   if (!newName.value.trim() || !newAngle.value || Number.isNaN(newAngle.value)) {
     shakeForm();
     return false;
   }
+
   // Angle should be between 0° and 450°
   const newAngleValue = Number(newAngle.value);
-  if (newAngleValue < 0.0 || newAngleValue > 450.0) {
+  if (newAngleValue < 0.0 || newAngleValue > maxAngle) {
     shakeForm();
     return false;
   }
+
   // Name gets cut to maxNameLength
   let newNameValue = newName.value.trim();
   if (newNameValue.length > maxNameLength) {
     newNameValue = newNameValue.substring(0, maxNameLength);
   }
+
   // Add favorite
-  settingsStore.addFavorite(newNameValue, newAngleValue);
-  toggleAddingFavorite();
-  return true;
+  if (settingsStore.addFavorite(newNameValue, newAngleValue)) {
+    toggleAddingFavorite();
+    return true;
+  } else {
+    shakeForm();
+    return false;
+  }
 }
 </script>
 
@@ -245,7 +261,7 @@ function addFavorite() {
 /* Add-Favorite Dialog */
 #fav-form {
   display: grid;
-  grid-template-rows: auto auto  auto;
+  grid-template-rows: auto auto auto;
   grid-template-columns: 1fr 1fr;
   justify-items: stretch;
   align-items: stretch;
@@ -281,7 +297,7 @@ function addFavorite() {
   }
 
   .fav-head {
-    opacity: $text-light-opacity
+    opacity: $text-light-opacity;
   }
 
   .fav-head-sort {

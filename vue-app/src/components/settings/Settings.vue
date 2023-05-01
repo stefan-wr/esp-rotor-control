@@ -2,8 +2,10 @@
   <div id="settings" class="flex-vst gap-one l-align">
     <Disconnect></Disconnect>
     <Reboot></Reboot>
+    <FontSize></FontSize>
     <KeyboardShortcuts></KeyboardShortcuts>
     <ADC></ADC>
+    
   </div>
 </template>
 
@@ -12,6 +14,7 @@ import KeyboardShortcuts from '@/components/settings/KeyboardShortcuts.vue';
 import Disconnect from '@/components/settings/Disconnect.vue';
 import Reboot from '@/components/settings/Reboot.vue';
 import ADC from '@/components/settings/ADC.vue';
+import FontSize from '@/components/settings/FontSize.vue';
 
 import { ref } from 'vue';
 

@@ -4,7 +4,7 @@
 
     <SettingCard title="Rotor-Kalibrierung" class="l-align">
       <template #icon>
-        <Icon icon="fa-solid fa-wrench" style="margin-right: 0.5em"></Icon>
+        <Icon icon="fa-solid fa-wrench"></Icon>
       </template>
 
       <template #content>
@@ -61,10 +61,12 @@ import CalibrationManual from '@/components/settings/CalibrationManual.vue';
 import CalibrationCurrent from '@/components/settings/CalibrationCurrent.vue';
 
 import { useSettingsStore } from '@/stores/settings';
+import { useUmbrellaStore } from '@/stores/umbrella';
 
 import { ref } from 'vue';
 
 const settingsStore = useSettingsStore();
+const umbrellaStore = useUmbrellaStore();
 
 // Toggle between manual- and auto calibration tabs
 // ------------------------------------------------

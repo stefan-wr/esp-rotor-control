@@ -27,10 +27,10 @@ export const useRotorStore = defineStore('rotor', () => {
     // **********************
 
     const rotor = reactive({
-        rotation: 0,    // -1: CCW, 0:Stop, 1:CW
+        rotation: 0, // -1: CCW, 0:Stop, 1:CW
         angle: 0.0,
         adc_v: 0.0,
-        speed: 0        // 0-100
+        speed: 0 // 0-100
     });
 
     // *************
@@ -60,23 +60,24 @@ export const useRotorStore = defineStore('rotor', () => {
 
     // Get wether rotor is in overlap mode
     const isOverlap = computed(() => {
-        return (rotor.angle > 360);
+        return rotor.angle > 360;
     });
 
+    // Get speed JSON message
+    const getSpeedMsg = computed(() => {
+        return `{\"speed\":${rotor.speed}}`;
+    });
+
+    // Get rotation JSON message
+    function getRotationMsg(dir) {
+        return `{\"rotation\":${dir}}`;
+    }
 
     // *************
     //    Actions
     // *************
 
-    // Get messages for sending to ESP32
-    function getRotationMsg(dir) {
-        return `{\"rotation\":${dir}}`;
-    }
-
-    function getSpeedMsg() {
-        return `{\"speed\":${rotor.speed}}`;
-    }
-
+    // *****
     return {
         rotor,
         cardinal,
@@ -85,6 +86,6 @@ export const useRotorStore = defineStore('rotor', () => {
         angle2D,
         isOverlap,
         getRotationMsg,
-        getSpeedMsg,
+        getSpeedMsg
     };
 });

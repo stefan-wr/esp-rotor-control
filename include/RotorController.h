@@ -21,19 +21,19 @@ namespace Rotor {
     private:
         Adafruit_ADS1115 adc;
         const int adc_channel = 0;
-        
-        struct {
-            float u1, u2, a1, a2;
-            float d_grad, u_0;
-            const float volt_div_factor = 1.5;
-            float offset;
-        } calibration;
 
     public:
         int last_adc_value = 0;
         float last_adc_volts = 0.0;
         float last_angle = 0.0;
         int last_speed = 30;
+
+        struct {
+            float u1, u2, a1, a2;
+            float d_grad, u_0;
+            const float volt_div_factor = 1.5;
+            float offset;
+        } calibration;
 
         Rotation();
         void init();
@@ -66,6 +66,7 @@ namespace Rotor {
         void sendLastRotationMsg(const bool &with_angle);
         void sendNewRotationMsg(const bool &with_angle);
         void sendSpeed();
+        void sendCalibration();
     };
     
 

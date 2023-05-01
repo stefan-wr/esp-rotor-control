@@ -1,5 +1,5 @@
 <template>
-  <SettingCard title="ADC-Spannung">
+  <SettingCard title="Positions-Spannung">
     <template #icon>
       <Icon icon="fa-solid fa-bolt"></Icon>
     </template>
@@ -10,7 +10,8 @@
 
     <template #content>
       <p class="txt-dark">
-        Die aktuell gemessene Positions-Spannung des Rotors. Mithilfe der Kalibrierung wird aus dieser Spannung die Rotor-Position berechnet.
+        Die aktuell gemessene Positions-Spannung des Rotors. Mithilfe der Kalibrierung wird aus
+        dieser Spannung die Rotor-Position berechnet.
       </p>
     </template>
   </SettingCard>
@@ -22,5 +23,4 @@ import SettingCard from '@/components/settings/SettingCard.vue';
 import { useRotorStore } from '@/stores/rotor';
 
 const rotorStore = useRotorStore();
-
 </script>

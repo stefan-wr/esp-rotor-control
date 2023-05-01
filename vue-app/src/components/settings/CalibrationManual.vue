@@ -1,9 +1,8 @@
 <template>
   <div class="flex-vst gap-one">
     <p>
-      Hier können die Kalibrations-Parameter manuell eingegeben werden. Dabei muss gelten:
-      <span class="no-wrap">Pos. 1 &lt; Pos. 2</span>. Als Spannung wird die ADC-Spannung erwartet.
-      Sie entspricht der Positions-Spannung des Rotors geteilt durch 1,5. Die Parameter werden auf 3
+      Hier können die Kalibrations-Parameter manuell eingegeben werden. Dabei muss
+      <span class="no-wrap">Pos. 1 &lt; Pos. 2</span> gelten. Die Parameter werden auf 4
       Dezimalstellen gerundet.
     </p>
 
@@ -63,6 +62,7 @@
 
       <button
         class="btn-std-resp bold no-wrap-ellip"
+        title="Kalibrations-Parameter bestätigen und anwenden."
         ref="confirmBtn"
         :disabled="!isManualConfirmEnabled"
         @click="confirmManualCal"
@@ -77,14 +77,8 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
-import { useRotorStore } from '@/stores/rotor';
-import { useSettingsStore } from '@/stores/settings';
-import { useUIStore } from '@/stores/ui';
 
 const umbrellaStore = useUmbrellaStore();
-const rotorStore = useRotorStore();
-const settingsStore = useSettingsStore();
-const uiStore = useUIStore();
 
 // Utilitiy functions
 // ------------------
@@ -104,7 +98,7 @@ const newPos2Angle = ref(null);
 const newPos1Adc = ref(null);
 const newPos2Adc = ref(null);
 
-// Test wether values in an inputs are not allowed
+// Test wether values in inputs are not allowed
 const isNewPos1AngleWrong = computed(() => {
   return !(newPos1Angle.value === null || testInputForNumber(newPos1Angle.value));
 });
@@ -143,7 +137,7 @@ const isManualConfirmEnabled = computed(() => {
   }
 });
 
-// Shake Form
+// Shake form
 // ----------
 const manualFormFailed = ref(false);
 
@@ -154,10 +148,9 @@ function shakeManualForm() {
   }, 300);
 }
 
-// Confirm Calibration
+// Confirm calibration
 // -------------------
 function testNewParams() {
-  console.log(newPos1Angle.value, newPos2Angle.value, newPos1Adc.value, newPos2Adc.value);
   if (newPos2Angle.value <= newPos1Angle.value) {
     alert('Position 2 Azimuth darf nicht kleiner oder gleich Position 1 Azimuth sein.');
     return false;
@@ -171,15 +164,14 @@ function testNewParams() {
 
 function confirmManualCal() {
   if (testNewParams()) {
-    pos1Angle.value = Number(newPos1Angle.value.toFixed(3));
-    pos2Angle.value = Number(newPos2Angle.value.toFixed(3));
-    pos1Adc.value = Number(newPos2Adc.value.toFixed(3));
-    pos2Adc.value = Number(newPos2Adc.value.toFixed(3));
-    console.log(
-      'TODO: Confirm manual calibration',
+    pos1Angle.value = Number(newPos1Angle.value.toFixed(4));
+    pos2Angle.value = Number(newPos2Angle.value.toFixed(4));
+    pos1Adc.value = Number(newPos1Adc.value.toFixed(4));
+    pos2Adc.value = Number(newPos2Adc.value.toFixed(4));
+    umbrellaStore.sendCalibration(
       pos1Angle.value,
-      pos2Angle.value,
       pos1Adc.value,
+      pos2Angle.value,
       pos2Adc.value
     );
   } else {

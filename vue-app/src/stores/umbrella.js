@@ -19,7 +19,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     // ****************
     const connectionTimeout = 5000;
     const hasLostConnection = ref(false);
-    let timeOfLastMsg = (new Date()).getTime();
+    let timeOfLastMsg = new Date().getTime();
 
     function updateTimeOfLastMsg() {
         const date = new Date();
@@ -33,7 +33,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         const now = date.getTime();
         if (now - timeOfLastMsg >= connectionTimeout) {
             hasLostConnection.value = true;
-            console.log("Connection lost. Closing WebSocket.")
+            console.log('Connection lost. Closing WebSocket.');
             socket.socket.close();
         }
     }
@@ -42,11 +42,10 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
 
     // Socket
     // ******
-    const socket = 
-        {
-            gateway: `ws://home.wraase.de:1339/ws`,
-            socket: null
-        }
+    const socket = {
+        gateway: `ws://home.wraase.de:1339/ws`,
+        socket: null
+    };
 
     // Initialise Socket
     // -----------------
@@ -77,11 +76,13 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     const rotorIdentifier = 'ROTOR';
     const settingsIdentifier = 'SETTINGS';
     const uiIdentifier = 'UI';
+    const calibrationIdentifier = 'CALIBRATION';
+    const favoritesIdentifier = 'FAVORITES';
 
     function receiveData(event) {
         hasLostConnection.value = false;
         updateTimeOfLastMsg();
-        
+
         // Split type-identifier from JSON data
         var [identifier, msg] = event.data.split('|');
 
@@ -95,6 +96,12 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         if (identifier === settingsIdentifier) {
             console.log('[' + event.origin + '] ' + event.data);
             receiveSettingsMsg(msg);
+        }
+
+        // CALIBRATION MESSAGE
+        if (identifier === calibrationIdentifier) {
+            console.log('[' + event.origin + '] ' + event.data);
+            receiveCalibrationMsg(msg);
         }
     }
 
@@ -110,18 +117,27 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         }
     }
 
-    // Receiver for settings message
-    function receiveSettingsMsg(msg) {
-        settingsMsg = JSON.parse(msg);
-        for (key in settigsMsg) {
-            if (key === 'cal_u1') {
-                settingsStore.settings.cal_u1;
+    // Receiver for calibration message
+    function receiveCalibrationMsg(msg) {
+        let calibrationMsg = JSON.parse(msg);
+        for (let key in calibrationMsg) {
+            if (key in settingsStore.calibration) {
+                settingsStore.calibration[key] = calibrationMsg[key];
+            } else {
+                console.log(`ERROR: key '${key}' not in settings.cal.`);
             }
         }
     }
 
-    // Send data over socket[i]
-    // ------------------------
+    // Receiver for settings message
+    function receiveSettingsMsg(msg) {
+        let settingsMsg = JSON.parse(msg);
+        for (let key in settingsMsg) {
+        }
+    }
+
+    // Send data over socket
+    // ---------------------
     function sendData(data) {
         socket.socket.send(data);
     }
@@ -140,33 +156,50 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         sendData(`${rotorIdentifier}|${msg}`);
     }
 
+    function sendCalibrationMsg(msg) {
+        sendData(`${calibrationIdentifier}|${msg}`);
+    }
+
+    function sendFavoritesMsg(msg) {
+        sendData(`${favoritesIdentifier}|${msg}`);
+    }
+
     function sendSettingsMsg(msg) {
         sendData(`${settingsIdentifier}|${msg}`);
     }
 
     function sendUiMsg(msg) {
-        sendData( `${uiIdentifier}|${msg}`);
+        sendData(`${uiIdentifier}|${msg}`);
     }
 
     // Specific senders
+    // ----------------
     function sendRotation(dir) {
         sendRotorMsg(rotorStore.getRotationMsg(dir));
     }
 
-    function sendSpeed(spd) {
-        sendRotorMsg(rotorStore.getSpeedMsg());
+    function sendSpeed() {
+        sendRotorMsg(rotorStore.getSpeedMsg);
     }
 
-    // Setters for setting state in used stores
-    // ----------------------------------------
+    function sendCalibration(a1, u1, a2, u2) {
+        sendCalibrationMsg(settingsStore.getCalibrationMsg(a1, u1, a2, u2));
+    }
+
+    function sendFavorites() {
+        sendFavoritesMsg(settingsStore.getFavoritesMsg);
+    }
 
 
+    // *************
     return {
         rotorStore,
         settingsStore,
         uiStore,
         hasLostConnection,
         sendRotation,
-        sendSpeed
+        sendSpeed,
+        sendCalibration,
+        sendFavorites
     };
 });

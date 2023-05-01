@@ -112,6 +112,7 @@
       <!-- Confirm Button -->
       <button
         class="btn-std-resp bold no-wrap-ellip"
+        title="Kalibrations-Parameter bestätigen und anwenden."
         ref="calConfirmBtn"
         :disabled="!isAutoConfirmEnabled"
         @click="confirmCalibration()"
@@ -123,17 +124,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
 import { useRotorStore } from '@/stores/rotor';
-import { useSettingsStore } from '@/stores/settings';
-import { useUIStore } from '@/stores/ui';
 
 const umbrellaStore = useUmbrellaStore();
 const rotorStore = useRotorStore();
-const settingsStore = useSettingsStore();
-const uiStore = useUIStore();
 
 // Element Refs
 // ------------
@@ -215,7 +212,7 @@ const pos2Adc = ref(0);
 function confirmPos1(event) {
   if (newPos1Angle.value !== null && !isNewPos1AngleWrong.value) {
     pos1Angle.value = Number(newPos1Angle.value.toFixed(1));
-    pos1Adc.value = rotorStore.rotor.adc_v;
+    pos1Adc.value = Number(rotorStore.rotor.adc_v.toFixed(4));
     pos2Input.value.focus();
     newPos1Angle.value = null;
   } else if (event.target.tagName === 'BUTTON') {
@@ -232,7 +229,7 @@ function confirmPos1(event) {
 function confirmPos2(event) {
   if (newPos2Angle.value !== null && !isNewPos2AngleWrong.value) {
     pos2Angle.value = Number(newPos2Angle.value.toFixed(1));
-    pos2Adc.value = rotorStore.rotor.adc_v;
+    pos2Adc.value = Number(rotorStore.rotor.adc_v.toFixed(4));
     calConfirmBtn.value.focus();
     newPos2Angle.value = null;
   } else if (event.target.tagName === 'BUTTON') {
@@ -280,8 +277,27 @@ function shakePos2Form() {
 
 // Confirm Calibration
 // -------------------
+function testNewParams() {
+  if (pos2Adc.value <= pos1Adc.value) {
+    alert('Position 2 Spannung darf nicht kleiner oder gleich Position 1 Spannung sein.\n\nDer Rotor muss VOR der Eingabe der Winkel auf die entsprechenden Positionsbereiche gedreht werden.');
+    return false;
+  } else {
+    return true;
+  }
+}
+
 function confirmCalibration() {
-  console.log("TODO: Confirm automatic calibration.")
+  if (testNewParams()) {
+    umbrellaStore.sendCalibration(
+      pos1Angle.value,
+      pos1Adc.value,
+      pos2Angle.value,
+      pos2Adc.value
+    );
+  } else {
+    shakePos1Form();
+    shakePos2Form();
+  }
 }
 
 // Reset parameters and inputs

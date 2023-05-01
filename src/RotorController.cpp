@@ -136,11 +136,11 @@ namespace Rotor {
     // Define Messenger members
     // ************************
     Messenger::Messenger() {
-        // Set buffer size on the heap
+        // Set message buffer size on the heap
         msg_buffer.reserve(100);
     }
 
-    // Set rotation msg into buffer
+    // Set last rotation msg into buffer
     void Messenger::setLastRotationMsg(const bool &with_angle) {
         if (rotor_ptr != NULL) {
             // Buffers
@@ -149,7 +149,9 @@ namespace Rotor {
 
             // Angle
             if (with_angle) {
-                doc["adc_v"] = round(rotor_ptr->rotor.last_adc_volts * 1000.0) / 1000.0;
+                doc["adc_v"] = round(rotor_ptr->rotor.last_adc_volts
+                                     * rotor_ptr->rotor.calibration.volt_div_factor
+                                     * 1000.0) / 1000.0;
                 doc["angle"] = round(rotor_ptr->rotor.last_angle * 100.0) / 100.0;
             }
 
@@ -184,6 +186,19 @@ namespace Rotor {
         msg_buffer = "ROTOR|";
         StaticJsonDocument<20> doc;
         doc["speed"] = rotor_ptr->speed;
+        serializeJson(doc, msg_buffer);
+        socket.textAll(msg_buffer);
+    }
+
+    // Send current calibration parameters over web socket
+    void Messenger::sendCalibration() {
+        msg_buffer = "CALIBRATION|";
+        StaticJsonDocument<100> doc;
+        doc["a1"] = round(rotor_ptr->rotor.calibration.a1 * 10000.0) / 10000.0;
+        doc["u1"] = round(rotor_ptr->rotor.calibration.u1 * 10000.0) / 10000.0;
+        doc["a2"] = round(rotor_ptr->rotor.calibration.a2 * 10000.0) / 10000.0;
+        doc["u2"] = round(rotor_ptr->rotor.calibration.u2 * 10000.0) / 10000.0;
+        doc["offset"] = rotor_ptr->rotor.calibration.offset;
         serializeJson(doc, msg_buffer);
         socket.textAll(msg_buffer);
     }
@@ -239,6 +254,7 @@ namespace Rotor {
     void RotorController::setCalibration(const float u1, const float u2,
                                          const float a1, const float a2) {
         rotor.calibrate(u1, u2, a1, a2);
+        messenger.sendCalibration();
         if (verbose) {
             Serial.print("[ROTOR] Set calibration: ");
             Serial.print(u1, 4); Serial.print(" V | ");

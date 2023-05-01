@@ -16,6 +16,7 @@ import {
     faArrowDown,
     faXmark,
     faPlus,
+    faMinus,
     faCheck,
     faGaugeHigh,
     faArrowsSpin,
@@ -26,7 +27,8 @@ import {
     faKeyboard,
     faWifi,
     faPowerOff,
-    faBolt
+    faBolt,
+    faTextHeight
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -36,6 +38,7 @@ library.add(
     faArrowDown,
     faXmark,
     faPlus,
+    faMinus,
     faCheck,
     faGaugeHigh,
     faArrowsSpin,
@@ -46,7 +49,8 @@ library.add(
     faKeyboard,
     faWifi,
     faPowerOff,
-    faBolt
+    faBolt,
+    faTextHeight
 );
 
 // Setup app

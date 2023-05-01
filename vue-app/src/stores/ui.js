@@ -16,6 +16,7 @@ export const useUIStore = defineStore('ui', () => {
         kbscEnabled: true,
         showSettings: false,
         showCalibration: false,
+        fontSize: 14,
 
         reqAngle: 0,
         reqAngleLocked: false,

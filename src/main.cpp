@@ -162,7 +162,8 @@ void socketRecieve(char* msg, const size_t &len) {
       return;
     }
 
-    // Unpack message
+    // \/\/ Unpack message \/\/
+    // Rotation
     JsonVariant val;
     val = doc["rotation"];
     if (!val.isNull()) {
@@ -185,8 +186,13 @@ void socketRecieve(char* msg, const size_t &len) {
 
   // ----- SETTINGS -----
   if (identifier == "SETTINGS") {
+
+  }
+
+  // ----- CALIBRATION -----
+  if (identifier == "CALIBRATION") {
     // Deserialize JSON
-    StaticJsonDocument<200> doc;
+    StaticJsonDocument<100> doc;
     DeserializationError err = deserializeJson(doc, msg + sep_idx + 1);
 
     // Test wether deserialization succeeded
@@ -197,12 +203,11 @@ void socketRecieve(char* msg, const size_t &len) {
     }
 
     // \/\/ Unpack message \/\/
-
     // Calibration
-    JsonVariant cal_u1 = doc["cal"]["u1"];
-    JsonVariant cal_u2 = doc["cal"]["u2"];
-    JsonVariant cal_a1 = doc["cal"]["a1"];
-    JsonVariant cal_a2 = doc["cal"]["a2"];
+    JsonVariant cal_u1 = doc["u1"];
+    JsonVariant cal_u2 = doc["u2"];
+    JsonVariant cal_a1 = doc["a1"];
+    JsonVariant cal_a2 = doc["a2"];
     if (!cal_u1.isNull() && !cal_u2.isNull()
         && !cal_a1.isNull() && !cal_a2.isNull()) {
       rotor_ctrl.setCalibration(cal_u1.as<const float>(), cal_u2.as<const float>(),
@@ -215,12 +220,40 @@ void socketRecieve(char* msg, const size_t &len) {
       rotor_ctrl.setAngleOffset(offset.as<float>());
     }
   }
+
+  // ----- FAVORITES -----
+  if(identifier == "FAVORITES") {
+    // Deserialize JSON
+    StaticJsonDocument<800> doc;
+    DeserializationError err = deserializeJson(doc, msg + sep_idx + 1);
+
+    // Test wether deserialization succeeded
+    if (err) {
+      Serial.print("JSON parse failed: ");
+      Serial.println(err.f_str());
+      return;
+    }
+
+    // \/\/ Unpack message \/\/
+    JsonArray favs = doc.as<JsonArray>();
+    for (JsonVariant fav : favs) {
+      int fav_id = fav["id"].as<const int>();
+      String fav_name = fav["name"].as<String>();
+      int fav_angle = fav["angle"].as<int>();
+      Serial.print(fav_id);
+      Serial.print(" | ");
+      Serial.print(fav_name);
+      Serial.print(" | ");
+      Serial.println(fav_angle);
+    }
+  }
 }
 
 
 // Initialise new client connection
 void socketInitClient(){
   rotor_ctrl.messenger.sendSpeed();
+  rotor_ctrl.messenger.sendCalibration();
 }
 
 // Websocket event handler
