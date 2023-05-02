@@ -7,7 +7,7 @@
     <template #action>
       <a
         class="button btn-std-resp bold flex-cc"
-        href="%DISCONNECT_URL%"
+        href="/disconnect"
         @click="disconnect($event)"
         title="Trennt und setzt die Netzwerverbindung des Rotor Controllers zurück."
         >Trennen</a

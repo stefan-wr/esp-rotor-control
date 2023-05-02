@@ -31,7 +31,7 @@ extern bool reset_now;
 extern bool scan_now;
 extern bool in_station_mode;
 
-// Acces-Point SSID
+// Access-Point SSID
 extern const char* ap_ssid;
 
 #endif //GLOBALS_H

@@ -8,33 +8,28 @@
 #include <globals.h>
 #include <SimpleSPIFFS.h>
 #include <WiFiFunctions.h>
-#include <ToggleSwitch.h>
 #include <RotorController.h>
+#include <Settings.h>
 
 // Title on Website
-const char* TITLE = "Rotor-Controller";
+const char* TITLE = "RotorControl";
 
 // AP mode SSID
-const char* ap_ssid = "ESP32 Rotor";
+const char* ap_ssid = "RotorControl";
 
 // STATION mode HTTP login-credentials
 const char* http_username = "otto";
 const char* http_password = "dl2rz";
 
 // URLS
-const char* DISCONNECT_URL = "/disconnect";
-const char* REBOOT_URL = "/reboot";
-const char* LOGOUT_URL = "/logout";
 const char* SWITCH_URL = "/switch";
 const char* RESET_SWITCHES_URL = "/reset-switches";
 
 // Create rotor-controller instance
 Rotor::RotorController rotor_ctrl;
 
-// Initialise switches {pin, id, name, dscr, default}
-ToggleSwitch switches[n_switches] = {};
-/* ToggleSwitch switches[n_switches] = {ToggleSwitch(17, "pin-17", "PIN #17", "Standardzustand: LOW", false),
-                                     ToggleSwitch(16, "pin-16", "PIN #16", "Standardzustand: HIGH", true)}; */
+// Create favorites instance
+Settings::Favorites favorites;
 
 // State variables
 bool in_station_mode = true;      // ESP is connected with WiFi -> STA mode
@@ -107,25 +102,13 @@ String processor(const String &var) {
   if (var == "RSSI") {
     return (String)WiFi.RSSI();
   }
-  if (var == "DISCONNECT_URL") {
-    return DISCONNECT_URL;
-  }
-  if (var == "REBOOT_URL") {
-    return REBOOT_URL;
-  }
-  if (var == "LOGOUT_URL") {
-    return LOGOUT_URL;
-  }
-  if (var == "SWITCHES") {
-    return switchesListHTML();
-  }
   return String();
 }
 
 
 // WebSocket stuff
 // ***************
-void socketRecieve(char* msg, const size_t &len) {
+void socketReceive(char* msg, const size_t &len) {
   // Separate message from identifier, separated by '|'
   int sep_idx;  // Index of separator
   for(sep_idx =  0; sep_idx < len; ++sep_idx) {
@@ -150,6 +133,7 @@ void socketRecieve(char* msg, const size_t &len) {
   String identifier(msg);
 
   // ----- ROTOR -----
+  // -----------------
   if (identifier == "ROTOR") {
     // Deserialize JSON
     StaticJsonDocument<50> doc;
@@ -184,12 +168,8 @@ void socketRecieve(char* msg, const size_t &len) {
     }
   }
 
-  // ----- SETTINGS -----
-  if (identifier == "SETTINGS") {
-
-  }
-
   // ----- CALIBRATION -----
+  // -----------------------
   if (identifier == "CALIBRATION") {
     // Deserialize JSON
     StaticJsonDocument<100> doc;
@@ -222,30 +202,18 @@ void socketRecieve(char* msg, const size_t &len) {
   }
 
   // ----- FAVORITES -----
+  // ---------------------
   if(identifier == "FAVORITES") {
-    // Deserialize JSON
-    StaticJsonDocument<800> doc;
-    DeserializationError err = deserializeJson(doc, msg + sep_idx + 1);
+    // Rejoin message by inserting back '|'
+    msg[sep_idx] = '|';
+    // For favorites we ust save the JSON message
+    favorites.set(msg);
+  }
 
-    // Test wether deserialization succeeded
-    if (err) {
-      Serial.print("JSON parse failed: ");
-      Serial.println(err.f_str());
-      return;
-    }
+  // ----- SETTINGS -----
+  // --------------------
+  if (identifier == "SETTINGS") {
 
-    // \/\/ Unpack message \/\/
-    JsonArray favs = doc.as<JsonArray>();
-    for (JsonVariant fav : favs) {
-      int fav_id = fav["id"].as<const int>();
-      String fav_name = fav["name"].as<String>();
-      int fav_angle = fav["angle"].as<int>();
-      Serial.print(fav_id);
-      Serial.print(" | ");
-      Serial.print(fav_name);
-      Serial.print(" | ");
-      Serial.println(fav_angle);
-    }
   }
 }
 
@@ -254,6 +222,7 @@ void socketRecieve(char* msg, const size_t &len) {
 void socketInitClient(){
   rotor_ctrl.messenger.sendSpeed();
   rotor_ctrl.messenger.sendCalibration();
+  favorites.send();
 }
 
 // Websocket event handler
@@ -263,7 +232,6 @@ void onSocketEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEven
       ++clients_connected;
       socketInitClient();
       Serial.println("[Websocket] Client " + (String)(client->id()) + " connected.");
-      if (n_switches != 0) socket.textAll("SWITCHES|" + getSwitchesJSON());
       break;
     case WS_EVT_DISCONNECT:
       --clients_connected;
@@ -282,12 +250,14 @@ void onSocketEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEven
         if(info->opcode == WS_TEXT){
           data[len] = 0;
 
+          // Print message
           if (verbose) {
             Serial.print("[Websocket] Data, client "); Serial.print(client->id());
              Serial.print(": "); Serial.println((char*) data);
           }
 
-          socketRecieve((char*) data, len);
+          // Recieve
+          socketReceive((char*) data, len);
         } else {
           Serial.println("[Websocket] Binary data recieved unexpectedly.");
         }
@@ -326,8 +296,8 @@ void setup() {
   digitalWrite(rotor_led, LOW);        // Turn off rotor status LED
   initWiFiButton();                    // Initialise wifi reset button
   initRotorButton();                   // Initialise rotor stop button
-  initSwitches();                      // Initialise switches with hard coded default positions
   rotor_ctrl.init();                   // Initialise rotor
+  favorites.init();                    // Initialise favorites
 
   // Try the loaded settings
   // -----------------------
@@ -340,21 +310,30 @@ void setup() {
     // WiFi connection established
     digitalWrite(wifi_status_led, LOW);
 
-    // Apply loaded positions to switches
-    switchesApply();
-
     // ----- \/\/ CONFIGURE STA SERVER \/\/ -----
     // ------------------------------------------
-    // Root route
+    // Root route, Vue-App index files
     server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!request->authenticate(http_username, http_password))
         return request->requestAuthentication();
-      request->send(SPIFFS, "/sta-index-esp.html", String(), false, processor);
+      request->send(SPIFFS, "/index.html");
+    });
+
+    server.on("/index.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+      if (!request->authenticate(http_username, http_password))
+        return request->requestAuthentication();
+      request->send(SPIFFS, "/index.js");
+    });
+
+    server.onNotFound([](AsyncWebServerRequest *request){
+      request->send(SPIFFS, "/index.html");
     });
 
     // Static files (CSS, fonts)
-    server.serveStatic("/ui.js", SPIFFS, "/ui.js");
-    server.serveStatic("/styles.css", SPIFFS, "/styles.css");
+    //server.serveStatic("/ui.js", SPIFFS, "/ui.js");
+    //server.serveStatic("/styles.css", SPIFFS, "/styles.css");
+
+    // Favicons
     server.serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2");
     server.serveStatic("/inter-700.woff2", SPIFFS, "/inter-700.woff2");
     server.serveStatic("/site.webmanifest", SPIFFS, "/site.webmanifest");
@@ -365,30 +344,34 @@ void setup() {
     server.serveStatic("/android-chrome-192x192.png", SPIFFS, "/android-chrome-192x192.png");
     server.serveStatic("/android-chrome-512x512.png", SPIFFS, "/android-chrome-512x512.png");
 
+    // Vue-App CSS
+    server.serveStatic("/index.css", SPIFFS, "/index.css");
+
     // Logout
-    server.on(LOGOUT_URL, HTTP_GET, [](AsyncWebServerRequest* request) {
+    server.on("/logout", HTTP_GET, [](AsyncWebServerRequest* request) {
       request->send(401);
     });
 
     // Reboot ESP
-    server.on(REBOOT_URL, HTTP_GET, [](AsyncWebServerRequest* request) {
+    server.on("/reboot", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!request->authenticate(http_username, http_password))
         return request->requestAuthentication();
-      request->send(200, "text/plain", "Der ESP32 startet sich neu.");
+      request->send(200, "text/plain", "RotorControl startet sich jetzt neu. Diese Seite aktualisiert sich NICHT von alleine.");
       delay(2000);
       ESP.restart();
     });
 
     // Disconnect ESP from network
-    server.on(DISCONNECT_URL, HTTP_GET, [](AsyncWebServerRequest* request) {
+    server.on("/disconnect", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!request->authenticate(http_username, http_password))
         return request->requestAuthentication();
-      request->send(200, "text/plain", "Der ESP32 trennt sich vom Netzwerk und startet sich neu. Der Fernzugriff ist damit inaktiv, bis eine neue Netzwerkverbindung aufgebaut wurde.");
+      request->send(200, "text/plain", "Der ESP32 trennt sich vom Netzwerk und startet sich neu. Der Fernzugriff ist damit inaktiv, bis eine neue Netzwerkverbindung eingerichtet wurde.");
       resetCredentials();
       delay(2000);
       ESP.restart();
     });
 
+    /*
     // Toggle a switch -> check and send back switch status to confirm
     server.on(SWITCH_URL, HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!request->authenticate(http_username, http_password))
@@ -423,6 +406,7 @@ void setup() {
       request->send(SPIFFS, "/sta-index-esp.html", String(), false, processor);
       socket.textAll("SWITCHES|" + getSwitchesJSON());
     });
+    */
 
     // Start server
     initWebSocket();
@@ -545,20 +529,10 @@ void loop() {
       lasts[1] = millis();
       if (WiFi.status() != WL_CONNECTED) {
         Serial.println("WiFi disconnected. Try reconnecting...");
-
-        // Set switches in save mode
-        if (!switches_save_mode) {
-          switchesDefault(false);
-          switches_save_mode = true;
-        }
-
         // Try to reconnect WiFi
         WiFi.disconnect();
         blinkWifiLed(1);
         WiFi.reconnect();
-      } else if (switches_save_mode) {
-        switches_save_mode = false;
-        switchesReset();
       }
     }
   }

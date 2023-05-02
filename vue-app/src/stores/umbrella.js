@@ -64,7 +64,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         };
         // Error
         socket.socket.onerror = function (event) {
-            console.log('[' + socket.gateway + '] Error.');
+            console.error('[' + socket.gateway + '] Error.');
             socket.socket.close();
         };
         // Receive message
@@ -92,16 +92,22 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
             receiveRotorMsg(msg);
         }
 
-        // SETTINGS MESSAGE
-        if (identifier === settingsIdentifier) {
-            console.log('[' + event.origin + '] ' + event.data);
-            receiveSettingsMsg(msg);
-        }
-
         // CALIBRATION MESSAGE
         if (identifier === calibrationIdentifier) {
             console.log('[' + event.origin + '] ' + event.data);
             receiveCalibrationMsg(msg);
+        }
+
+        // FAVORITES MESSAGE
+        if (identifier === favoritesIdentifier) {
+            console.log('[' + event.origin + '] ' + event.data);
+            receiveFavoritesMsg(msg);
+        }
+
+        // SETTINGS MESSAGE
+        if (identifier === settingsIdentifier) {
+            console.log('[' + event.origin + '] ' + event.data);
+            receiveSettingsMsg(msg);
         }
     }
 
@@ -112,7 +118,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
             if (key in rotorStore.rotor) {
                 rotorStore.rotor[key] = rotorMsg[key];
             } else {
-                console.log(`ERROR: key '${key}' not in rotor.`);
+                console.error(`ERROR: key '${key}' not in rotor.`);
             }
         }
     }
@@ -124,8 +130,22 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
             if (key in settingsStore.calibration) {
                 settingsStore.calibration[key] = calibrationMsg[key];
             } else {
-                console.log(`ERROR: key '${key}' not in settings.cal.`);
+                console.error(`ERROR: key '${key}' not in settings.cal.`);
             }
+        }
+    }
+
+    // Receiver for favorites message
+    function receiveFavoritesMsg(msg) {
+        const parsedMsg = JSON.parse(msg);
+        if (settingsStore.isValidFavoritesArray(parsedMsg)) {
+            settingsStore.favorites.array = parsedMsg;
+            settingsStore.reapplyFavoriteSorting();
+        } else {
+            // Received favorites are not valid -> reset them in UI and on controller
+            console.error(`ERROR: received favorites are not valid: ${msg}`)
+            settingsStore.favorites.array = [];
+            sendFavorites('[]');
         }
     }
 
@@ -190,6 +210,9 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         sendFavoritesMsg(settingsStore.getFavoritesMsg);
     }
 
+    function resetFavorites() {
+        sendFavoritesMsg('[]');
+    }
 
     // *************
     return {
@@ -200,6 +223,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         sendRotation,
         sendSpeed,
         sendCalibration,
-        sendFavorites
+        sendFavorites,
+        resetFavorites
     };
 });

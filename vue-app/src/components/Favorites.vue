@@ -9,6 +9,13 @@
           <p>
             Lege bis zu 10 Favoriten an, die per Tastendruck automatisch angefahren werden können.
           </p>
+          <!--button
+            class="btn-std-resp"
+            title="Neuen Favoriten anlegen."
+            @click="umbrellaStore.resetFavorites();"
+          >
+            <Icon icon="fa-solid fa-rotate-left" />
+          </button-->
           <button
             class="btn-std-resp"
             title="Neuen Favoriten anlegen."
@@ -82,23 +89,23 @@
     </CardToggleContentTransition>
 
     <!-- Favorites List Head-->
-    <ul v-if="settingsStore.favorites.length" id="favorites-list">
+    <ul v-if="settingsStore.favorites.array.length" id="favorites-list">
       <li class="small">
         <span
           class="fav-index fav-head fav-head-sort"
-          @click="settingsStore.sortFavoritesById()"
+          @click="settingsStore.sortFavoritesBy.id"
           title="Favoriten nach ID sortieren."
           >#</span
         >
         <span
           class="fav-name fav-head fav-head-sort"
-          @click="settingsStore.sortFavoritesByName()"
+          @click="settingsStore.sortFavoritesBy.name"
           title="Favoriten nach Namen sortieren."
           >Name</span
         >
         <span
           class="fav-angle fav-head fav-head-sort"
-          @click="settingsStore.sortFavoritesByAngle()"
+          @click="settingsStore.sortFavoritesBy.angle"
           title="Favoriten nach Winkel sortieren."
         >
           Azimuth
@@ -109,7 +116,7 @@
       </li>
 
       <!-- Favorites List Items-->
-      <li v-for="(fav, index) in settingsStore.favorites" :key="fav" class="flex-csp">
+      <li v-for="(fav, index) in settingsStore.favorites.array" :key="fav" class="flex-csp">
         <span class="fav-index fav-head small">{{ fav.id }}</span>
         <span class="fav-name no-wrap-ellip">{{ fav.name }}</span>
         <span class="fav-angle">{{ fav.angle }}°</span>
@@ -125,7 +132,7 @@
         >
           <Icon icon="fa-solid fa-xmark" />
         </button>
-        <hr v-if="index !== settingsStore.favorites.length - 1" />
+        <hr v-if="index !== settingsStore.favorites.array.length - 1" />
       </li>
     </ul>
   </Card>
@@ -138,8 +145,10 @@ import CardToggleContentTransition from '@/components/CardToggleContentTransitio
 import { ref, computed } from 'vue';
 
 import { useSettingsStore } from '@/stores/settings';
+import { useUmbrellaStore } from '../stores/umbrella';
 
 const settingsStore = useSettingsStore();
+const umbrellaStore = useUmbrellaStore();
 
 // Toggle between dscr and 'add new favorite form'
 // -----------------------------------------------
@@ -182,8 +191,6 @@ const isAngleWrong = computed(() => {
 // -> prevent input if max angle already reached
 function restrictAngleInput(event) {
   if (!/\d/.test(event.key)) {
-    event.preventDefault();
-  } else if (event.key === '0' && !newAngle.value) {
     event.preventDefault();
   } else if (newAngle.value > maxAngle) {
     event.preventDefault();

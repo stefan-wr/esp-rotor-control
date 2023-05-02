@@ -7,7 +7,7 @@
     <template #action>
       <a
         class="button btn-std-resp bold flex-cc"
-        href="%REBOOT_URL%"
+        href="/reboot"
         title="Startet den Rotor Controller neu."
         >Neu starten</a
       >

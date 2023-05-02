@@ -232,7 +232,7 @@ void getCredentials(AsyncWebServer &server) {
   });
 
   // Static files (CSS, fonts)
-  server.serveStatic("/styles.css", SPIFFS, "/styles.css");
+  server.serveStatic("/ap-styles.css", SPIFFS, "/ap-styles.css");
   server.serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2");
   server.serveStatic("/inter-700.woff2", SPIFFS, "/inter-700.woff2");
 

@@ -1,4 +1,4 @@
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref, shallowRef, toRaw } from 'vue';
 import { defineStore } from 'pinia';
 
 import { useUmbrellaStore } from './umbrella.js';
@@ -20,32 +20,16 @@ export const useSettingsStore = defineStore('settings', () => {
     });
 
     // Array of favorites
-    const favorites = reactive([
-        {
-            id: 1,
-            name: 'Norden',
-            angle: 0
-        },
-        {
-            id: 2,
-            name: 'Osten',
-            angle: 90
-        },
-        {
-            id: 3,
-            name: 'Süden',
-            angle: 180
-        },
-        {
-            id: 4,
-            name: 'Westen',
-            angle: 270
-        }
-    ]);
+    //const favorites = ref([]);
+
+    const favorites = reactive({
+        array: [],
+        sortedBy: 'id'
+    });
 
     const maxFavorites = 10;
     const hasMaxFavorites = computed(() => {
-        return favorites.length >= maxFavorites;
+        return favorites.array.length >= maxFavorites;
     });
 
     // *************
@@ -63,71 +47,108 @@ export const useSettingsStore = defineStore('settings', () => {
         return JSON.stringify(cal);
     }
 
-    // Get favorites JSON message
+    // Get favorites JSON message, use unreffed copy sorted by ID
     const getFavoritesMsg = computed(() => {
-        return JSON.stringify(favorites);
+        let copy = JSON.parse(JSON.stringify(favorites.array));
+        copy.sort((a, b) => {
+            return a.id - b.id;
+        });
+        return JSON.stringify(copy);
     });
 
     // *************
     //    Actions
     // *************
 
-    // Add a new favorite if number of favorites < maxFavorites
+    // Test wether a given array is a valid array of favorites
+    function isValidFavoritesArray(array) {
+        if (Array.isArray(array)) {
+            for (let item of array) {
+                for (let prop of ['id', 'name', 'angle']) {
+                    if (!Object.hasOwn(item, prop)) {
+                        return false;
+                    }
+                }
+            }
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    // Add a new favorite if max number of favorites has not been reached
     function addFavorite(newName, newAngle) {
         if (hasMaxFavorites.value) {
             return false;
         }
         const newFavorite = {
-            id: favorites.length + 1,
+            id: favorites.array.length + 1,
             name: newName,
             angle: newAngle
         };
-        favorites.push(newFavorite);
+        favorites.array.push(newFavorite);
+        reapplyFavoriteSorting();
+
         umbrellaStore.sendFavorites();
         return true;
     }
 
     // Remove a favorite
     function remFavorite(index) {
-        favorites.splice(index, 1);
-        reorderFavoritesIds();
-        umbrellaStore.sendFavorites();
+        favorites.array.splice(index, 1); // 1. Remove Favorite
+        reorderFavoritesIds(); // 2. Reorder IDs
+        reapplyFavoriteSorting(); // 3. Reapply previous sorting
+        umbrellaStore.sendFavorites(); // 4. Send changes to controller
     }
 
-    // Reset IDs to resemble the current order of the favorites array
+    // Reset IDs to fill the gap that a removed favorite left behind
+    // Works on copy of favorites first and replaces original with result
     function reorderFavoritesIds() {
-        for (let i = 0; i < favorites.length; i++) {
-            favorites[i].id = i + 1;
-        }
-    }
-
-    // Sort favorites array by IDs
-    function sortFavoritesById() {
-        favorites.sort((a, b) => {
+        let copy = JSON.parse(JSON.stringify(favorites.array));
+        copy.sort((a, b) => {
             return a.id - b.id;
         });
+        for (let i = 0; i < copy.length; i++) {
+            copy[i].id = i + 1;
+        }
+        favorites.array = copy;
     }
 
-    // Sort favorites array by name
-    function sortFavoritesByName() {
-        favorites.sort((a, b) => {
-            const nameA = a.name.toUpperCase();
-            const nameB = b.name.toUpperCase();
-            if (nameA < nameB) {
-                return -1;
-            }
-            if (nameA > nameB) {
-                return 1;
-            }
-            return 0;
-        });
-    }
+    // Collection of favorites sorting functions
+    const sortFavoritesBy = {
+        id: function (save = true) {
+            favorites.array.sort((a, b) => {
+                return a.id - b.id;
+            });
+            favorites.sortedBy = save ? 'id' : favorites.sortedBy;
+        },
 
-    // Sort favorites array by angle
-    function sortFavoritesByAngle() {
-        favorites.sort((a, b) => {
-            return a.angle - b.angle;
-        });
+        name: function (save = true) {
+            favorites.array.sort((a, b) => {
+                const nameA = a.name.toUpperCase();
+                const nameB = b.name.toUpperCase();
+                if (nameA < nameB) {
+                    return -1;
+                }
+                if (nameA > nameB) {
+                    return 1;
+                }
+                return 0;
+            });
+            favorites.sortedBy = save ? 'name' : favorites.sortedBy;
+        },
+
+        angle: function (save = true) {
+            favorites.array.sort((a, b) => {
+                return a.angle - b.angle;
+            });
+            favorites.sortedBy = save ? 'angle' : favorites.sortedBy;
+        }
+    };
+
+    // Reapply previous
+    function reapplyFavoriteSorting() {
+        sortFavoritesBy[favorites.sortedBy](false);
     }
 
     // *************
@@ -138,10 +159,10 @@ export const useSettingsStore = defineStore('settings', () => {
         hasMaxFavorites,
         getCalibrationMsg,
         getFavoritesMsg,
+        isValidFavoritesArray,
         addFavorite,
         remFavorite,
-        sortFavoritesByName,
-        sortFavoritesByAngle,
-        sortFavoritesById
+        sortFavoritesBy,
+        reapplyFavoriteSorting
     };
 });
