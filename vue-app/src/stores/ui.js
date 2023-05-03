@@ -15,14 +15,13 @@ export const useUIStore = defineStore('ui', () => {
     const ui = reactive({
         kbscEnabled: true,
         showSettings: false,
-        showCalibration: false,
         fontSize: 14,
+
+        cards: {},
 
         reqAngle: 0,
         reqAngleLocked: false,
-        isMouseInCompass: false,
-
-        cards: {}
+        isMouseInCompass: false
     });
 
     // *************

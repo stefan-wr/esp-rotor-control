@@ -13,7 +13,6 @@ const int n_switches = 0;
 // I/O pins
 const uint8_t wifi_status_led = 19;
 const uint8_t button_pin = 14;
-const uint8_t rotor_led = 16;
 
 // 0: ccw/left, 1: cw/right
 const uint8_t rot_pins[2] = {32, 33};

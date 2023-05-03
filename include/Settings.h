@@ -21,6 +21,10 @@ namespace Settings {
         void set(char* msg);
         void send();
     };
+
+    // Other Settings
+    // **************
+    void sendSettings();
 }
 
 #endif //SETTINGS_H

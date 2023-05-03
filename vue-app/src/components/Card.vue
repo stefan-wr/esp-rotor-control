@@ -1,5 +1,5 @@
 <template>
-  <div class="card border-box l-align" :class="{ 'card-show': showContent }">
+  <div class="card border-box l-align" :class="{ 'card-show': uiStore.ui.cards[props.title] }">
     <div class="flex-csp gap-half medium">
       <slot name="icon"></slot>
       <span class="card-title bold">{{ title }}</span>
@@ -10,7 +10,7 @@
       >
         <svg viewBox="0 0 300 300">
           <path
-            :class="{ 'caret-rot': !showContent }"
+            :class="{ 'caret-rot': !uiStore.ui.cards[props.title] }"
             class="caret-path"
             d="M136.874,96.18C144.4,89.634 155.6,89.634 163.126,96.18C186.786,116.76 237.15,160.568 269.744,188.919C274.465,193.026 276.141,199.632 273.949,205.492C271.757,211.353 266.157,215.237 259.899,215.237C202.495,215.237 97.505,215.237 40.101,215.237C33.843,215.237 28.243,211.353 26.051,205.492C23.859,199.632 25.535,193.026 30.256,188.919C62.85,160.568 113.214,116.76 136.874,96.18Z"
             style="fill: var(--text-color)"
@@ -28,23 +28,25 @@
 
 <script setup>
 import { ref, onUpdated, onMounted } from 'vue';
+import { useUIStore } from '../stores/ui';
 
-defineProps({
+const uiStore = useUIStore();
+
+const props = defineProps({
   title: String
 });
 
-const showContent = ref(true);
 const cardContent = ref(null);
 
 // Toggle card content.
 // Set fixed height to hidden card content AFTER animation to avoid
 // resizing of the hidden content to affect the card.
 function toggleShow() {
-  if (showContent.value) {
-    showContent.value = !showContent.value;
+  if (uiStore.ui.cards[props.title].value) {
+    uiStore.ui.cards[props.title] = !uiStore.ui.cards[props.title];
     setTimeout(() => cardContent.value.style.height = `${cardContent.value.offsetHeight}px`, 200);
   } else {
-    showContent.value = !showContent.value;
+    uiStore.ui.cards[props.title] = !uiStore.ui.cards[props.title];
     cardContent.value.style.height = null;
   }
 }
@@ -52,7 +54,7 @@ function toggleShow() {
 // Set the negative top margin that is used to hide the
 // card content to the exact height of the content -1px.
 function setSlideMargin() {
-  if (!showContent.value) {
+  if (!uiStore.ui.cards[props.title]) {
     cardContent.value.style.marginTop = `${cardContent.value.offsetHeight * -1}px`;
   }
 }
@@ -63,6 +65,12 @@ onUpdated(() => {
 
 onMounted(() => {
   setSlideMargin();
+  // Add show-content toggle to ui store
+  if (!Object.hasOwn(uiStore.ui.cards, props.title)) {
+    uiStore.ui.cards[props.title] = true;
+  }
+  // Add transition class 200ms after mount to avoid height-change when mounted
+  setTimeout(() => {cardContent.value.classList.add('card-content-trans')}, 200);
 });
 </script>
 
@@ -106,6 +114,9 @@ $card-trans-spd: 0.2s;
   opacity: 0;
   transform: scaleX(90%);
   transform-origin: bottom center;
+}
+
+.card-content-trans {
   transition: margin-top $card-trans-spd, opacity $card-trans-spd, transform $card-trans-spd;
 }
 

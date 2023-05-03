@@ -21,10 +21,6 @@ const char* ap_ssid = "RotorControl";
 const char* http_username = "otto";
 const char* http_password = "dl2rz";
 
-// URLS
-const char* SWITCH_URL = "/switch";
-const char* RESET_SWITCHES_URL = "/reset-switches";
-
 // Create rotor-controller instance
 Rotor::RotorController rotor_ctrl;
 
@@ -35,11 +31,10 @@ Settings::Favorites favorites;
 bool in_station_mode = true;      // ESP is connected with WiFi -> STA mode
 bool scan_now = false;            // Scan for networks now
 bool reset_now = false;           // Set by button, tested in main loop
-bool switches_save_mode = false;  // Set switches to default positions now
 int clients_connected = 0;        // Number of connected socket clients
-bool safety_stop_now = false;     // Set by button, testesd in main loop
+bool safety_stop_now = false;     // Set by button, tested in main loop
 
-// Stores the HTML-code for list of available networks
+// Stores the HTML-code for list of available networks in AP mode
 String networks_html = "";
 
 // Create AsyncWebServer object
@@ -66,7 +61,7 @@ void initWiFiButton() {
   attachInterrupt(button_pin, wifiButtonAction, FALLING);
 }
 
-// Setup an interrupt button (rotor safety stop)
+// Setup an interrupt button (Rotor Safety-Stop)
 // *********************************************
 unsigned long rotor_btn_last_ms = 0;
 
@@ -88,6 +83,7 @@ void initRotorButton() {
 
 
 // => HTML processor, replaces placeholders in HTML files
+// Only used for AP-mode, not for Vue-App
 // ******************************************************
 String processor(const String &var) {
   if (var == "TITLE") {
@@ -106,8 +102,13 @@ String processor(const String &var) {
 }
 
 
-// WebSocket stuff
-// ***************
+
+// **********************************************************************************
+// WebSocket Stuff  *****************************************************************
+// **********************************************************************************
+
+// Socket receive function
+// ***********************
 void socketReceive(char* msg, const size_t &len) {
   // Separate message from identifier, separated by '|'
   int sep_idx;  // Index of separator
@@ -122,13 +123,6 @@ void socketReceive(char* msg, const size_t &len) {
     Serial.println("Can't parse message.");
     return;
   }
-
-  /*
-  String msg_str = (String)msg;
-  int sep_index = msg_str.indexOf("|");
-  String identifier = msg_str.substring(0, sep_index);
-  String msg_json = msg_str.substring(sep_index + 1, msg_str.length());
-  */
 
   String identifier(msg);
 
@@ -161,7 +155,7 @@ void socketReceive(char* msg, const size_t &len) {
       }
     }
 
-    // Rotor speed
+    // Speed
     val = doc["speed"];
     if (!val.isNull()) {
       rotor_ctrl.setSpeed(val.as<const int>());
@@ -204,28 +198,31 @@ void socketReceive(char* msg, const size_t &len) {
   // ----- FAVORITES -----
   // ---------------------
   if(identifier == "FAVORITES") {
-    // Rejoin message by inserting back '|'
+    // For favorites we just save the JSON message with
+    // the identifier rejoined by inserting back '|' into msg
     msg[sep_idx] = '|';
-    // For favorites we ust save the JSON message
     favorites.set(msg);
   }
 
   // ----- SETTINGS -----
   // --------------------
   if (identifier == "SETTINGS") {
-
+    Serial.print("Received SETTINGS message: ");
+    Serial.println(msg);
   }
 }
 
-
 // Initialise new client connection
+// ********************************
 void socketInitClient(){
   rotor_ctrl.messenger.sendSpeed();
   rotor_ctrl.messenger.sendCalibration();
+  Settings::sendSettings();
   favorites.send();
 }
 
 // Websocket event handler
+// ***********************
 void onSocketEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
   switch (type) {
     case WS_EVT_CONNECT:
@@ -233,16 +230,20 @@ void onSocketEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEven
       socketInitClient();
       Serial.println("[Websocket] Client " + (String)(client->id()) + " connected.");
       break;
+
     case WS_EVT_DISCONNECT:
       --clients_connected;
       Serial.println("[Websocket] Client " + (String)(client->id()) + " disconnected.");
       break;
+
     case WS_EVT_ERROR:
       Serial.println("[WebSocket] Error received.");
       break;
+
     case WS_EVT_PONG:
       Serial.println("[WebSocket] Got pinged.");
-      break;      
+      break;     
+
     case WS_EVT_DATA:
     AwsFrameInfo * info = (AwsFrameInfo*)arg;
       if(info->final && info->index == 0 && info->len == len){
@@ -256,7 +257,7 @@ void onSocketEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEven
              Serial.print(": "); Serial.println((char*) data);
           }
 
-          // Recieve
+          // Receive
           socketReceive((char*) data, len);
         } else {
           Serial.println("[Websocket] Binary data recieved unexpectedly.");
@@ -283,6 +284,13 @@ void setup() {
   // Open serial port
   Serial.begin(serial_speed);
 
+  // Show CPU Frequency
+  if (verbose) {
+    Serial.print("CPU Frequency: ");
+    Serial.print(getCpuFrequencyMhz());
+    Serial.println(" MHz");
+  }
+
   // Initialise SPIFFS
   if (!mountSPIFFS()) {
     Serial.println("Mounting SPIFFS failed.");
@@ -292,9 +300,7 @@ void setup() {
   // Initialise I/O
   pinMode(wifi_status_led, OUTPUT);    // Configure WiFi status LED
   digitalWrite(wifi_status_led, LOW);  // Turn off WiFi status LED
-  pinMode(rotor_led, OUTPUT);          // Configure rotor status LED
-  digitalWrite(rotor_led, LOW);        // Turn off rotor status LED
-  initWiFiButton();                    // Initialise wifi reset button
+  initWiFiButton();                    // Initialise WiFi reset button
   initRotorButton();                   // Initialise rotor stop button
   rotor_ctrl.init();                   // Initialise rotor
   favorites.init();                    // Initialise favorites
@@ -325,13 +331,13 @@ void setup() {
       request->send(SPIFFS, "/index.js");
     });
 
+    // Catch all route, necessary for page reloads in Vue-App
     server.onNotFound([](AsyncWebServerRequest *request){
       request->send(SPIFFS, "/index.html");
     });
 
-    // Static files (CSS, fonts)
-    //server.serveStatic("/ui.js", SPIFFS, "/ui.js");
-    //server.serveStatic("/styles.css", SPIFFS, "/styles.css");
+    // Vue-App CSS
+    server.serveStatic("/index.css", SPIFFS, "/index.css");
 
     // Favicons
     server.serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2");
@@ -344,9 +350,6 @@ void setup() {
     server.serveStatic("/android-chrome-192x192.png", SPIFFS, "/android-chrome-192x192.png");
     server.serveStatic("/android-chrome-512x512.png", SPIFFS, "/android-chrome-512x512.png");
 
-    // Vue-App CSS
-    server.serveStatic("/index.css", SPIFFS, "/index.css");
-
     // Logout
     server.on("/logout", HTTP_GET, [](AsyncWebServerRequest* request) {
       request->send(401);
@@ -356,8 +359,8 @@ void setup() {
     server.on("/reboot", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!request->authenticate(http_username, http_password))
         return request->requestAuthentication();
-      request->send(200, "text/plain", "RotorControl startet sich jetzt neu. Diese Seite aktualisiert sich NICHT von alleine.");
-      delay(2000);
+      request->send(200);
+      delay(1000);
       ESP.restart();
     });
 
@@ -365,48 +368,11 @@ void setup() {
     server.on("/disconnect", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!request->authenticate(http_username, http_password))
         return request->requestAuthentication();
-      request->send(200, "text/plain", "Der ESP32 trennt sich vom Netzwerk und startet sich neu. Der Fernzugriff ist damit inaktiv, bis eine neue Netzwerkverbindung eingerichtet wurde.");
+      request->send(200);
       resetCredentials();
-      delay(2000);
+      delay(1000);
       ESP.restart();
     });
-
-    /*
-    // Toggle a switch -> check and send back switch status to confirm
-    server.on(SWITCH_URL, HTTP_GET, [](AsyncWebServerRequest* request) {
-      if (!request->authenticate(http_username, http_password))
-        return request->requestAuthentication();
-
-      if (request->hasParam("id") && request->hasParam("checked")) {
-        // Unpack parameters
-        String id = request->getParam("id")->value();
-        String checked = request->getParam("checked")->value();
-        Serial.println("Request: Toggle (" + id + ") to " + checked + ".");
-
-        // Set switch status and send confirmation
-        if (checked == "true") {
-          setSwitch(id, true);
-          request->send(200);
-        } else if (checked == "false") {
-          setSwitch(id, false);
-          request->send(200);
-        } else {
-          request->send(200, "text/plain", "Couldn't parse this request: " + checked);
-        }
-        // Send new switch positions to all clients
-        socket.textAll("SWITCHES|" + getSwitchesJSON());
-      }
-    });
-
-    // Reset Switches to default positions
-    server.on(RESET_SWITCHES_URL, HTTP_GET, [](AsyncWebServerRequest* request) {
-      if (!request->authenticate(http_username, http_password))
-        return request->requestAuthentication();
-      switchesDefault(true);
-      request->send(SPIFFS, "/sta-index-esp.html", String(), false, processor);
-      socket.textAll("SWITCHES|" + getSwitchesJSON());
-    });
-    */
 
     // Start server
     initWebSocket();
@@ -464,6 +430,7 @@ void loop() {
     Serial.print("Stop button pressed. Waiting 400ms to confirm...");
     delay(400);
     if (!digitalRead(safety_stop_pin)) {
+      blinkWifiLed(1);
       Serial.println("stopped rotor.");
       rotor_ctrl.stop();
       safety_stop_now = false;
@@ -475,11 +442,15 @@ void loop() {
 
 
   // Send rotation data
-  // Interval: ms
   if (in_station_mode && (clients_connected > 0)) {
     if (millis() - lasts[3] >= intervals[3]) {
      adc_volts = rotor_ctrl.rotor.getADCVolts();
 
+      /* Send rotation message if either:
+          1. voltage changed significantly compared to last message
+          2. rotor started or stopped rotation
+          3. last message was sent more than 1 second ago
+      */
       if ((abs(adc_volts - adc_volts_previous) > 0.003) ||
           (rotor_ctrl.is_rotating != is_rotating_prev) ||
           (millis() - lasts[4] >= intervals[4])) {
@@ -510,7 +481,6 @@ void loop() {
   
 
   // Scanning for networks if not connected to WiFi
-  // Interval: 15s
   if (!in_station_mode) {
     if (scan_now || (millis() - lasts[0] >= intervals[0])) {
       if (verbose) Serial.println("Scanning for networks after: " + (String)(millis() - lasts[0]) + " ms");
@@ -522,8 +492,6 @@ void loop() {
 
 
   // Checking for WiFi disconnects -> try reconnect
-  // Set switches in save mode (default pos.) while connection lost
-  // Interval: 10s
   if (in_station_mode) {
     if (millis() - lasts[1] >= intervals[1]) {
       lasts[1] = millis();

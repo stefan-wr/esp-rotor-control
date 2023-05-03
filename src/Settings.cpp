@@ -1,5 +1,8 @@
 #include <Settings.h>
 #include <SimpleSPIFFS.h>
+#include <ArduinoJson.h>
+
+extern String wifi_ssid;
 
 namespace Settings {
     // Path to save favorites at in SPIFFS
@@ -38,5 +41,24 @@ namespace Settings {
     // Send favorites to clients
     void Favorites::send() {
         socket.textAll(favs_buffer);
+    }
+
+
+    // **************
+    // Other Settings
+    // **************
+    String settings_buffer;
+
+    // Send settings
+    void sendSettings() {
+        settings_buffer.reserve(60);
+        settings_buffer = "SETTINGS|";
+
+        StaticJsonDocument<100> doc;
+        doc["ssid"] = wifi_ssid;
+        doc["rssi"] = (String)WiFi.RSSI();
+
+        serializeJson(doc, settings_buffer);
+        socket.textAll(settings_buffer);
     }
 }

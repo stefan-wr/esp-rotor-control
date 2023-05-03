@@ -19,9 +19,7 @@ export const useSettingsStore = defineStore('settings', () => {
         offset: 0.0
     });
 
-    // Array of favorites
-    //const favorites = ref([]);
-
+    // Favorites
     const favorites = reactive({
         array: [],
         sortedBy: 'id'
@@ -30,6 +28,12 @@ export const useSettingsStore = defineStore('settings', () => {
     const maxFavorites = 10;
     const hasMaxFavorites = computed(() => {
         return favorites.array.length >= maxFavorites;
+    });
+
+    // Other settings
+    const settings = reactive({
+        ssid: '--',
+        rssi: '--'
     });
 
     // *************
@@ -88,7 +92,6 @@ export const useSettingsStore = defineStore('settings', () => {
         };
         favorites.array.push(newFavorite);
         reapplyFavoriteSorting();
-
         umbrellaStore.sendFavorites();
         return true;
     }
@@ -146,7 +149,7 @@ export const useSettingsStore = defineStore('settings', () => {
         }
     };
 
-    // Reapply previous
+    // Reapply previous favorites sorting
     function reapplyFavoriteSorting() {
         sortFavoritesBy[favorites.sortedBy](false);
     }
@@ -155,6 +158,7 @@ export const useSettingsStore = defineStore('settings', () => {
     return {
         calibration,
         favorites,
+        settings,
         maxFavorites,
         hasMaxFavorites,
         getCalibrationMsg,

@@ -130,7 +130,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
             if (key in settingsStore.calibration) {
                 settingsStore.calibration[key] = calibrationMsg[key];
             } else {
-                console.error(`ERROR: key '${key}' not in settings.cal.`);
+                console.error(`ERROR: key '${key}' not in calibration.`);
             }
         }
     }
@@ -143,7 +143,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
             settingsStore.reapplyFavoriteSorting();
         } else {
             // Received favorites are not valid -> reset them in UI and on controller
-            console.error(`ERROR: received favorites are not valid: ${msg}`)
+            console.error(`ERROR: received favorites are not valid: ${msg}`);
             settingsStore.favorites.array = [];
             sendFavorites('[]');
         }
@@ -153,6 +153,11 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     function receiveSettingsMsg(msg) {
         let settingsMsg = JSON.parse(msg);
         for (let key in settingsMsg) {
+            if (key in settingsStore.settings) {
+                settingsStore.settings[key] = settingsMsg[key];
+            } else {
+                console.error(`ERROR: key '${key}' not in settings.`);
+            }
         }
     }
 
