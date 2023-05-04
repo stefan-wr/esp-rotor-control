@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <DNSServer.h>
 #include <math.h>
 
 #include <globals.h>
@@ -11,11 +12,14 @@
 #include <RotorController.h>
 #include <Settings.h>
 
+String lock_msg = "LOCK|{}";
+
 // Title on Website
 const char* TITLE = "RotorControl";
 
 // AP mode SSID
 const char* ap_ssid = "RotorControl";
+const char* local_url = "rotor";
 
 // STATION mode HTTP login-credentials
 const char* http_username = "otto";
@@ -38,8 +42,11 @@ bool safety_stop_now = false;     // Set by button, tested in main loop
 String networks_html = "";
 
 // Create AsyncWebServer object
-AsyncWebServer server(port);
+AsyncWebServer *server;
 AsyncWebSocket socket("/ws");
+
+// Create DNS Server
+DNSServer dns_server;
 
 // Setup an interrupt button (WiFi Reset)
 // *************************************
@@ -204,6 +211,14 @@ void socketReceive(char* msg, const size_t &len) {
     favorites.set(msg);
   }
 
+  // ----- LOCK -----
+  // ----------------
+  if (identifier == "LOCK") {
+    msg[sep_idx] = '|';
+    lock_msg = (String) msg;
+    socket.textAll(msg);
+  }
+
   // ----- SETTINGS -----
   // --------------------
   if (identifier == "SETTINGS") {
@@ -219,6 +234,7 @@ void socketInitClient(){
   rotor_ctrl.messenger.sendCalibration();
   Settings::sendSettings();
   favorites.send();
+  socket.textAll(lock_msg);
 }
 
 // Websocket event handler
@@ -272,7 +288,7 @@ void onSocketEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEven
 // => Add event handler to socket
 void initWebSocket() {
   socket.onEvent(onSocketEvent);
-  server.addHandler(&socket);
+  server->addHandler(&socket);
 }
 
 
@@ -310,7 +326,7 @@ void setup() {
   if (!initWiFi()) {
     // WiFi connection failed -> launch AccessPoint WiFi mode
     digitalWrite(wifi_status_led, HIGH);
-    getCredentials(server);
+    getCredentials(server, dns_server);
 
   } else {
     // WiFi connection established
@@ -318,54 +334,44 @@ void setup() {
 
     // ----- \/\/ CONFIGURE STA SERVER \/\/ -----
     // ------------------------------------------
-    // Root route, Vue-App index files
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+    
+    // Define server to set port
+    server = new AsyncWebServer(sta_port);
+
+  // Root route, Vue-App index files
+    server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!request->authenticate(http_username, http_password))
         return request->requestAuthentication();
       request->send(SPIFFS, "/index.html");
     });
 
-    server.on("/index.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+    server->on("/index.js", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!request->authenticate(http_username, http_password))
         return request->requestAuthentication();
       request->send(SPIFFS, "/index.js");
     });
 
     // Catch all route, necessary for page reloads in Vue-App
-    server.onNotFound([](AsyncWebServerRequest *request){
+    server->onNotFound([](AsyncWebServerRequest *request){
       request->send(SPIFFS, "/index.html");
     });
 
-    // Vue-App CSS
-    server.serveStatic("/index.css", SPIFFS, "/index.css");
+    // CSS
+    server->serveStatic("/index.css", SPIFFS, "/index.css");
 
     // Favicons
-    server.serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2");
-    server.serveStatic("/inter-700.woff2", SPIFFS, "/inter-700.woff2");
-    server.serveStatic("/site.webmanifest", SPIFFS, "/site.webmanifest");
-    server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
-    server.serveStatic("/favicon-16x16.png", SPIFFS, "/favicon-16x16.png");
-    server.serveStatic("/favicon-32x32.png", SPIFFS, "/favicon-32x32.png");
-    server.serveStatic("/apple-touch-icon.png", SPIFFS, "/apple-touch-icon.png");
-    server.serveStatic("/android-chrome-192x192.png", SPIFFS, "/android-chrome-192x192.png");
-    server.serveStatic("/android-chrome-512x512.png", SPIFFS, "/android-chrome-512x512.png");
-
-    // Logout
-    server.on("/logout", HTTP_GET, [](AsyncWebServerRequest* request) {
-      request->send(401);
-    });
-
-    // Reboot ESP
-    server.on("/reboot", HTTP_GET, [](AsyncWebServerRequest* request) {
-      if (!request->authenticate(http_username, http_password))
-        return request->requestAuthentication();
-      request->send(200);
-      delay(1000);
-      ESP.restart();
-    });
+    server->serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2");
+    server->serveStatic("/inter-700.woff2", SPIFFS, "/inter-700.woff2");
+    server->serveStatic("/site.webmanifest", SPIFFS, "/site.webmanifest");
+    server->serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
+    server->serveStatic("/favicon-16x16.png", SPIFFS, "/favicon-16x16.png");
+    server->serveStatic("/favicon-32x32.png", SPIFFS, "/favicon-32x32.png");
+    server->serveStatic("/apple-touch-icon.png", SPIFFS, "/apple-touch-icon.png");
+    server->serveStatic("/android-chrome-192x192.png", SPIFFS, "/android-chrome-192x192.png");
+    server->serveStatic("/android-chrome-512x512.png", SPIFFS, "/android-chrome-512x512.png");
 
     // Disconnect ESP from network
-    server.on("/disconnect", HTTP_GET, [](AsyncWebServerRequest* request) {
+    server->on("/disconnect", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!request->authenticate(http_username, http_password))
         return request->requestAuthentication();
       request->send(200);
@@ -374,9 +380,23 @@ void setup() {
       ESP.restart();
     });
 
+    // Reboot ESP
+    server->on("/reboot", HTTP_GET, [](AsyncWebServerRequest* request) {
+      if (!request->authenticate(http_username, http_password))
+        return request->requestAuthentication();
+      request->send(200);
+      delay(1000);
+      ESP.restart();
+    });
+
+    // Logout
+    server->on("/logout", HTTP_GET, [](AsyncWebServerRequest* request) {
+      request->send(401);
+    });
+
     // Start server
     initWebSocket();
-    server.begin();
+    server->begin();
   }
 }
 
@@ -386,10 +406,11 @@ void setup() {
 // ----------------------------------------------------------------------------------
 // LOOP -----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------
+
 const int n_timers = 5;
 unsigned long lasts[n_timers];
 // Intervals: { network-scan, WiFi reconnect, remove old websocket, read ADS1115, send COMPASS }
-const unsigned long intervals[n_timers] = { 15000, 8000, 1000, 66, 1000 };
+const unsigned long intervals[n_timers] = { 20000, 8000, 1000, 66, 1000 };
 unsigned long current_loop_ms;
 unsigned long previous_loop_ms = 0;
 
@@ -400,6 +421,7 @@ bool is_rotating_prev = false;
 int clients_connected_prev;
 
 void loop() {
+  
   // Handle millis() overflow, resets lasts
   current_loop_ms = millis();
   if (current_loop_ms < previous_loop_ms) {
@@ -478,17 +500,6 @@ void loop() {
   } else {
     clients_connected_prev = clients_connected;
   }
-  
-
-  // Scanning for networks if not connected to WiFi
-  if (!in_station_mode) {
-    if (scan_now || (millis() - lasts[0] >= intervals[0])) {
-      if (verbose) Serial.println("Scanning for networks after: " + (String)(millis() - lasts[0]) + " ms");
-      scanNetworks(networks_html);
-      scan_now = false;
-      lasts[0] = millis();
-    }
-  }
 
 
   // Checking for WiFi disconnects -> try reconnect
@@ -514,4 +525,24 @@ void loop() {
       lasts[2] = millis();
     }
   }
+
+
+  // ********** AP MODE  *********
+  // *****************************
+
+  // Scanning for networks if not connected to WiFi
+  if (!in_station_mode) {
+    if (scan_now || (millis() - lasts[0] >= intervals[0])) {
+      if (verbose) Serial.println("Scanning for networks after: " + (String)(millis() - lasts[0]) + " ms");
+      scanNetworks(networks_html);
+      scan_now = false;
+      lasts[0] = millis();
+    }
+  }
+
+  // DNS Server
+  if (!in_station_mode) {
+    dns_server.processNextRequest();
+  }
 }
+

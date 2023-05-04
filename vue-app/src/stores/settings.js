@@ -1,10 +1,13 @@
-import { computed, reactive, ref, shallowRef, toRaw } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { defineStore } from 'pinia';
 
 import { useUmbrellaStore } from './umbrella.js';
 
 export const useSettingsStore = defineStore('settings', () => {
     const umbrellaStore = useUmbrellaStore();
+
+    // Max allowed number of favorites
+    const maxFavorites = 10;
 
     // **********************
     //    State, Reactives
@@ -25,20 +28,36 @@ export const useSettingsStore = defineStore('settings', () => {
         sortedBy: 'id'
     });
 
-    const maxFavorites = 10;
-    const hasMaxFavorites = computed(() => {
-        return favorites.array.length >= maxFavorites;
-    });
-
     // Other settings
     const settings = reactive({
         ssid: '--',
         rssi: '--'
     });
 
+    // Rotor lock
+    const lock = reactive({
+        isLocked: false,
+        by: '',
+        name: ''
+    });
+
     // *************
     //    Getters
     // *************
+
+    // Max number of favorites reached?
+    const hasMaxFavorites = computed(() => {
+        return favorites.array.length >= maxFavorites;
+    });
+
+    // Is rotor locked by someone else?
+    const isLockedByElse = computed(() => {
+        if (lock.isLocked && lock.name !== lock.by) {
+            return true;
+        } else {
+            return false;
+        }
+    });
 
     // Get calibration JSON message
     function getCalibrationMsg(a1_value, u1_value, a2_value, u2_value) {
@@ -60,9 +79,21 @@ export const useSettingsStore = defineStore('settings', () => {
         return JSON.stringify(copy);
     });
 
+    // Get lock JSON message
+    const getLockMsg = computed(() => {
+        return JSON.stringify(lock, ['isLocked', 'by']);
+    });
+
+    function getLockMsg2(isLocked_value, by_value) {
+        return JSON.stringify({ isLocked: isLocked_value, by: by_value });
+    }
+
     // *************
     //    Actions
     // *************
+
+    // Favorites
+    // ---------
 
     // Test wether a given array is a valid array of favorites
     function isValidFavoritesArray(array) {
@@ -154,19 +185,33 @@ export const useSettingsStore = defineStore('settings', () => {
         sortFavoritesBy[favorites.sortedBy](false);
     }
 
+    // Lock
+    // ----
+
+    // Reset lock
+    function resetLock() {
+        lock.by = '';
+        lock.isLocked = false;
+        lock.name = '';
+        umbrellaStore.sendLock();
+    }
+
     // *************
     return {
         calibration,
         favorites,
         settings,
-        maxFavorites,
+        lock,
         hasMaxFavorites,
+        isLockedByElse,
         getCalibrationMsg,
         getFavoritesMsg,
+        getLockMsg,
         isValidFavoritesArray,
         addFavorite,
         remFavorite,
         sortFavoritesBy,
-        reapplyFavoriteSorting
+        reapplyFavoriteSorting,
+        resetLock
     };
 });

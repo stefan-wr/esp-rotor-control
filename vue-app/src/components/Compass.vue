@@ -11,13 +11,13 @@
       >
         <path
           d="M500,0C775.958,0 1000,224.042 1000,500C1000,775.958 775.958,1000 500,1000C224.042,1000 0,775.958 0,500C0,224.042 224.042,0 500,0ZM500,50C748.362,50 950,251.638 950,500C950,748.362 748.362,950 500,950C251.638,950 50,748.362 50,500C50,251.638 251.638,50 500,50Z"
-          style="fill: #f7f7f7"
+          :style="ringColor"
         />
         <g id="cmp-req-needle" :style="{ transform: 'rotate(' + uiStore.ui.reqAngle + 'deg)' }">
           <path d="M500,15L515,40L515,700L485,700L485,40L" style="fill: var(--text-color-accent)" />
         </g>
         <g id="cmp-needle" :style="{ transform: 'rotate(' + rotorStore.angle1D + 'deg)' }">
-          <path d="M500,200L550,500L500,650L450,500L500,200" style="fill: #f7f7f7" />
+          <path d="M500,200L550,500L500,650L450,500L500,200" :style="ringColor" />
         </g>
       </svg>
     </div>
@@ -42,6 +42,7 @@ import { useUIStore } from '@/stores/ui';
 
 const umbrellaStore = useUmbrellaStore();
 const rotorStore = useRotorStore();
+const settingsStore = useSettingsStore();
 const uiStore = useUIStore();
 
 const rotation = computed(() => {
@@ -69,6 +70,14 @@ function setRequestAngle(event) {
     uiStore.ui.isMouseInCompass = false;
   }
 }
+
+const ringColor = computed(() => {
+  if (settingsStore.isLockedByElse) {
+    return 'fill: var(--alert-color)';
+  } else {
+    return 'fill: var(--text-color)';
+  }
+});
 
 onMounted(() => {
   const compass = document.getElementById('compass');

@@ -371,6 +371,10 @@ input[type='number'] {
     outline: none;
 }
 
+input:disabled {
+    cursor: not-allowed !important;
+}
+
 .input-std-resp {
     @media (hover: none) {
         font-size: 1.1rem !important;

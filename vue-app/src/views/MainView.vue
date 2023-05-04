@@ -4,6 +4,7 @@
     <aside class="flex-vst gap-one">
       <ManualRotation></ManualRotation>
       <SpeedControl></SpeedControl>
+      <Lock></Lock>
       <Favorites></Favorites>
     </aside>
   </main>
@@ -12,8 +13,9 @@
 <script setup>
 import Compass from '@/components/Compass.vue';
 import SpeedControl from '@/components/SpeedControl.vue';
-import ManualRotation from '@/components/ManualRotation.vue'
-import Favorites from '@/components/Favorites.vue'
+import ManualRotation from '@/components/ManualRotation.vue';
+import Favorites from '@/components/Favorites.vue';
+import Lock from '@/components/Lock.vue';
 
 import { ref, computed } from 'vue';
 

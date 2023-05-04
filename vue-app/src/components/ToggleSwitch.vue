@@ -1,9 +1,20 @@
 <template>
-  <div class="switch">
-    <input type="checkbox" @change="$emit('toggle')" autocomplete="off" :checked="toggle" />
+  <div class="switch" :class="{'disabled': disabled}">
+    <input
+      type="checkbox"
+      @change="$emit('toggle')"
+      autocomplete="off"
+      :class="{'disabled': disabled}"
+      :checked="toggle"
+      :disabled="disabled"
+    />
     <span class="switch-slider"></span>
-    <span class="switch-on small">AN</span>
-    <span class="switch-off small">AUS</span>
+    <span class="switch-on small">
+      <slot name="on">AN</slot>
+    </span>
+    <span class="switch-off small">
+      <slot name="off">AUS</slot>
+    </span>
   </div>
 </template>
 
@@ -12,6 +23,10 @@ const props = defineProps({
   toggle: {
     type: Boolean,
     required: true
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 });
 </script>
@@ -59,6 +74,11 @@ $slider-trans: 0.2s;
   margin: 0;
   border: none;
   opacity: 0;
+}
+
+.disabled {
+  filter: saturate(10%);
+  cursor: not-allowed !important;
 }
 
 /* Full switch border box*/

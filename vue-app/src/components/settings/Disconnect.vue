@@ -1,7 +1,7 @@
 <template>
   <SettingCard title="Netzwerk">
     <template #icon>
-      <Icon icon="fa-solid fa-wifi" style="margin-right: 0.5em"></Icon>
+      <Icon icon="fa-solid fa-wifi"></Icon>
     </template>
 
     <template #action>

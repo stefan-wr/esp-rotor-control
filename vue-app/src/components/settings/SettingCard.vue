@@ -2,7 +2,7 @@
   <div class="flex-vst gap-one border-box">
     <div class="flex-hc gap-one">
       <div class="flex-cl gap-half flex-grow wrd-break">
-        <slot name="icon"></slot>
+        <div class="setting-icon"><slot name="icon"></slot></div>
         {{ title }}
       </div>
       <slot name="action"></slot>
@@ -19,3 +19,9 @@ const props = defineProps({
   }
 });
 </script>
+
+<style lang="scss" scoped>
+  .setting-icon {
+    min-width: 1.3em;
+  }
+</style>

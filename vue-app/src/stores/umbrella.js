@@ -7,7 +7,7 @@ import { useUIStore } from './ui.js';
 
 /**
  * Main store handling all sockets sends and receives.
- * Distributes changes down to all other stores.
+ * Distributes received messages down to all other stores.
  */
 export const useUmbrellaStore = defineStore('umbrella', () => {
     // Other stores
@@ -38,17 +38,27 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         }
     }
 
-    setInterval(checkConnection, connectionTimeout);
+    // Start continuous connection test
+    if (import.meta.env.PROD) {
+        setInterval(checkConnection, connectionTimeout);
+    }
 
     // Socket
     // ******
     const socket = {
-        gateway: `ws://home.wraase.de:1339/ws`,
+        gateway: import.meta.env.DEV
+            ? import.meta.env.VITE_SOCKET_GATEWAY
+            : `ws://${window.location.host}/ws`,
         socket: null
     };
 
-    // Initialise Socket
-    // -----------------
+    if (import.meta.env.DEV) {
+        console.log('Window.Location.Host: ', window.location.host);
+        console.log('Socket Gateway: ', socket.gateway);
+    }
+
+    // Initialise Socket Events
+    // ------------------------
     function initWebSocket() {
         console.log('[' + socket.gateway + '] Open connection...');
         updateTimeOfLastMsg();
@@ -71,13 +81,27 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         socket.socket.onmessage = receiveData;
     }
 
-    // Receive data from Socket
-    // ------------------------
-    const rotorIdentifier = 'ROTOR';
-    const settingsIdentifier = 'SETTINGS';
-    const uiIdentifier = 'UI';
-    const calibrationIdentifier = 'CALIBRATION';
-    const favoritesIdentifier = 'FAVORITES';
+    // Socket main send function
+    // -------------------------
+    function sendData(data) {
+        socket.socket.send(data);
+    }
+
+    // Init socket
+    // -----------
+    initWebSocket();
+
+    // ***************
+    //    Receivers
+    // ***************
+    const identifiers = {
+        rotor: 'ROTOR',
+        settings: 'SETTINGS',
+        ui: 'UI',
+        calibration: 'CALIBRATION',
+        favorites: 'FAVORITES',
+        lock: 'LOCK'
+    };
 
     function receiveData(event) {
         hasLostConnection.value = false;
@@ -87,27 +111,33 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         var [identifier, msg] = event.data.split('|');
 
         // ROTOR MESSAGE
-        if (identifier === rotorIdentifier) {
+        if (identifier === identifiers.rotor) {
             console.log('[' + event.origin + '] ' + event.data);
             receiveRotorMsg(msg);
         }
 
         // CALIBRATION MESSAGE
-        if (identifier === calibrationIdentifier) {
+        if (identifier === identifiers.calibration) {
             console.log('[' + event.origin + '] ' + event.data);
             receiveCalibrationMsg(msg);
         }
 
         // FAVORITES MESSAGE
-        if (identifier === favoritesIdentifier) {
+        if (identifier === identifiers.favorites) {
             console.log('[' + event.origin + '] ' + event.data);
             receiveFavoritesMsg(msg);
         }
 
         // SETTINGS MESSAGE
-        if (identifier === settingsIdentifier) {
+        if (identifier === identifiers.settings) {
             console.log('[' + event.origin + '] ' + event.data);
             receiveSettingsMsg(msg);
+        }
+
+        // LOCK MESSAGE
+        if (identifier === identifiers.lock) {
+            console.log('[' + event.origin + '] ' + event.data);
+            receiveLockMsg(msg);
         }
     }
 
@@ -161,40 +191,46 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         }
     }
 
-    // Send data over socket
-    // ---------------------
-    function sendData(data) {
-        socket.socket.send(data);
+    // Receiver for lock message
+    function receiveLockMsg(msg) {
+        let lockMsg = JSON.parse(msg);
+        for (let key in lockMsg) {
+            if (key in settingsStore.lock) {
+                settingsStore.lock[key] = lockMsg[key];
+            } else {
+                console.error(`ERROR: key '${key}' not in lock.`);
+            }
+        }
     }
 
-    // Init sockets
-    // ------------
-    initWebSocket();
-
     // *************
-    //    Actions
+    //    Senders
     // *************
 
     // General message senders
     // -----------------------
     function sendRotorMsg(msg) {
-        sendData(`${rotorIdentifier}|${msg}`);
+        sendData(`${identifiers.rotor}|${msg}`);
     }
 
     function sendCalibrationMsg(msg) {
-        sendData(`${calibrationIdentifier}|${msg}`);
+        sendData(`${identifiers.calibration}|${msg}`);
     }
 
     function sendFavoritesMsg(msg) {
-        sendData(`${favoritesIdentifier}|${msg}`);
+        sendData(`${identifiers.favorites}|${msg}`);
     }
 
     function sendSettingsMsg(msg) {
-        sendData(`${settingsIdentifier}|${msg}`);
+        sendData(`${identifiers.settings}|${msg}`);
+    }
+
+    function sendLockMsg(msg) {
+        sendData(`${identifiers.lock}|${msg}`);
     }
 
     function sendUiMsg(msg) {
-        sendData(`${uiIdentifier}|${msg}`);
+        sendData(`${identifiers.ui}|${msg}`);
     }
 
     // Specific senders
@@ -219,16 +255,18 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         sendFavoritesMsg('[]');
     }
 
+    function sendLock() {
+        sendLockMsg(settingsStore.getLockMsg);
+    }
+
     // *************
     return {
-        rotorStore,
-        settingsStore,
-        uiStore,
         hasLostConnection,
         sendRotation,
         sendSpeed,
         sendCalibration,
         sendFavorites,
-        resetFavorites
+        resetFavorites,
+        sendLock
     };
 });

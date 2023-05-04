@@ -14,6 +14,7 @@ import {
     faRotateRight,
     faRotateLeft,
     faArrowDown,
+    faArrowRight,
     faXmark,
     faPlus,
     faMinus,
@@ -28,7 +29,9 @@ import {
     faWifi,
     faPowerOff,
     faBolt,
-    faTextHeight
+    faTextHeight,
+    faLock,
+    faLockOpen
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -36,6 +39,7 @@ library.add(
     faRotateLeft,
     faRotateRight,
     faArrowDown,
+    faArrowRight,
     faXmark,
     faPlus,
     faMinus,
@@ -50,7 +54,9 @@ library.add(
     faWifi,
     faPowerOff,
     faBolt,
-    faTextHeight
+    faTextHeight,
+    faLock,
+    faLockOpen
 );
 
 // Setup app

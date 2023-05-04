@@ -20,10 +20,13 @@ const uint8_t safety_stop_pin = 13;
 const uint8_t speed_pin = 25;
 const String directions[2] = {"CCW", "CW"};
 
-// Server Port
-const int port = 1339;
-const bool use_custom_ip = false;
-const int ip[4] = {192, 168, 0, 1};
+// STATION mode server port
+const int sta_port = 1339;
+
+// AP mode server config
+const bool use_custom_ip = true;
+const int ip[4] = {192, 168, 4, 1};
+const String ip_url = "http://192.168.4.1";
 
 // External state variables
 extern bool reset_now;
@@ -32,5 +35,8 @@ extern bool in_station_mode;
 
 // Access-Point SSID
 extern const char* ap_ssid;
+
+// Local URL for mDNS
+extern const char* local_url;
 
 #endif //GLOBALS_H

@@ -2,7 +2,7 @@ import { ref, computed, reactive } from 'vue';
 import { defineStore } from 'pinia';
 
 export const useRotorStore = defineStore('rotor', () => {
-    // Cardinal directions, non-reactive
+    // Cardinal directions
     const cardinals = [
         'N',
         'NNO',

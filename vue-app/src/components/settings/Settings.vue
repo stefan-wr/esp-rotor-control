@@ -4,6 +4,7 @@
     <Reboot></Reboot>
     <FontSize></FontSize>
     <KeyboardShortcuts></KeyboardShortcuts>
+    <ResetLock></ResetLock>
     <ADC></ADC>
     
   </div>
@@ -15,6 +16,7 @@ import Disconnect from '@/components/settings/Disconnect.vue';
 import Reboot from '@/components/settings/Reboot.vue';
 import ADC from '@/components/settings/ADC.vue';
 import FontSize from '@/components/settings/FontSize.vue';
+import ResetLock from '@/components/settings/ResetLock.vue';
 
 import { ref } from 'vue';
 

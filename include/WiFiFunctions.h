@@ -3,6 +3,7 @@
 
 #include<Arduino.h>
 #include<ESPAsyncWebServer.h>
+#include<DNSServer.h>
 
 // STATION mode global WiFi-credentials
 // Defined in WiFiFunctions.cpp
@@ -19,6 +20,9 @@ void saveCredentials();
 
 // => Overwrite the saved credentials with empty strings
 void resetCredentials();
+
+// => React to button inmterrupt for resetting WiFi credentials
+void resetCredentialsInterrupt();
 
 // => Convert wifi_bssid BSSID string to uint8_t
 bool bssidToUint8();
@@ -37,6 +41,6 @@ void scanNetworks(String &networks_html);
 bool initWiFi();
 
 // Start AP mode server and ask for local WiFi credentials.
-void getCredentials(AsyncWebServer &server);
+void getCredentials(AsyncWebServer *server, DNSServer &dns_server);
 
 #endif // WIFIFUNCTIONS_H

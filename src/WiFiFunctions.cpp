@@ -1,8 +1,10 @@
 #include <WiFiFunctions.h>
 #include <WiFi.h>
+#include <ESPmDNS.h>
 #include <globals.h>
 #include <Preferences.h>
 #include <SPIFFS.h>
+#include <DNSServer.h>
 
 // PREFS instance
 Preferences wifi_prefs;
@@ -38,6 +40,21 @@ void resetCredentials() {
   wifi_prefs.end();
 }
 
+// => React to button inmterrupt for resetting WiFi credentials
+void resetCredentialsInterrupt() {
+  Serial.print("Button pressed. Waiting 2s to confirm...");
+  delay(2000);
+  if (!digitalRead(button_pin)) {
+    blinkWifiLed(4);
+    Serial.println("Button pressed. Resetting WiFi credentials and restart.");
+    resetCredentials();
+    ESP.restart();
+  } else {
+    reset_now = false;
+    Serial.println("failed.");
+  }
+}
+
 // => Convert wifi_bssid BSSID-String to uint8_t
 bool bssidToUint8() {
   if (6 == sscanf(wifi_bssid.c_str(), "%hhX:%hhX:%hhX:%hhX:%hhX:%hhX", &wifi_bssid_uint8[0], &wifi_bssid_uint8[1], &wifi_bssid_uint8[2], &wifi_bssid_uint8[3], &wifi_bssid_uint8[4], &wifi_bssid_uint8[5])) {
@@ -47,6 +64,11 @@ bool bssidToUint8() {
   }
 }
 
+// => Return ip url from current AP IP
+String get_ip_url() {
+  return "http://" + WiFi.softAPIP().toString();
+}
+
 // => Blink WiFi LED n-times, blocking
 void blinkWifiLed(const int n) {
   for (int i = 0; i < n * 2; i++) {
@@ -54,6 +76,15 @@ void blinkWifiLed(const int n) {
     delay(250);
   }
 }
+
+// => Init mDNS
+void initMDNS() {
+  if(!MDNS.begin(local_url)) {
+      Serial.println("Error starting mDNS");
+      return;
+  }
+}
+
 
 // => Create HTML <li> item for a scanned network
 // **********************************************
@@ -115,7 +146,12 @@ void scanNetworks(String &networks_html) {
 bool initWiFi() {
   // Load WiFi settings from Prefs
   loadCredentials();
-  Serial.println("WiFi from PREFS: " + wifi_ssid + " | {" + wifi_bssid + "} | PW: " + wifi_pw);
+  Serial.println("WiFi from PREFS: ");
+  Serial.print(wifi_ssid);
+  Serial.print(" {");
+  Serial.print(wifi_bssid);
+  Serial.print("} | PW: ");
+  Serial.println(wifi_pw);
 
   // Check for SSID
   if (wifi_ssid == "") {
@@ -135,36 +171,32 @@ bool initWiFi() {
   // Set WiFi mode
   WiFi.mode(WIFI_STA);
 
-  // Try repeatedly to connect to WiFi for 10 seconds
+  // Try repeatedly to connect to WiFi for 6 seconds
   // Reset when button pressed for two seconds
   int n_try = 1;
-  const long interval = 8000;
+  const long interval = 6000;
   unsigned long start = millis();
 
   // Start WiFi, first try
-  Serial.println("Connecting WiFi to " + wifi_ssid + " {" + wifi_bssid + "}");
+  Serial.print("Connecting WiFi to ");
+  Serial.print(wifi_ssid);
+  Serial.print(" {");
+  Serial.print(wifi_bssid);
+  Serial.println("}");
   WiFi.begin(wifi_ssid.c_str(), wifi_pw.c_str(), 0, wifi_bssid_uint8);
 
   // Try continuously
   while (WiFi.status() != WL_CONNECTED) {
     // Check for interrupt
     if (reset_now) {
-      Serial.print("Button pressed. Waiting 2s to confirm...");
-      delay(2000);
-      if (!digitalRead(button_pin)) {
-        blinkWifiLed(4);
-        Serial.println("Button pressed. Resetting WiFi credentials and restart.");
-        resetCredentials();
-        ESP.restart();
-      } else {
-        reset_now = false;
-        Serial.println("failed.");
-      }
+      resetCredentialsInterrupt();
     }
-
     // Retry after interval
     if (millis() - start >= interval) {
-      Serial.println("[Try " + (String)n_try + "] Failed to connect. WiFi-Status: " + (String)WiFi.status());
+      Serial.print("[Try ");
+      Serial.print(n_try);
+      Serial.print("] Failed to connect. WiFi-Status: ");
+      Serial.println(WiFi.status());
       WiFi.disconnect();
       blinkWifiLed(1);
       WiFi.begin(wifi_ssid.c_str(), wifi_pw.c_str(), 0, wifi_bssid_uint8);
@@ -174,8 +206,11 @@ bool initWiFi() {
   }
 
   // Connection established
-  Serial.print("[Try " + (String)n_try + "] Connection established. IP: ");
+  Serial.print("[Try ");
+  Serial.print(n_try);
+  Serial.print("] Connection established. IP: ");
   Serial.println(WiFi.localIP());
+  initMDNS();
   return true;
 }
 
@@ -184,8 +219,11 @@ bool initWiFi() {
 // ********************************************************
 extern String processor(const String &var);
 
-void getCredentials(AsyncWebServer &server) {
+void getCredentials(AsyncWebServer *server, DNSServer &dns_server) {
   in_station_mode = false;  // not connected to a WiFi network
+
+  // Define server with standard HTTP port 80
+  server = new AsyncWebServer(80);
 
   // Start WiFi in AP mode
   WiFi.mode(WIFI_AP);
@@ -197,13 +235,30 @@ void getCredentials(AsyncWebServer &server) {
     IPAddress subnet(255, 255, 255, 0);
     WiFi.softAPConfig(local_ip, gateway, subnet);
   }
+
+  // Enable mDNS
+  initMDNS();
   
+  // Start WiFI AP
   WiFi.softAP(ap_ssid, NULL);
   Serial.print("Starting AP-mode. AP-IP: ");
   Serial.println(WiFi.softAPIP());
+  Serial.print("AP-URL: ");
+  Serial.println(get_ip_url());
 
+  // Start DNS Server for captive portal
+  // Redirects all URLs to AP server
+  dns_server.setTTL(300);
+  dns_server.setErrorReplyCode(DNSReplyCode::NoError);
+  Serial.print("Starting DNS server...");
+  if (dns_server.start(53, "*", WiFi.softAPIP())) {
+    Serial.println("success.");
+  } else {
+    Serial.println("failed.");
+  }
+  
   // Configure AP-mode server root URL
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+  server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
     if (request->hasParam("pw") && request->hasParam("ssid") && request->hasParam("bssid")) {
       // Unpack parameters, WiFi credentials
       wifi_ssid = request->getParam("ssid")->value();
@@ -215,8 +270,11 @@ void getCredentials(AsyncWebServer &server) {
       saveCredentials();
 
       // Send message and reboot ESP
-      String msg = "Der ESP32 starte sich jetzt neu und versucht sich mit dem Netzwerk ";
-      msg += wifi_ssid + " {" + wifi_bssid + "} zu verbinden.";
+      String msg = "Der Rotor Controller startet sich jetzt neu und versucht sich mit dem Netzwerk ";
+      msg += wifi_ssid;
+      msg += " {";
+      msg += wifi_bssid;
+      msg += "} zu verbinden.";
       request->send(200, "text/plain", msg);
       delay(2000);
       ESP.restart();
@@ -226,16 +284,38 @@ void getCredentials(AsyncWebServer &server) {
   });
 
   // Trigger a rescan for networks
-  server.on("/rescan.html", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->send(SPIFFS, "/ap-index-esp.html", String(), false, processor);
+  server->on("/rescan", HTTP_ANY, [](AsyncWebServerRequest* request) {
+    request->redirect("/");
     scan_now = true;
   });
 
+  // Catch all route
+  server->onNotFound([](AsyncWebServerRequest *request){
+    request->redirect(ip_url);
+  });
+
   // Static files (CSS, fonts)
-  server.serveStatic("/ap-styles.css", SPIFFS, "/ap-styles.css");
-  server.serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2");
-  server.serveStatic("/inter-700.woff2", SPIFFS, "/inter-700.woff2");
+  server->serveStatic("/ap-styles.css", SPIFFS, "/ap-styles.css");
+  server->serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2");
+  server->serveStatic("/inter-700.woff2", SPIFFS, "/inter-700.woff2");
+  server->on("/favicon.ico",[](AsyncWebServerRequest *request){request->send(404);});
+
+  // Captive Portal responses
+  // ------------------------
+  // Required
+	server->on("/connecttest.txt",[](AsyncWebServerRequest *request){request->redirect("http://logout.net");}); // windows 11 captive portal workaround
+	server->on("/wpad.dat",[](AsyncWebServerRequest *request){request->send(404);});                            // Honestly don't understand what this is but a 404 stops win 10 keep calling this repeatedly and panicking the esp32
+  //-----
+	server->on("/generate_204",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});         // android captive portal redirect
+	server->on("/redirect",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});             // microsoft redirect
+	server->on("/hotspot-detect.html",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});  // apple call home
+	server->on("/canonical.html",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});       // firefox captive portal call home
+	server->on("/success.txt",[](AsyncWebServerRequest *request){request->send(200);});                       // firefox captive portal call home
+	server->on("/ncsi.txt",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});             // windows call home
 
   // Start server
-  server.begin();
+  server->begin();
+
+  // Start first network scan
+  scan_now = true;
 }
