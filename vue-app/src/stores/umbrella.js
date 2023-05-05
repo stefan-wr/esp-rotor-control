@@ -148,7 +148,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
             if (key in rotorStore.rotor) {
                 rotorStore.rotor[key] = rotorMsg[key];
             } else {
-                console.error(`ERROR: key '${key}' not in rotor.`);
+                console.warn(`ERROR: key '${key}' not in rotor.`);
             }
         }
     }
@@ -160,7 +160,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
             if (key in settingsStore.calibration) {
                 settingsStore.calibration[key] = calibrationMsg[key];
             } else {
-                console.error(`ERROR: key '${key}' not in calibration.`);
+                console.warn(`ERROR: key '${key}' not in calibration.`);
             }
         }
     }
@@ -186,7 +186,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
             if (key in settingsStore.settings) {
                 settingsStore.settings[key] = settingsMsg[key];
             } else {
-                console.error(`ERROR: key '${key}' not in settings.`);
+                console.warn(`ERROR: key '${key}' not in settings.`);
             }
         }
     }
@@ -198,7 +198,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
             if (key in settingsStore.lock) {
                 settingsStore.lock[key] = lockMsg[key];
             } else {
-                console.error(`ERROR: key '${key}' not in lock.`);
+                console.warn(`ERROR: key '${key}' not in lock.`);
             }
         }
     }

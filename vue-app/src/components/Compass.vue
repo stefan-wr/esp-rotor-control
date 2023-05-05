@@ -14,7 +14,7 @@
           :style="ringColor"
         />
         <g id="cmp-req-needle" :style="{ transform: 'rotate(' + uiStore.ui.reqAngle + 'deg)' }">
-          <path d="M500,15L515,40L515,700L485,700L485,40L" style="fill: var(--text-color-accent)" />
+          <path d="M500,15L515,40L515,700L485,700L485,40L" style="fill: var(--compass-req-needle-color)" />
         </g>
         <g id="cmp-needle" :style="{ transform: 'rotate(' + rotorStore.angle1D + 'deg)' }">
           <path d="M500,200L550,500L500,650L450,500L500,200" :style="ringColor" />
@@ -75,7 +75,7 @@ const ringColor = computed(() => {
   if (settingsStore.isLockedByElse) {
     return 'fill: var(--alert-color)';
   } else {
-    return 'fill: var(--text-color)';
+    return 'fill: var(--compass-color)';
   }
 });
 

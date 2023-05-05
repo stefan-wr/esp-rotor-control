@@ -31,7 +31,8 @@ import {
     faBolt,
     faTextHeight,
     faLock,
-    faLockOpen
+    faLockOpen,
+    faPalette
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -56,7 +57,8 @@ library.add(
     faBolt,
     faTextHeight,
     faLock,
-    faLockOpen
+    faLockOpen,
+    faPalette
 );
 
 // Setup app

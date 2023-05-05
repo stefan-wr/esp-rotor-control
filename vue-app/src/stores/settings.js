@@ -84,10 +84,6 @@ export const useSettingsStore = defineStore('settings', () => {
         return JSON.stringify(lock, ['isLocked', 'by']);
     });
 
-    function getLockMsg2(isLocked_value, by_value) {
-        return JSON.stringify({ isLocked: isLocked_value, by: by_value });
-    }
-
     // *************
     //    Actions
     // *************
@@ -113,7 +109,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
     // Add a new favorite if max number of favorites has not been reached
     function addFavorite(newName, newAngle) {
-        if (hasMaxFavorites.value) {
+        if (this.hasMaxFavorites) {
             return false;
         }
         const newFavorite = {
@@ -136,7 +132,7 @@ export const useSettingsStore = defineStore('settings', () => {
     }
 
     // Reset IDs to fill the gap that a removed favorite left behind
-    // Works on copy of favorites first and replaces original with result
+    // Works on copy of favorites first and replaces original array with result
     function reorderFavoritesIds() {
         let copy = JSON.parse(JSON.stringify(favorites.array));
         copy.sort((a, b) => {
@@ -188,6 +184,20 @@ export const useSettingsStore = defineStore('settings', () => {
     // Lock
     // ----
 
+    // Close lock
+    function closeLock() {
+        lock.by = lock.name;
+        lock.isLocked = true;
+        umbrellaStore.sendLock();
+    }
+
+    // Open lock
+    function openLock() {
+        lock.isLocked = false;
+        lock.by = '';
+        umbrellaStore.sendLock();
+    }
+
     // Reset lock
     function resetLock() {
         lock.by = '';
@@ -212,6 +222,8 @@ export const useSettingsStore = defineStore('settings', () => {
         remFavorite,
         sortFavoritesBy,
         reapplyFavoriteSorting,
+        closeLock,
+        openLock,
         resetLock
     };
 });

@@ -45,9 +45,9 @@ const ledTitle = computed(() => {
 <style lang="scss" scoped>
 #header {
   padding: 0.5em 2em 0.5em 1.3em;
-  background-color: var(--content-color-0);
+  color: var(--header-text-color);
+  background-color: var(--header-color);
   border-radius: $content-radius $content-radius 0 0;
-  //border-bottom: 2px solid var(--content-color-0);
 
   @include small {
     border-radius: 0;
@@ -102,7 +102,7 @@ const ledTitle = computed(() => {
   left: 0;
   width: 100%;
   opacity: 0.8;
-  border-bottom: 0.1em solid var(--text-color);
+  border-bottom: 0.1em solid var(--header-text-color);
   border-radius: 0.1em;
   animation: growX 0.15s ease-out;
 }
@@ -122,7 +122,7 @@ const ledTitle = computed(() => {
 
 @keyframes blink-txt {
   0% {
-    color: var(--text-color);
+    color: var(--header-text-color);
   }
   100% {
     color: var(--alert-color);

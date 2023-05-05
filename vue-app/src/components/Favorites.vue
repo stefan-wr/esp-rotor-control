@@ -1,7 +1,7 @@
 <template>
   <Card id="favorites" title="Favoriten">
     <template #icon><Icon icon="fa-solid fa-bookmark"></Icon></template>
-    <CardToggleContentTransition :toggle="isAddingFavorite">
+    <CardToggleContentTransition :toggle="isFormOpen">
       <!-- CHILD A -->
       <!-- Description and add favorite button -->
       <template #childA>
@@ -19,7 +19,7 @@
           <button
             class="btn-std-resp"
             title="Neuen Favoriten anlegen."
-            @click="toggleAddingFavorite"
+            @click="toggleForm"
             :disabled="settingsStore.hasMaxFavorites"
           >
             <Icon icon="fa-solid fa-plus" />
@@ -71,7 +71,7 @@
           <button
             class="btn-std-resp bold no-wrap-ellip"
             title="Abbrechen"
-            @click="toggleAddingFavorite"
+            @click="toggleForm"
           >
             <Icon icon="fa-solid btn-std-resp fa-xmark" />&nbsp;Abbrechen
           </button>
@@ -145,26 +145,24 @@ import CardToggleContentTransition from '@/components/CardToggleContentTransitio
 import { ref, computed } from 'vue';
 
 import { useSettingsStore } from '@/stores/settings';
-import { useUmbrellaStore } from '../stores/umbrella';
 
 const settingsStore = useSettingsStore();
-const umbrellaStore = useUmbrellaStore();
 
 // Toggle between dscr and 'add new favorite form'
 // -----------------------------------------------
-const isAddingFavorite = ref(false);
+const isFormOpen = ref(false);
 const nameInput = ref(null);
 const angleInput = ref(null);
 
-function toggleAddingFavorite() {
-  if (isAddingFavorite.value) {
+function toggleForm() {
+  if (isFormOpen.value) {
     // When form leaves -> clear inputs, loose focus
     newName.value = '';
     newAngle.value = '';
     nameInput.value.blur();
-    isAddingFavorite.value = false;
+    isFormOpen.value = false;
   } else {
-    isAddingFavorite.value = true;
+    isFormOpen.value = true;
     // When form enters -> get focus AFTER form entered, otherwise the layout shifts on Edge.
     // Focus does not work on iOS Safari :(
     window.setTimeout(() => nameInput.value.focus(), 200);
@@ -180,9 +178,13 @@ const maxAngle = 450;
 const newName = ref('');
 const newAngle = ref('');
 
-// Used to highlight outline if value is not allowed
+// Used to add outline to input if value is not allowed
 const isAngleWrong = computed(() => {
-  return newAngle.value > 450;
+  if (newAngle.value > 450 || newAngle.value < 0) {
+    return true;
+  } else {
+    return false;
+  }
 });
 
 // Prevent input of wrong angles
@@ -191,7 +193,7 @@ const isAngleWrong = computed(() => {
 // -> prevent input if max angle already reached
 function restrictAngleInput(event) {
   if (!/\d/.test(event.key)) {
-    event.preventDefault();
+    //event.preventDefault();
   } else if (newAngle.value > maxAngle) {
     event.preventDefault();
   }
@@ -233,14 +235,14 @@ function addFavorite() {
     return false;
   }
 
-  // Angle should be between 0° and 450°
-  const newAngleValue = Number(newAngle.value);
+  // Angle should be between 0° and 450° and not have decimals
+  const newAngleValue = Math.round(Number(newAngle.value));
   if (newAngleValue < 0.0 || newAngleValue > maxAngle) {
     shakeForm();
     return false;
   }
 
-  // Name gets cut to maxNameLength
+  // Name gets trimmed and cut to maxNameLength
   let newNameValue = newName.value.trim();
   if (newNameValue.length > maxNameLength) {
     newNameValue = newNameValue.substring(0, maxNameLength);
@@ -248,7 +250,7 @@ function addFavorite() {
 
   // Add favorite
   if (settingsStore.addFavorite(newNameValue, newAngleValue)) {
-    toggleAddingFavorite();
+    toggleForm();
     return true;
   } else {
     shakeForm();

@@ -5,7 +5,7 @@
       <span class="card-title bold">{{ title }}</span>
       <button
         class="card-hide-btn flex-cc"
-        @click="toggleShow"
+        @click="toggleCollapse"
         :title="`Bereich '${title}' ein-/ausklappen`"
       >
         <svg viewBox="0 0 300 300">
@@ -19,7 +19,11 @@
       </button>
     </div>
     <div v-if="true" class="card-slider">
-      <div class="card-content" ref="cardContent">
+      <div
+        class="card-content"
+        ref="cardContent"
+        :class="{ 'card-content-trans': hasTransitionClass }"
+      >
         <slot></slot>
       </div>
     </div>
@@ -36,41 +40,66 @@ const props = defineProps({
   title: String
 });
 
+// Element ref
 const cardContent = ref(null);
 
-// Toggle card content.
-// Set fixed height to hidden card content AFTER animation to avoid
-// resizing of the hidden content to affect the card.
-function toggleShow() {
-  if (uiStore.ui.cards[props.title].value) {
-    uiStore.ui.cards[props.title] = !uiStore.ui.cards[props.title];
-    setTimeout(() => cardContent.value.style.height = `${cardContent.value.offsetHeight}px`, 200);
+/**
+ * Used to only add CSS transitions to card content
+ * when it is mounted and not collapsed:
+ *  1. On mount: add transition 200ms after mount if not collapsed
+ *  2. Collapse: remove transition 200ms after collapse
+ *  3. Show: add transition class immediately
+ */
+const hasTransitionClass = ref(false);
+
+/** Toggle collapse card content. After animation played:
+ *  - set fixed height to hidden card content
+ *  - remove CSS transitions from card content
+ * This avoids ressizing of hidden content to affect the collapsed card
+ */
+function toggleCollapse() {
+  if (uiStore.ui.cards[props.title]) {
+    // Hide
+    uiStore.ui.cards[props.title] = false;
+    setTimeout(() => {
+      hasTransitionClass.value = false;
+      cardContent.value.style.height = `${cardContent.value.offsetHeight}px`;
+    }, 200);
   } else {
-    uiStore.ui.cards[props.title] = !uiStore.ui.cards[props.title];
+    // Show
+    uiStore.ui.cards[props.title] = true;
     cardContent.value.style.height = null;
+    hasTransitionClass.value = true;
   }
 }
 
-// Set the negative top margin that is used to hide the
-// card content to the exact height of the content -1px.
+/** Set the negative top margin that is used to hide the
+ *  card content to the exact height of the content -1px.
+ */
 function setSlideMargin() {
   if (!uiStore.ui.cards[props.title]) {
     cardContent.value.style.marginTop = `${cardContent.value.offsetHeight * -1}px`;
   }
 }
 
-onUpdated(() => {
-  setSlideMargin();
-});
-
 onMounted(() => {
   setSlideMargin();
-  // Add show-content toggle to ui store
+  // Add collapse-content toggle to uiStore on first mount
   if (!Object.hasOwn(uiStore.ui.cards, props.title)) {
     uiStore.ui.cards[props.title] = true;
   }
-  // Add transition class 200ms after mount to avoid height-change when mounted
-  setTimeout(() => {cardContent.value.classList.add('card-content-trans')}, 200);
+
+  // Add transition class 200ms after mount if content is not collapsed
+  if (uiStore.ui.cards[props.title]) {
+    setTimeout(() => {
+      hasTransitionClass.value = true;
+    }, 200);
+  }
+});
+
+// Reapply negative top margin on updates
+onUpdated(() => {
+  setSlideMargin();
 });
 </script>
 

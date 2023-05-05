@@ -18,6 +18,7 @@
           :disabled="settingsStore.lock.isLocked"
           @keypress="restrictInput($event)"
           @paste="restrictPaste($event)"
+          @keyup.enter="toggleLock"
         />
 
         <Icon
@@ -31,10 +32,12 @@
           :disabled="settingsStore.isLockedByElse"
           @toggle="toggleLock"
         >
-          <template #on><Icon icon="fa-solid fa-lock switch-lbl"></Icon></template>
-          <template #off
-            ><Icon icon="fa-solid fa-lock-open switch-lbl"></Icon
-          ></template>
+          <template #on>
+            <Icon icon="fa-solid fa-lock switch-lbl"></Icon>
+          </template>
+          <template #off>
+            <Icon icon="fa-solid fa-lock-open switch-lbl"></Icon>
+          </template>
         </ToggleSwitch>
       </div>
     </div>
@@ -65,15 +68,9 @@ import Card from '@/components/Card.vue';
 import ToggleSwitch from '@/components/ToggleSwitch.vue';
 import CardToggleContentTransition from '@/components/CardToggleContentTransition.vue';
 
-import { ref, computed, onMounted } from 'vue';
-
 import { useSettingsStore } from '@/stores/settings';
-import { useUmbrellaStore } from '@/stores/umbrella';
 
 const settingsStore = useSettingsStore();
-const umbrellaStore = useUmbrellaStore();
-
-const toggle = ref(false);
 const maxNameLength = 15;
 
 // Toggle lock status
@@ -81,16 +78,11 @@ function toggleLock() {
   if (settingsStore.lock.isLocked) {
     // Unlock
     if (settingsStore.lock.name === settingsStore.lock.by) {
-      settingsStore.lock.isLocked = false;
-      settingsStore.lock.by = '';
-      umbrellaStore.sendLock();
-      toggle.value = false;
+      settingsStore.openLock();
     }
   } else {
     // Lock
-    settingsStore.lock.isLocked = true;
-    settingsStore.lock.by = settingsStore.lock.name;
-    umbrellaStore.sendLock();
+    settingsStore.closeLock();
   }
 }
 
@@ -112,7 +104,6 @@ function restrictPaste(event) {
 </script>
 
 <style lang="scss" scoped>
-
 .switch-lbl {
   margin-left: 0.6em;
 }

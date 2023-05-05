@@ -131,11 +131,13 @@ $slider-trans: 0.2s;
 .switch > .switch-on {
   left: calc(var(--switch-padding) + 0.3em);
   color: var(--text-color-accent);
+  margin-left: 0.2em;
   opacity: 0;
 }
 
 .switch > .switch-off {
   right: calc(var(--switch-padding) + 0.3em);
+  margin-right: 0.2em;
   opacity: 0.2;
 }
 

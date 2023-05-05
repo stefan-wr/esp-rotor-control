@@ -189,6 +189,7 @@ onBeforeUnmount(() => {
 
   /* Label */
   .range-lbl {
+    pointer-events:none;
     grid-column: 2;
     grid-row: 1;
   }

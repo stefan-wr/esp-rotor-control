@@ -11,8 +11,8 @@
 #footer {
   padding: 0 1em !important;
   height: calc($border-box-bradius * 2);
-  background-color: var(--content-color-0);
-  color: var(--content-color-3);
+  background-color: var(--footer-color);
+  color: var(--footer-text-color);
 
   span {
     filter: brightness(120%);
@@ -22,7 +22,7 @@
     text-decoration: underline;
 
     &:hover {
-      color: var(--text-color);
+      color: var(--footer-text-color-hover);
     }
   }
 }
