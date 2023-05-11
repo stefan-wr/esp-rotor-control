@@ -233,9 +233,6 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     // ----------------
     function sendRotation(dir) {
         sendRotorMsg(rotorStore.getRotationMsg(dir));
-        if (true) {
-            uiStore.ui.targetAngleLocked = false;
-        }
     }
 
     function sendSpeed() {

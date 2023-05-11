@@ -2,22 +2,26 @@
   <div class="compass border-box">
     <div id="compass-svg">
       <!--- Corner Labels -->
-      <div v-if="rotorStore.rotor.rotation === -1" id="rotation" class="corner-lbl bold medium">
-        <div class="rotate-ccw"><Icon icon="fa-solid fa-rotate-left"></Icon></div>
+      <div v-if="rotorStore.rotor.rotation === -1" class="rotation-lbl corner-lbl bold medium">
+        <div class="rotate-ccw">
+          <Icon icon="fa-solid fa-rotate-left"></Icon>
+        </div>
       </div>
-      <div v-if="rotorStore.rotor.rotation === 0" id="rotation" class="corner-lbl bold medium">
+      <div v-if="rotorStore.rotor.rotation === 0" class="rotation-lbl corner-lbl bold medium">
         STOP
       </div>
-      <div v-if="rotorStore.rotor.rotation === 1" id="rotation" class="corner-lbl bold medium">
-        <div class="rotate-cw"><Icon icon="fa-solid fa-rotate-right"></Icon></div>
+      <div v-if="rotorStore.rotor.rotation === 1" class="rotation-lbl corner-lbl bold medium">
+        <div class="rotate-cw">
+          <Icon icon="fa-solid fa-rotate-right"></Icon>
+        </div>
       </div>
 
-      <div v-if="rotorStore.isOverlap" id="overlap" class="corner-lbl medium bold">OL</div>
-      <div v-if="settingsStore.lock.isLocked" id="lock" class="corner-lbl bold medium">
+      <div v-if="rotorStore.isOverlap" id="overlap-lbl" class="corner-lbl medium bold">OL</div>
+      <div v-if="settingsStore.lock.isLocked" id="lock-lbl" class="corner-lbl bold medium">
         <Icon icon="fa-solid fa-lock"></Icon>
       </div>
 
-      <!-- Compass-->
+      <!-- Compass SVG-->
       <svg
         id="compass"
         ref="compass"
@@ -31,10 +35,7 @@
           :style="ringColor"
         />
         <g id="cmp-req-needle" :style="{ transform: 'rotate(' + uiStore.ui.requestAngle + 'deg)' }">
-          <path
-            d="M500,15L515,40L515,700L485,700L485,40L"
-            style="fill: var(--compass-req-needle-color)"
-          />
+          <path d="M500,15L515,40L515,700L485,700L485,40L" />
         </g>
         <g
           v-if="rotorStore.hasTarget"
@@ -49,6 +50,8 @@
         </g>
       </svg>
     </div>
+
+    <!-- Additional Information -->
     <div class="compass-label border-box">
       <span class="small">Position</span>
       <span class="small">Richtung</span>
@@ -61,7 +64,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { useEventListener } from '@vueuse/core';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
@@ -75,6 +78,16 @@ const settingsStore = useSettingsStore();
 const uiStore = useUIStore();
 
 const compass = ref(null);
+
+// Change ring color if rotor is locked by someone else
+// ----------------------------------------------------
+const ringColor = computed(() => {
+  if (settingsStore.isLockedByElse) {
+    return 'fill: var(--alert-color)';
+  } else {
+    return 'fill: var(--compass-color)';
+  }
+});
 
 // Get and set request angle from mouse position in compass
 // --------------------------------------------------------
@@ -99,36 +112,18 @@ function setRequestAngle(event) {
   }
 }
 
-// Add event listener to set request angle
-useEventListener(compass, 'mousemove', (event) => {
-  setRequestAngle(event);
-});
-
-watch(
-  () => rotorStore.rotor.rotation,
-  (newRotation, oldRotation) => {
-    if (!oldRotation && !newRotation) {
-      uiStore.ui.targetAngleLocked = false;
-    }
-  }
-);
-
-// Change ring color if rotor is locked by someone else
-// ----------------------------------------------------
-const ringColor = computed(() => {
-  if (settingsStore.isLockedByElse) {
-    return 'fill: var(--alert-color)';
-  } else {
-    return 'fill: var(--compass-color)';
-  }
-});
+// Register event listener
+useEventListener(compass, 'mousemove', setRequestAngle);
 
 // Request auto rotation to given angle
 // ------------------------------------
 function requestAngle() {
+  const needle = document.getElementById('cmp-req-needle');
+  needle.style.filter = 'brightness(120%)';
+  setTimeout(() => {
+    needle.style.filter = 'unset';
+  }, 100);
   if (uiStore.ui.isMouseInCompass) {
-    uiStore.ui.targetAngle = uiStore.ui.requestAngle;
-    uiStore.ui.targetAngleLocked = true;
     umbrellaStore.sendTarget(uiStore.ui.requestAngle.toFixed(1));
   }
 }
@@ -147,9 +142,9 @@ function requestAngle() {
 
 .corner-lbl {
   position: absolute;
-  border-radius: 0.5em;
-  padding: 0.25em;
   z-index: -1;
+  padding: 0.25em;
+  border-radius: 0.5em;
   border: 0.2em solid var(--text-color);
 
   @include large {
@@ -157,7 +152,7 @@ function requestAngle() {
   }
 }
 
-#rotation {
+.rotation-lbl {
   top: 0;
   left: 0;
   width: 4em;
@@ -169,18 +164,18 @@ function requestAngle() {
   .rotate-ccw {
     animation: 5s linear reverse infinite rotate-cw;
   }
+
+  @keyframes rotate-cw {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
 }
 
-@keyframes rotate-cw {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-#overlap {
+#overlap-lbl {
   top: 0;
   right: 0;
   width: 2.3em;
@@ -188,7 +183,7 @@ function requestAngle() {
   border-color: var(--alert-color);
 }
 
-#lock {
+#lock-lbl {
   bottom: 0;
   right: 0;
   width: 2em;
@@ -206,6 +201,10 @@ function requestAngle() {
   transform-origin: center;
   transform: rotate(0deg);
   transition: transform 0.1s;
+}
+
+#cmp-req-needle {
+  fill: var(--compass-req-needle-color);
 }
 
 #cmp-target-needle {

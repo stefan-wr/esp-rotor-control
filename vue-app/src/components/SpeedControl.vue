@@ -26,7 +26,8 @@
 <script setup>
 import Card from '@/components/Card.vue';
 
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
+import { computed } from 'vue';
+import { useEventListener } from '@vueuse/core';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
 import { useRotorStore } from '@/stores/rotor';
@@ -36,7 +37,7 @@ const umbrellaStore = useUmbrellaStore();
 const rotorStore = useRotorStore();
 const uiStore = useUIStore();
 
-// Speed label, change 0%  to 1%
+// Speed label, display 0 as 1%
 const speedLabel = computed(() => {
   if (rotorStore.rotor.speed == 0) {
     return 1;
@@ -45,6 +46,7 @@ const speedLabel = computed(() => {
   }
 });
 
+// Event listener for setting speed with up/down arrow keys
 function speedKeyEventListener(event) {
   if (!event.repeat && uiStore.ui.kbscEnabled && event.target.tagName !== 'INPUT') {
     switch (event.key) {
@@ -66,15 +68,8 @@ function speedKeyEventListener(event) {
   }
 }
 
-onMounted(() => {
-  // Add arrow up and down key event listeners for speed
-    document.addEventListener('keydown', speedKeyEventListener);
-});
-
-onBeforeUnmount(() => {
-  // Remove key event listeners for speed
-  document.removeEventListener('keydown', speedKeyEventListener);
-})
+// Register arrow keys event listener
+useEventListener(document, 'keydown', speedKeyEventListener);
 </script>
 
 <style lang="scss">

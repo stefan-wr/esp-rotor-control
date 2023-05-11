@@ -32,7 +32,6 @@ export default function useColors() {
                 'compass-color': 'var(--text-color)',
                 'compass-needle-color': 'var(--text-color)',
                 'compass-req-needle-color': 'var(--content-color-0)',
-                'compass-target-needle-color': 'var(--accent-color',
 
                 'button-color': 'var(--accent-color)',
                 'button-text-color': 'var(-text-color-accent)',

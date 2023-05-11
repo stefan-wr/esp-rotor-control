@@ -29,17 +29,17 @@ export const useSettingsStore = defineStore('settings', () => {
         sortedBy: 'id'
     });
 
-    // Other settings
-    const settings = reactive({
-        ssid: '--',
-        rssi: '--'
-    });
-
     // Rotor lock
     const lock = reactive({
         isLocked: false,
         by: '',
         name: useStorage('lock-name', '')
+    });
+
+    // Other settings
+    const settings = reactive({
+        ssid: '--',
+        rssi: '--'
     });
 
     // *************

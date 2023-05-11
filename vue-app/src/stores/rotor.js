@@ -30,7 +30,7 @@ export const useRotorStore = defineStore('rotor', () => {
         rotation: 0, // -1: CCW, 0:Stop, 1:CW
         angle: 0.0,
         adc_v: 0.0,
-        speed: 0,   // 0-100
+        speed: 0, // 0-100
         target: null
     });
 
@@ -66,31 +66,32 @@ export const useRotorStore = defineStore('rotor', () => {
         } else {
             return true;
         }
-    })
+    });
 
     // Get speed JSON message
     const getSpeedMsg = computed(() => {
-        return `{\"speed\":${rotor.speed}}`;
+        //return `{\"speed\":${rotor.speed}}`;
+        return JSON.stringify({ speed: rotor.speed });
     });
 
     // Get rotation JSON message
     function getRotationMsg(dir) {
-        return `{\"rotation\":${dir}}`;
+        return JSON.stringify({ rotation: dir });
     }
 
-    // Get auto rotation request JSON message
+    // Get auto-rotation request JSON message
     function getTargetMessage(angle, useOverlap) {
-        const msg = {
-            "target": angle,
-            "useOverlap": useOverlap
-        }
-        return JSON.stringify(msg);
+        return JSON.stringify({
+            target: angle,
+            useOverlap: useOverlap
+        });
     }
 
     // *************
     //    Actions
     // *************
 
+    // Reset target when rotor rotation stops
     watch(
         () => rotor.rotation,
         (newRotation, oldRotation) => {
@@ -98,7 +99,7 @@ export const useRotorStore = defineStore('rotor', () => {
                 rotor.target = null;
             }
         }
-    )
+    );
 
     // *****
     return {

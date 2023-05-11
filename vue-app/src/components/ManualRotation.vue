@@ -40,43 +40,37 @@
 <script setup>
 import Card from '@/components/Card.vue';
 
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref } from 'vue';
+import { useEventListener } from '@vueuse/core';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
-import { useRotorStore } from '@/stores/rotor';
 import { useUIStore } from '@/stores/ui';
 
 const umbrellaStore = useUmbrellaStore();
-const rotorStore = useRotorStore();
 const uiStore = useUIStore();
 
 const isLeftBtnPressed = ref(false);
 const isRightBtnPressed = ref(false);
 
 function rotateLeft() {
-  stopRotation();
+  umbrellaStore.sendRotation(0);
   isLeftBtnPressed.value = true;
   umbrellaStore.sendRotation(-1);
 }
 
 function rotateRight() {
-  stopRotation();
+  umbrellaStore.sendRotation(0);
   isRightBtnPressed.value = true;
   umbrellaStore.sendRotation(1);
 }
 
 function stopRotation() {
-  /*
-  if (isLeftBtnPressed.value || isRightBtnPressed.value) {
-    isLeftBtnPressed.value = false;
-    isRightBtnPressed.value = false;
-  }
-  */
   isLeftBtnPressed.value = false;
   isRightBtnPressed.value = false;
   umbrellaStore.sendRotation(0);
 }
 
+// Press left/right arrow keys -> start rotation event listener
 function startRotationKeyEventListener(event) {
   if (!event.repeat && uiStore.ui.kbscEnabled && event.target.tagName !== 'INPUT') {
     switch (event.key) {
@@ -90,6 +84,7 @@ function startRotationKeyEventListener(event) {
   }
 }
 
+// Lift left/right arrow keys: stop rotation event listener
 function stopRotationKeyEventListener(event) {
   if (uiStore.ui.kbscEnabled && event.target.tagName !== 'INPUT') {
     if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
@@ -98,17 +93,9 @@ function stopRotationKeyEventListener(event) {
   }
 }
 
-onMounted(() => {
-  // Add arrow left/right listeners for manual rotation
-  document.addEventListener('keydown', startRotationKeyEventListener);
-  document.addEventListener('keyup', stopRotationKeyEventListener);
-});
-
-onBeforeUnmount(() => {
-  // Remove arrow left/right listeners
-  document.removeEventListener('keydown', startRotationKeyEventListener);
-  document.removeEventListener('keyup', stopRotationKeyEventListener);
-});
+// Register arrow keys event listeners
+useEventListener(document, 'keydown', startRotationKeyEventListener);
+useEventListener(document, 'keyup', stopRotationKeyEventListener);
 </script>
 
 <style lang="scss">
