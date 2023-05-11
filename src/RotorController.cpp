@@ -2,6 +2,7 @@
 #include <Preferences.h>
 
 namespace Rotor {
+    const String directions[2] = {"CCW", "CW"};
 
     // PREFS instances
     Preferences cal_prefs;
@@ -28,7 +29,8 @@ namespace Rotor {
         adc.setGain(GAIN_ONE); 
         if (!adc.begin()) {
             Serial.println("Failed to initialize ADS1115.");
-        }
+            ads_failed = true;
+        } else
 
         // Init calibration factors
         loadCalibration();
@@ -87,13 +89,21 @@ namespace Rotor {
 
     // Get raw ADC value
     int Rotation::getADCValue() {
-        last_adc_value = adc.readADC_SingleEnded(adc_channel);
+        if (ads_failed) {
+            last_adc_value = 0;
+        } else {
+            last_adc_value = adc.readADC_SingleEnded(adc_channel);
+        }
         return last_adc_value;
     }
 
     // Get ADC voltage
     float Rotation::getADCVolts() {
-        last_adc_volts =  adc.computeVolts(getADCValue());
+        if (ads_failed) {
+            last_adc_volts = 0;
+        } else {
+            last_adc_volts =  adc.computeVolts(getADCValue());
+        }
         return last_adc_volts;
     }
 
@@ -147,14 +157,6 @@ namespace Rotor {
             msg_buffer = "ROTOR|";
             StaticJsonDocument<100> doc;
 
-            // Angle
-            if (with_angle) {
-                doc["adc_v"] = round(rotor_ptr->rotor.last_adc_volts
-                                     * rotor_ptr->rotor.calibration.volt_div_factor
-                                     * 1000.0) / 1000.0;
-                doc["angle"] = round(rotor_ptr->rotor.last_angle * 100.0) / 100.0;
-            }
-
             // Rotation & direction
             if (!rotor_ptr->is_rotating) {
                 doc["rotation"] = 0;
@@ -164,21 +166,34 @@ namespace Rotor {
                 doc["rotation"] = -1;
             }
 
+            // Angle
+            if (with_angle) {
+                doc["adc_v"] = round(rotor_ptr->rotor.last_adc_volts
+                                     * rotor_ptr->rotor.calibration.volt_div_factor
+                                     * 1000.0) / 1000.0;
+                doc["angle"] = round(rotor_ptr->rotor.last_angle * 100.0) / 100.0;
+            }
+
+            // Target
+            if (!with_angle && rotor_ptr->is_auto_rotating) {
+                doc["target"] = round(rotor_ptr->auto_rotation_target * 100.0) / 100.0;
+            }
+
             // Send message
             serializeJson(doc, msg_buffer);
         }
     }
 
     // Send last rotation values over web socket
-    void Messenger::sendLastRotationMsg(const bool &with_angle) {
+    void Messenger::sendLastRotation(const bool &with_angle) {
         setLastRotationMsg(with_angle);
         socket.textAll(msg_buffer);
     }
 
     // Send new rotation values over web socket
-    void Messenger::sendNewRotationMsg(const bool &with_angle) {
+    void Messenger::sendNewRotation(const bool &with_angle) {
         rotor_ptr->rotor.update();
-        sendLastRotationMsg(with_angle);
+        sendLastRotation(with_angle);
     }
 
     // Send speed of rotation over web socket
@@ -202,6 +217,15 @@ namespace Rotor {
         serializeJson(doc, msg_buffer);
         socket.textAll(msg_buffer);
     }
+
+    // Send auto rotation target over web socket
+    void Messenger::sendTarget() {
+        msg_buffer = "ROTOR|";
+        StaticJsonDocument<40> doc;
+        doc["target"] = round(rotor_ptr->auto_rotation_target * 100.0) / 100.0;
+        serializeJson(doc, msg_buffer);
+        socket.textAll(msg_buffer);
+    }
     
 
     // ******************************
@@ -219,8 +243,12 @@ namespace Rotor {
             direction = dir;
             is_rotating = true;
             rotor.startRotation(direction);
-            messenger.sendLastRotationMsg(false);
-            if (verbose) { Serial.println("[ROTOR] Started rotation (" + directions[dir]  + ")"); }
+            messenger.sendLastRotation(false);
+            if (verbose) {
+                Serial.print("[ROTOR] Started rotation (");
+                Serial.print(directions[dir]);
+                Serial.println(").");
+            }
         } else {
             if (verbose) { Serial.println("[ROTOR] Can't start rotation, already rotating."); }
         }
@@ -231,7 +259,8 @@ namespace Rotor {
         if (is_rotating) {
             rotor.stopRotor();
             is_rotating = false;
-            messenger.sendLastRotationMsg(false);
+            is_auto_rotating = false;
+            messenger.sendLastRotation(false);
             if (verbose) { Serial.println("[ROTOR] Stopped rotation."); }
         } else {
             if (verbose) { Serial.println("[ROTOR] Is already stationary."); }
@@ -246,7 +275,7 @@ namespace Rotor {
         if (verbose) { 
             Serial.print("[ROTOR] Set speed (");
             Serial.print(speed);
-            Serial.println(" %)"); 
+            Serial.println(" %)."); 
         }
     }
 
@@ -260,7 +289,7 @@ namespace Rotor {
             Serial.print(u1, 4); Serial.print(" V | ");
             Serial.print(u2, 4); Serial.print(" V | ");
             Serial.print(a1, 2); Serial.print("° | ");
-            Serial.print(a2, 2); Serial.println("°");
+            Serial.print(a2, 2); Serial.println("°.");
         }
     }
 
@@ -270,7 +299,65 @@ namespace Rotor {
         if (verbose) {
             Serial.print("[ROTOR] Set angle offset: ");
             Serial.print(offset);
-            Serial.println("°");
+            Serial.println("°.");
+        }
+    }
+
+    // Auto-rotate to given angle
+    // --------------------------
+    void RotorController::rotateTo(const float target_angle, const bool use_overlap) {
+        // Stop previous rotation
+        stop();
+
+        int overlap_border = max_angle - 360;
+        float current_angle = rotor.getAngle();
+        float distance = target_angle - current_angle;
+        
+        // Target angle is in overlap region (0° - overlapBorder)
+        // -> this means it's possible to reach it with +360°, too.
+        if (use_overlap && target_angle <= overlap_border) {
+            // If distance is less than -180° -> flip it.
+            if (distance < -180) {
+                distance += 360;
+            }
+        }
+
+        // Do nothing if distance to target is too small
+        if (abs(distance) < min_rotation_angle) {
+            return;
+        }
+    	
+        // Direction
+        int target_dir = (distance > 0) ? +1 : 0;
+
+        // Serial output
+        if (verbose) {
+            Serial.print("[ROTOR] Auto-rotation request: Target: ");
+            Serial.print(target_angle, 1);
+            Serial.print("° | Computed target: " );
+            Serial.print(current_angle + distance);
+            Serial.print("° | Dir: ");
+            Serial.println(direction);
+        }
+
+        // Start auto rotation
+        auto_rotation_target = current_angle + distance;
+        is_auto_rotating = true;
+        startRotation(target_dir);
+    }
+
+    // Stop auto rotation if target has been reached.
+    void RotorController::watchAutoRotation() {
+        float current_angle = rotor.getAngle();
+        if ((direction == 0 && current_angle <= auto_rotation_target + auto_rotation_buffer) ||
+            (direction == 1 && current_angle >= auto_rotation_target - auto_rotation_buffer)) {
+            stop();
+
+            Serial.print("[ROTOR] Auto-rotation target (");
+            Serial.print(auto_rotation_target);
+            Serial.print("°) reached with: ");
+            Serial.print(rotor.getAngle());
+            Serial.println("°.");
         }
     }
 }

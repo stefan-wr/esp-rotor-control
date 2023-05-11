@@ -8,6 +8,7 @@
       <button
         class="btn-std-resp bold flex-cc"
         title="Startet den Rotor Controller neu."
+        ref="rebootBtn"
         @click="reboot($event)"
       >
         Neu starten
@@ -24,12 +25,39 @@
 
 <script setup>
 import SettingCard from '@/components/settings/SettingCard.vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
+const rebootBtn = ref(null);
+
+function animatedDots(el) {
+  el.textContent = ' ...';
+  setTimeout(() => {
+    el.textContent = '. ..';
+  }, 500);
+  setTimeout(() => {
+    el.textContent = '.. .';
+  }, 1000);
+}
+
+function dots(el) {
+  el.style.width = String(el.offsetWidth) + 'px';
+  animatedDots(el);
+  setInterval(() => {
+    animatedDots(el);
+  }, 1500);
+}
+
 function reboot() {
-  fetch('/reboot');
-  router.push({ name: 'reboot' });
+  dots(rebootBtn.value);
+  fetch('/reboot')
+    .then(() => {
+      router.push({ name: 'reboot' });
+    })
+    .catch(() => {
+      router.push({ name: 'reboot-failed' });
+    });
 }
 </script>

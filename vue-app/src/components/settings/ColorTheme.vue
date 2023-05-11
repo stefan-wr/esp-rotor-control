@@ -21,7 +21,7 @@
           v-for="(theme, key) in uiStore.colorThemes"
           class="flex-cst gap-half btn-std-resp theme"
           :class="{ 'theme-active': uiStore.isActiveColorTheme(key) }"
-          @click="uiStore.applyColorTheme(key)"
+          @click="uiStore.setColorTheme(key)"
           :disabled="uiStore.isActiveColorTheme(key)"
         >
           <span class="no-wrap-ellip">{{ theme.name }}</span>
@@ -36,15 +36,8 @@
 
 <script setup>
 import SettingCard from '@/components/settings/SettingCard.vue';
-
 import { useUIStore } from '@/stores/ui';
-import { onMounted } from 'vue';
-
 const uiStore = useUIStore();
-
-onMounted(() => {
-  //uiStore.applyColorTheme('default');
-});
 </script>
 
 <style lang="scss" scoped>

@@ -68,11 +68,7 @@
 
           <!-- Buttons -->
           <!-- Cancel Button -->
-          <button
-            class="btn-std-resp bold no-wrap-ellip"
-            title="Abbrechen"
-            @click="toggleForm"
-          >
+          <button class="btn-std-resp bold no-wrap-ellip" title="Abbrechen" @click="toggleForm">
             <Icon icon="fa-solid btn-std-resp fa-xmark" />&nbsp;Abbrechen
           </button>
           <!-- Add Button -->
@@ -120,7 +116,11 @@
         <span class="fav-index fav-head small">{{ fav.id }}</span>
         <span class="fav-name no-wrap-ellip">{{ fav.name }}</span>
         <span class="fav-angle">{{ fav.angle }}°</span>
-        <button class="fav-rot btn-std-resp flex-cc" title="Favoriten anfahren.">
+        <button
+          class="fav-rot btn-std-resp flex-cc"
+          title="Favoriten anfahren."
+          @click="requestAngle(fav.angle)"
+        >
           <span>
             <Icon icon="fa-solid fa-play" />
           </span>
@@ -145,8 +145,10 @@ import CardToggleContentTransition from '@/components/CardToggleContentTransitio
 import { ref, computed } from 'vue';
 
 import { useSettingsStore } from '@/stores/settings';
+import { useUmbrellaStore } from '../stores/umbrella';
 
 const settingsStore = useSettingsStore();
+const umbrellaStore = useUmbrellaStore();
 
 // Toggle between dscr and 'add new favorite form'
 // -----------------------------------------------
@@ -256,6 +258,15 @@ function addFavorite() {
     shakeForm();
     return false;
   }
+}
+
+// Move to favorite
+// ----------------
+function requestAngle(angle) {
+  if (angle > 360) {
+    angle -= 360;
+  }
+  umbrellaStore.sendTarget(angle);
 }
 </script>
 

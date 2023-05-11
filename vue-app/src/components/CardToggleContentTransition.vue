@@ -12,7 +12,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useUIStore } from '../stores/ui';
+import { storeToRefs } from 'pinia';
+
+const uiStore = useUIStore();
 
 // Toggle prop: false -> show Child A, true -> show Child B
 const props = defineProps({
@@ -32,9 +36,14 @@ onMounted(() => {
   window.addEventListener('resize', applyCurrentWrapHeight);
 });
 
-// Rmove resize event listener when components is unmounted
+// Remove resize event listener when components is unmounted
 onBeforeUnmount(() => {
   window.removeEventListener('resize', applyCurrentWrapHeight);
+});
+
+// Also reapply height when font size changes
+watch(() => uiStore.ui.fontSize, () => {
+  applyCurrentWrapHeight();
 });
 
 // Adjust height of wrapper to height of currently shown child

@@ -1,5 +1,7 @@
 <template>
   <div class="flex-vst gap-one">
+    <h2 class="medium">Kalibrierung</h2>
+    <ADC></ADC>
     <CalibrationCurrent></CalibrationCurrent>
 
     <SettingCard title="Rotor-Kalibrierung" class="l-align">
@@ -59,6 +61,7 @@ import CardToggleContentTransition from '@/components/CardToggleContentTransitio
 import CalibrationAutomatic from '@/components/settings/CalibrationAutomatic.vue';
 import CalibrationManual from '@/components/settings/CalibrationManual.vue';
 import CalibrationCurrent from '@/components/settings/CalibrationCurrent.vue';
+import ADC from '@/components/settings/ADC.vue';
 
 import { useSettingsStore } from '@/stores/settings';
 import { useUmbrellaStore } from '@/stores/umbrella';

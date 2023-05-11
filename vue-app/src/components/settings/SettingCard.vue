@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-vst gap-one border-box">
+  <div class="flex-vst gap-one border-box l-align">
     <div class="flex-hc gap-one">
       <div class="flex-cl gap-half flex-grow wrd-break">
         <div class="setting-icon"><slot name="icon"></slot></div>

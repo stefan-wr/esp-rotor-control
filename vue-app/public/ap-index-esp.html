@@ -1,16 +1,79 @@
 <!DOCTYPE html>
 <html lang="de">
-  <head>
-    <meta charset="utf-8" />
-    <title>%TITLE%</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="ap-styles.css" />
-  </head>
 
-  <body>
-    <div class="content-card">
-      <h1>%TITLE% - WiFi Login</h1>
-      %NETWORKS%
-    </div>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <title>RotorControl WiFi-Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" type="text/css" href="ap-styles.css" />
+</head>
+
+<body>
+  <div class="content-card">
+    <h1>RotorControl<br>WiFi-Login</h1>
+
+    <p id="alert" style="display:none;">%ALERT%</p>
+
+    <p>Server Konfiguration:</p>
+    <ul class="blocks">
+      <li>
+        <form id="config-form" action="/config" onsubmit="setDotsById('config-submit-btn')" onkeydown="return event.key != 'Enter';">
+          <label class="r-align small" for="user">Login</label>
+          <input id="user-input" type="text" name="user" maxlength="20" value="%USER%" onclick="this.select()" />
+          <label class="r-align small" for="pw">Passwort</label>
+          <input id="pw-input" type="text" name="pw" maxlength="20" value="%PASSWORD%" onclick="this.select()" />
+          <label class="r-align small" for="port">Port</label>
+          <input id="port-input" type="number" name="port" value="%PORT%" min="1" max="65535" onclick="this.select()" />
+          <div class="server-config-btns">
+            <button id="config-reset-btn" type="button" onclick="resetConfigForm()">Zurücksetzen</button>
+            <button id="config-submit-btn" type="submit" >Bestätigen</button>
+          </div>
+        </form>
+      </li>
+    </ul>
+
+    <p>Verfügbare WiFi-Netzwerke:</p>
+    %NETWORKS%
+  </div>
+</body>
+
 </html>
+
+<script>
+  // Reset config form and send
+  function resetConfigForm() {
+    setDotsById('config-reset-btn');
+    const form = document.getElementById("config-form");
+    form.action = "/reset";
+    form.submit();
+  }
+
+  // Show animated dots in an element
+  function setDotsById(id) {
+    const el = document.getElementById(id);
+    applyDots(el);
+  }
+
+  function applyDots(el) {
+    animateDots(el);
+    setInterval(() => {
+      animateDots(el);
+    }, 2000);
+  }
+
+  function animateDots(el) {
+    el.innerHTML = '<span class="dots">° °°°</span>';
+    setTimeout(() => { el.innerHTML = '<span class="dots">°° °°</span>' }, 500);
+    setTimeout(() => { el.innerHTML = '<span class="dots">°°° °</span>' }, 1000);
+    setTimeout(() => { el.innerHTML = '<span class="dots">°°°°</span>' }, 1500);
+  }
+
+  // When page loaded, show alert message element if it is not empty
+  window.onload = function() {
+    alert_el = document.getElementById('alert');
+    if (alert_el.textContent) {
+      alert_el.style.display = 'block';
+    }
+  }
+
+</script>

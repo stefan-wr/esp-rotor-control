@@ -32,6 +32,7 @@ export default function useColors() {
                 'compass-color': 'var(--text-color)',
                 'compass-needle-color': 'var(--text-color)',
                 'compass-req-needle-color': 'var(--content-color-0)',
+                'compass-target-needle-color': 'var(--accent-color',
 
                 'button-color': 'var(--accent-color)',
                 'button-text-color': 'var(-text-color-accent)',
@@ -123,7 +124,7 @@ export default function useColors() {
         light: {
             name: 'Kitzsteinhorn',
             vars: {
-                'body-background-color': '#dee3ee',
+                'body-background-color': '#f8fbff',
                 'app-shadow-color': '#a8aeb6',
                 
                 'content-color-0': '#b5bfce',

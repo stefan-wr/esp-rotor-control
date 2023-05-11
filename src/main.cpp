@@ -12,19 +12,6 @@
 #include <RotorController.h>
 #include <Settings.h>
 
-String lock_msg = "LOCK|{}";
-
-// Title on Website
-const char* TITLE = "RotorControl";
-
-// AP mode SSID
-const char* ap_ssid = "RotorControl";
-const char* local_url = "rotor";
-
-// STATION mode HTTP login-credentials
-const char* http_username = "otto";
-const char* http_password = "dl2rz";
-
 // Create rotor-controller instance
 Rotor::RotorController rotor_ctrl;
 
@@ -37,13 +24,16 @@ bool scan_now = false;            // Scan for networks now
 bool reset_now = false;           // Set by button, tested in main loop
 int clients_connected = 0;        // Number of connected socket clients
 bool safety_stop_now = false;     // Set by button, tested in main loop
-
-// Stores the HTML-code for list of available networks in AP mode
-String networks_html = "";
+bool authenticate = true;         // Authenticate HTTP connections
+String lock_msg = "LOCK|{}";      // Buffer storing lock message
 
 // Create AsyncWebServer object
 AsyncWebServer *server;
 AsyncWebSocket socket("/ws");
+
+// STATION mode default HTTP login-credentials
+const char* http_username = sta_default_user.c_str();
+const char* http_password = sta_default_pw.c_str();
 
 // Create DNS Server
 DNSServer dns_server;
@@ -87,27 +77,6 @@ void initRotorButton() {
   pinMode(safety_stop_pin, INPUT_PULLUP);
   attachInterrupt(safety_stop_pin, rotorButtonAction, FALLING);
 }
-
-
-// => HTML processor, replaces placeholders in HTML files
-// Only used for AP-mode, not for Vue-App
-// ******************************************************
-String processor(const String &var) {
-  if (var == "TITLE") {
-    return TITLE;
-  }
-  if (var == "NETWORKS") {
-    return networks_html;
-  }
-  if (var == "SSID") {
-    return wifi_ssid;
-  }
-  if (var == "RSSI") {
-    return (String)WiFi.RSSI();
-  }
-  return String();
-}
-
 
 
 // **********************************************************************************
@@ -166,6 +135,17 @@ void socketReceive(char* msg, const size_t &len) {
     val = doc["speed"];
     if (!val.isNull()) {
       rotor_ctrl.setSpeed(val.as<const int>());
+    }
+
+    // Auto-rotation request
+    val = doc["target"];
+    if (!val.isNull()) {
+      JsonVariant val2 = doc["useOverlap"];
+      if (!val2.isNull()) {
+        rotor_ctrl.rotateTo(val.as<const float>(), val2.as<const bool>());
+      } else {
+        rotor_ctrl.rotateTo(val.as<const float>(), true);
+      }
     }
   }
 
@@ -281,7 +261,7 @@ void onSocketEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEven
       } else {
         Serial.println("[Websocket] Data recieved in multiple frames.");
       }
-      break;
+    break;
   }
 }
 
@@ -310,6 +290,7 @@ void setup() {
   // Initialise SPIFFS
   if (!mountSPIFFS()) {
     Serial.println("Mounting SPIFFS failed.");
+    delay(5000);
     return;
   }
 
@@ -334,19 +315,30 @@ void setup() {
 
     // ----- \/\/ CONFIGURE STA SERVER \/\/ -----
     // ------------------------------------------
+
+    // Init server config
+    initServerConfig();
+
+    http_username = sta_user_str.c_str();
+    http_password = sta_pw_str.c_str();
     
+    // Disable authentication if password is empty string
+    if (sta_pw_str == "") {
+      authenticate = false;
+    }
+
     // Define server to set port
     server = new AsyncWebServer(sta_port);
 
-  // Root route, Vue-App index files
+    // Root route, Vue-App index files
     server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-      if (!request->authenticate(http_username, http_password))
+      if (authenticate && !request->authenticate(http_username, http_password))
         return request->requestAuthentication();
       request->send(SPIFFS, "/index.html");
     });
 
     server->on("/index.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-      if (!request->authenticate(http_username, http_password))
+      if (authenticate && !request->authenticate(http_username, http_password))
         return request->requestAuthentication();
       request->send(SPIFFS, "/index.js");
     });
@@ -360,19 +352,19 @@ void setup() {
     server->serveStatic("/index.css", SPIFFS, "/index.css");
 
     // Favicons
-    server->serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2");
-    server->serveStatic("/inter-700.woff2", SPIFFS, "/inter-700.woff2");
-    server->serveStatic("/site.webmanifest", SPIFFS, "/site.webmanifest");
-    server->serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
-    server->serveStatic("/favicon-16x16.png", SPIFFS, "/favicon-16x16.png");
-    server->serveStatic("/favicon-32x32.png", SPIFFS, "/favicon-32x32.png");
-    server->serveStatic("/apple-touch-icon.png", SPIFFS, "/apple-touch-icon.png");
-    server->serveStatic("/android-chrome-192x192.png", SPIFFS, "/android-chrome-192x192.png");
-    server->serveStatic("/android-chrome-512x512.png", SPIFFS, "/android-chrome-512x512.png");
+    server->serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/inter-700.woff2", SPIFFS, "/inter-700.woff2").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/site.webmanifest", SPIFFS, "/site.webmanifest").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/favicon.ico", SPIFFS, "/favicon.ico").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/favicon-16x16.png", SPIFFS, "/favicon-16x16.png").setCacheControl("public, max-age=31536000");
+    server->serveStatic("/favicon-32x32.png", SPIFFS, "/favicon-32x32.png").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/apple-touch-icon.png", SPIFFS, "/apple-touch-icon.png").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/android-chrome-192x192.png", SPIFFS, "/android-chrome-192x192.png").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/android-chrome-512x512.png", SPIFFS, "/android-chrome-512x512.png").setCacheControl("public,max-age=31536000");
 
     // Disconnect ESP from network
     server->on("/disconnect", HTTP_GET, [](AsyncWebServerRequest* request) {
-      if (!request->authenticate(http_username, http_password))
+      if (authenticate && !request->authenticate(http_username, http_password))
         return request->requestAuthentication();
       request->send(200);
       resetCredentials();
@@ -382,7 +374,7 @@ void setup() {
 
     // Reboot ESP
     server->on("/reboot", HTTP_GET, [](AsyncWebServerRequest* request) {
-      if (!request->authenticate(http_username, http_password))
+      if (authenticate && !request->authenticate(http_username, http_password))
         return request->requestAuthentication();
       request->send(200);
       delay(1000);
@@ -397,6 +389,11 @@ void setup() {
     // Start server
     initWebSocket();
     server->begin();
+
+    Serial.print("Started Server on http://");
+    Serial.print(WiFi.localIP());
+    Serial.print(":");
+    Serial.println(sta_port);
   }
 }
 
@@ -431,12 +428,12 @@ void loop() {
   }
   previous_loop_ms = current_loop_ms;
 
-
   // Checking for WiFi button interrupt
   if (reset_now) {
     Serial.print("Button pressed. Waiting 2s to confirm...");
     delay(2000);
     if (!digitalRead(button_pin)) {
+      rotor_ctrl.stop();
       blinkWifiLed(4);
       Serial.println("resetting WiFi credentials and restart.");
       resetCredentials();
@@ -452,9 +449,9 @@ void loop() {
     Serial.print("Stop button pressed. Waiting 400ms to confirm...");
     delay(400);
     if (!digitalRead(safety_stop_pin)) {
+      rotor_ctrl.stop();
       blinkWifiLed(1);
       Serial.println("stopped rotor.");
-      rotor_ctrl.stop();
       safety_stop_now = false;
     } else {
       safety_stop_now = false;
@@ -462,6 +459,10 @@ void loop() {
     }
   }
 
+  // Watch active auto rotation
+  if (rotor_ctrl.is_auto_rotating) {
+    rotor_ctrl.watchAutoRotation();
+  }
 
   // Send rotation data
   if (in_station_mode && (clients_connected > 0)) {
@@ -476,7 +477,7 @@ void loop() {
       if ((abs(adc_volts - adc_volts_previous) > 0.003) ||
           (rotor_ctrl.is_rotating != is_rotating_prev) ||
           (millis() - lasts[4] >= intervals[4])) {
-        rotor_ctrl.messenger.sendNewRotationMsg(true);
+        rotor_ctrl.messenger.sendNewRotation(true);
       }
 
       adc_volts_previous = adc_volts;
@@ -502,11 +503,12 @@ void loop() {
   }
 
 
-  // Checking for WiFi disconnects -> try reconnect
+  // Checking for WiFi disconnects -> try reconnect, stop rotor
   if (in_station_mode) {
     if (millis() - lasts[1] >= intervals[1]) {
       lasts[1] = millis();
       if (WiFi.status() != WL_CONNECTED) {
+        rotor_ctrl.stop();
         Serial.println("WiFi disconnected. Try reconnecting...");
         // Try to reconnect WiFi
         WiFi.disconnect();
@@ -527,14 +529,14 @@ void loop() {
   }
 
 
-  // ********** AP MODE  *********
-  // *****************************
+  // ********** AP MODE  **********
+  // ******************************
 
   // Scanning for networks if not connected to WiFi
   if (!in_station_mode) {
     if (scan_now || (millis() - lasts[0] >= intervals[0])) {
       if (verbose) Serial.println("Scanning for networks after: " + (String)(millis() - lasts[0]) + " ms");
-      scanNetworks(networks_html);
+      scanNetworks();
       scan_now = false;
       lasts[0] = millis();
     }

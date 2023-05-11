@@ -8,6 +8,13 @@
 
 // PREFS instance
 Preferences wifi_prefs;
+Preferences server_prefs;
+
+// Stores the HTML-code for list of available networks in AP mode
+String networks_html = "";
+
+// Stores alert message
+String alert = "";
 
 // STATION mode WiFi-credentials
 String wifi_ssid;
@@ -15,14 +22,40 @@ String wifi_bssid;
 String wifi_pw;
 uint8_t wifi_bssid_uint8[6];
 
-// => Load WiFi credentials from PREFS
-void loadCredentials() {
-  wifi_prefs.begin("wifiPrefs", true);
-  wifi_ssid = wifi_prefs.getString("ssid", "");
-  wifi_bssid = wifi_prefs.getString("bssid", "");
-  wifi_pw = wifi_prefs.getString("pw", "");
-  wifi_prefs.end();
+// STATION server config
+int sta_port;
+String sta_user_str;
+String sta_pw_str;
+
+// ----------------------------------- Server Config
+
+// => Save server config in PREFS
+void saveServerConfig() {
+  server_prefs.begin("serverPrefs", false);
+  server_prefs.putInt("port", sta_port);
+  server_prefs.putString("user", sta_user_str);
+  server_prefs.putString("password", sta_pw_str);
+  server_prefs.end();
 }
+
+// => Load server config from PREFS
+void loadServerConfig() {
+  server_prefs.begin("serverPrefs", true);
+  sta_port = server_prefs.getInt("port", sta_default_port);
+  sta_user_str = server_prefs.getString("user", sta_default_user);
+  sta_pw_str = server_prefs.getString("password", sta_default_pw);
+  server_prefs.end();
+}
+
+// Reset saved server config to default
+void resetServerConfig() {
+  sta_port = sta_default_port;
+  sta_user_str = sta_default_user;
+  sta_pw_str = sta_default_pw;
+  saveServerConfig();
+}
+
+// ----------------------------------- WiFi Credentials
 
 // => Save credentials to PREFS
 void saveCredentials() {
@@ -33,6 +66,15 @@ void saveCredentials() {
   wifi_prefs.end();
 }
 
+// => Load WiFi credentials from PREFS
+void loadCredentials() {
+  wifi_prefs.begin("wifiPrefs", true);
+  wifi_ssid = wifi_prefs.getString("ssid", "");
+  wifi_bssid = wifi_prefs.getString("bssid", "");
+  wifi_pw = wifi_prefs.getString("pw", "");
+  wifi_prefs.end();
+}
+
 // => Overwrite the saved credentials with empty strings
 void resetCredentials() {
   wifi_prefs.begin("wifiPrefs", false);
@@ -40,7 +82,9 @@ void resetCredentials() {
   wifi_prefs.end();
 }
 
-// => React to button inmterrupt for resetting WiFi credentials
+// -----------------------------------
+
+// => React to button interrupt for resetting WiFi credentials
 void resetCredentialsInterrupt() {
   Serial.print("Button pressed. Waiting 2s to confirm...");
   delay(2000);
@@ -85,16 +129,37 @@ void initMDNS() {
   }
 }
 
+// => HTML template processor
+// **************************
+String processor(const String &var) {
+  if (var == "ALERT") {
+    return alert;
+  }
+  if (var == "USER") {
+    return sta_user_str;
+  }
+  if (var == "PASSWORD") {
+    return sta_pw_str;
+  }
+  if (var == "PORT") {
+    return String(sta_port);
+  }
+  if (var == "NETWORKS") {
+    return networks_html;
+  }
+  return String();
+}
+
 
 // => Create HTML <li> item for a scanned network
 // **********************************************
-String networkItemHTML(const String &ssid, const String &bssid, const int &rssi) {
+String networkItemHTML(int id, const String &ssid, const String &bssid, const int &rssi) {
   String s = "";
-  s += "<li><form class=\"network-form\">";
+  s += "<li><form class=\"network-form\" action=\"/network\" onsubmit=\"setDotsById('nw-btn-" + String(id) + "')\">";
   s += "<span class=\"l-align wrd-break\">" + ssid + "</span>";
   s += "<span class=\"r-align small\">RSSI: " + String(rssi) + "</span>";
   s += "<input type=\"password\" placeholder=\"Passwort eingeben\" name=\"pw\" required>";
-  s += "<button type=\"submit\" class=\"small\">Verbinden</button>";
+  s += "<button id=\"nw-btn-" + String(id) + "\" type=\"submit\" class=\"small\">Verbinden</button>";
   s += "<input type=\"hidden\" name=\"ssid\" value=\"" + ssid + "\">";
   s += "<input type=\"hidden\" name=\"bssid\" value=\"" + bssid + "\">";
   s += "</form></li>";
@@ -104,11 +169,11 @@ String networkItemHTML(const String &ssid, const String &bssid, const int &rssi)
 
 // => Scan for WiFi-networks and create <ul> of found networks
 // ***********************************************************
-void scanNetworks(String &networks_html) {
+void scanNetworks() {
   Serial.println("Scanning for WiFi networks...");
   int n = WiFi.scanNetworks();
 
-  // Show on serial monitor
+  // Show found networks on serial monitor
   if (verbose) {
     if (n != 0) {
       Serial.println("-----------------------------");
@@ -128,15 +193,14 @@ void scanNetworks(String &networks_html) {
 
   // Create network HTML-list
   if (n != 0) {
-    String nws = "<p>Netzwerk waehlen:</p>";
-    nws += "<ul class=\"blocks\">";
+    String nws = "<ul class=\"blocks\">";
     for (int i = 0; i < n; ++i) {
-      nws += networkItemHTML(WiFi.SSID(i), WiFi.BSSIDstr(i), WiFi.RSSI(i));
+      nws += networkItemHTML(i, WiFi.SSID(i), WiFi.BSSIDstr(i), WiFi.RSSI(i));
     }
     nws += "</ul>";
     networks_html = nws;
   } else {
-    networks_html = "<p>Keine Netzwerke gefunden.<br>Warte 15 Sekunden und aktualisiere die Seite.</p>";
+    networks_html = "<p>Keine verfügbaren Netzwerke gefunden.<br>Bitte warte etwas und lade dann diese Seite erneut.</p>";
   }
 }
 
@@ -146,7 +210,7 @@ void scanNetworks(String &networks_html) {
 bool initWiFi() {
   // Load WiFi settings from Prefs
   loadCredentials();
-  Serial.println("WiFi from PREFS: ");
+  Serial.print("WiFi from PREFS: ");
   Serial.print(wifi_ssid);
   Serial.print(" {");
   Serial.print(wifi_bssid);
@@ -215,15 +279,27 @@ bool initWiFi() {
 }
 
 
+// => Load server config
+// *********************
+void initServerConfig() {
+    loadServerConfig();
+    Serial.print("Server config from PREFS: User: ");
+    Serial.print(sta_user_str);
+    Serial.print(" | PW: ");
+    Serial.print(sta_pw_str);
+    Serial.print(" | Port: ");
+    Serial.println(sta_port);
+}
+
+
 // Start AP mode server and ask for local WiFi credentials.
 // ********************************************************
-extern String processor(const String &var);
-
 void getCredentials(AsyncWebServer *server, DNSServer &dns_server) {
   in_station_mode = false;  // not connected to a WiFi network
 
   // Define server with standard HTTP port 80
   server = new AsyncWebServer(80);
+  initServerConfig();
 
   // Start WiFi in AP mode
   WiFi.mode(WIFI_AP);
@@ -244,7 +320,9 @@ void getCredentials(AsyncWebServer *server, DNSServer &dns_server) {
   Serial.print("Starting AP-mode. AP-IP: ");
   Serial.println(WiFi.softAPIP());
   Serial.print("AP-URL: ");
-  Serial.println(get_ip_url());
+  Serial.print(get_ip_url());
+  Serial.print(":");
+  Serial.println(sta_port);
 
   // Start DNS Server for captive portal
   // Redirects all URLs to AP server
@@ -256,17 +334,23 @@ void getCredentials(AsyncWebServer *server, DNSServer &dns_server) {
   } else {
     Serial.println("failed.");
   }
-  
-  // Configure AP-mode server root URL
+
+  // Root URL
   server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+    alert = "";
+    request->send(SPIFFS, "/ap-index-esp.html", String(), false, processor);
+  });
+
+  // Set Wifi Credentials
+  server->on("/network", HTTP_GET, [](AsyncWebServerRequest* request) {
     if (request->hasParam("pw") && request->hasParam("ssid") && request->hasParam("bssid")) {
       // Unpack parameters, WiFi credentials
       wifi_ssid = request->getParam("ssid")->value();
       wifi_bssid = request->getParam("bssid")->value();
       wifi_pw = request->getParam("pw")->value();
-      Serial.println(wifi_ssid + " (" + wifi_bssid + ") PW: " + wifi_pw);
+      Serial.println("Received WiFI Credentials | " + wifi_ssid + " (" + wifi_bssid + ") PW: " + wifi_pw);
 
-      // Save submitted credentials
+      // Save credentials
       saveCredentials();
 
       // Send message and reboot ESP
@@ -276,11 +360,38 @@ void getCredentials(AsyncWebServer *server, DNSServer &dns_server) {
       msg += wifi_bssid;
       msg += "} zu verbinden.";
       request->send(200, "text/plain", msg);
+
+      // Restart ESP
       delay(2000);
       ESP.restart();
-    } else {
-      request->send(SPIFFS, "/ap-index-esp.html", String(), false, processor);
     }
+    alert += "Fehler: Die Netzwerkauswahl konnte nicht übernommen werden!<br>";
+    request->send(SPIFFS, "/ap-index-esp.html", String(), false, processor);
+  });
+
+  // Set server config
+  server->on("/config", HTTP_GET, [](AsyncWebServerRequest* request) {
+    if (request->hasParam("user") && request->hasParam("pw") && request->hasParam("port")) {
+      // Unpack parameters
+      sta_user_str = request->getParam("user")->value();
+      sta_pw_str = request->getParam("pw")->value();
+      sta_port = request->getParam("port")->value().toInt();
+      Serial.println("Received Server Config | User: " + sta_user_str + " PW: " + sta_pw_str + " | Port: " + String(sta_port));
+      saveServerConfig();
+      alert += "Neue Serverkonfiguration wurde übernommen.<br>";
+    } else {
+      alert += "Fehler: Die Serverkonfiguration konnte nicht übernommen werden!<br>";
+    }
+    request->send(SPIFFS, "/ap-index-esp.html", String(), false, processor);
+  });
+
+  // Reset server config
+  server->on("/reset", HTTP_GET, [](AsyncWebServerRequest* request) {
+    // Reset server config
+    resetServerConfig();
+    Serial.println("Reset Server Config | User: " + sta_user_str + " PW: " + sta_pw_str + " | Port: " + String(sta_port));
+    alert += "Die Serverkonfiguration wurde zurückgesetzt.<br>";
+    request->send(SPIFFS, "/ap-index-esp.html", String(), false, processor);
   });
 
   // Trigger a rescan for networks

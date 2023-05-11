@@ -7,8 +7,9 @@
     <template #action>
       <button
         class="btn-std-resp bold flex-cc"
-        @click="disconnect($event)"
         title="Trennt und setzt die Netzwerverbindung des Rotor Controllers zurück."
+        ref="disconnectBtn"
+        @click="disconnect($event)"
       >
         Trennen
       </button>
@@ -33,9 +34,30 @@
 import SettingCard from '@/components/settings/SettingCard.vue';
 import { useSettingsStore } from '../../stores/settings';
 import { useRouter } from 'vue-router';
+import { ref } from 'vue';
 
 const settingsStore = useSettingsStore();
 const router = useRouter();
+
+const disconnectBtn = ref(null);
+
+function animatedDots(el) {
+  el.textContent = ' ...';
+  setTimeout(() => {
+    el.textContent = '. ..';
+  }, 500);
+  setTimeout(() => {
+    el.textContent = '.. .';
+  }, 1000);
+}
+
+function dots(el) {
+  el.style.width = String(el.offsetWidth) + 'px';
+  animatedDots(el);
+  setInterval(() => {
+    animatedDots(el);
+  }, 1500);
+}
 
 // Request conmirmation before sending disconnect request
 function disconnect(event) {
@@ -43,8 +65,14 @@ function disconnect(event) {
   msg += 'Ein Fernzugriff ist dann nicht mehr möglich.\n';
   msg += 'Der Rotor Controller muss danach lokal neu eingerichtet werden.';
   if (confirm(msg)) {
-    fetch('/disconnect');
-    router.push({ name: 'disconnect' });
+    dots(disconnectBtn.value);
+    fetch('/disconnect')
+      .then(() => {
+        router.push({ name: 'disconnect' });
+      })
+      .catch(() => {
+        router.push({ name: 'disconnect-failed' });
+      });
   }
 }
 </script>

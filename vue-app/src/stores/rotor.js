@@ -1,4 +1,4 @@
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, watch } from 'vue';
 import { defineStore } from 'pinia';
 
 export const useRotorStore = defineStore('rotor', () => {
@@ -30,7 +30,8 @@ export const useRotorStore = defineStore('rotor', () => {
         rotation: 0, // -1: CCW, 0:Stop, 1:CW
         angle: 0.0,
         adc_v: 0.0,
-        speed: 0 // 0-100
+        speed: 0,   // 0-100
+        target: null
     });
 
     // *************
@@ -53,15 +54,19 @@ export const useRotorStore = defineStore('rotor', () => {
         return rotor.angle.toFixed(1);
     });
 
-    // Get angle as string with two decimals
-    const angle2D = computed(() => {
-        return rotor.angle.toFixed(2);
-    });
-
     // Get wether rotor is in overlap mode
     const isOverlap = computed(() => {
         return rotor.angle > 360;
     });
+
+    // Get wether a target has been set
+    const hasTarget = computed(() => {
+        if (rotor.target == null) {
+            return false;
+        } else {
+            return true;
+        }
+    })
 
     // Get speed JSON message
     const getSpeedMsg = computed(() => {
@@ -73,9 +78,27 @@ export const useRotorStore = defineStore('rotor', () => {
         return `{\"rotation\":${dir}}`;
     }
 
+    // Get auto rotation request JSON message
+    function getTargetMessage(angle, useOverlap) {
+        const msg = {
+            "target": angle,
+            "useOverlap": useOverlap
+        }
+        return JSON.stringify(msg);
+    }
+
     // *************
     //    Actions
     // *************
+
+    watch(
+        () => rotor.rotation,
+        (newRotation, oldRotation) => {
+            if (!newRotation && oldRotation) {
+                rotor.target = null;
+            }
+        }
+    )
 
     // *****
     return {
@@ -83,9 +106,10 @@ export const useRotorStore = defineStore('rotor', () => {
         cardinal,
         angle,
         angle1D,
-        angle2D,
         isOverlap,
+        hasTarget,
         getRotationMsg,
-        getSpeedMsg
+        getSpeedMsg,
+        getTargetMessage
     };
 });

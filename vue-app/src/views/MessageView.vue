@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -25,10 +25,14 @@ const props = defineProps({
   }
 });
 
+const thisRouteName = router.currentRoute.value.name;
+
 onMounted(() => {
   if (props.pushTo) {
     setTimeout(function () {
-      router.push({ name: props.pushTo });
+      if (router.currentRoute.value.name === thisRouteName) {
+        router.push({ name: props.pushTo });
+      }
     }, props.pushAfter);
   }
 });

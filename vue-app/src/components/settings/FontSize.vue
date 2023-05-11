@@ -15,11 +15,11 @@
       </div>
     </template>
 
-    <template #content>
+    <!--template #content>
       <p class="txt-dark">
         Vergrößert oder verkleinert die Schriftgröße der Benutzeroberfläche.
       </p>
-    </template>
+    </template-->
   </SettingCard>
 </template>
 

@@ -2,16 +2,24 @@
 import { RouterView } from 'vue-router';
 import Header from '@/components/Header.vue';
 
-import { watch } from 'vue';
+import { watch, onBeforeMount } from 'vue';
 
 import { useRotorStore } from '@/stores/rotor';
+import { useUIStore } from '@/stores/ui'
 
 const rotorStore = useRotorStore();
+const uiStore = useUIStore();
 
 // Show current rotor angle in browser tab title.
 watch(rotorStore.rotor, () => {
   document.title = `RotorControl [ ${rotorStore.angle}°, ${rotorStore.cardinal} ]`;
 })
+
+// Apply ui settings from local storage
+onBeforeMount(() => {
+  uiStore.applyColorTheme();
+  uiStore.applyFontSize();
+});
 
 </script>
 

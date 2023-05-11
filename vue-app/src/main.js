@@ -32,7 +32,8 @@ import {
     faTextHeight,
     faLock,
     faLockOpen,
-    faPalette
+    faPalette,
+    faCircleHalfStroke
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -58,7 +59,8 @@ library.add(
     faTextHeight,
     faLock,
     faLockOpen,
-    faPalette
+    faPalette,
+    faCircleHalfStroke
 );
 
 // Setup app
@@ -78,4 +80,4 @@ app.use(router);
 app.mount('#app');
 
 // Create umbrella store here to init the WebSocket
-const store = useUmbrellaStore();
+const umbrellaStore = useUmbrellaStore();

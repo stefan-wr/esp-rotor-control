@@ -7,7 +7,7 @@
     <template #action>
       <button
         class="btn-std-resp bold flex-cc"
-        title="Setzt die Rotorsperre zurück"
+        title="Setzt die Rotorsperre zurück."
         @click="resetLock()"
       >
         Zurücksetzen

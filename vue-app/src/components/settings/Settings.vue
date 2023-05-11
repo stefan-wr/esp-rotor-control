@@ -1,18 +1,20 @@
 <template>
-  <div id="settings" class="flex-vst gap-one l-align">
+  <div id="settings" class="flex-vst gap-one">
+    <h2 class="medium hide-m">Einstellungen</h2>
     <Disconnect></Disconnect>
     <Reboot></Reboot>
     <FontSize></FontSize>
     <ColorTheme></ColorTheme>
     <KeyboardShortcuts></KeyboardShortcuts>
+    <UseOverlap></UseOverlap>
     <ResetLock></ResetLock>
-    <ADC></ADC>
-    
+    <!--ADC></ADC-->
   </div>
 </template>
 
 <script setup>
 import KeyboardShortcuts from '@/components/settings/KeyboardShortcuts.vue';
+import UseOverlap from '@/components/settings/UseOverlap.vue';
 import Disconnect from '@/components/settings/Disconnect.vue';
 import Reboot from '@/components/settings/Reboot.vue';
 import ADC from '@/components/settings/ADC.vue';

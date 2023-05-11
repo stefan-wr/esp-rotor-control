@@ -1,5 +1,6 @@
 import { computed, reactive, ref } from 'vue';
 import { defineStore } from 'pinia';
+import { useStorage } from '@vueuse/core';
 
 import { useUmbrellaStore } from './umbrella.js';
 
@@ -38,7 +39,7 @@ export const useSettingsStore = defineStore('settings', () => {
     const lock = reactive({
         isLocked: false,
         by: '',
-        name: ''
+        name: useStorage('lock-name', '')
     });
 
     // *************

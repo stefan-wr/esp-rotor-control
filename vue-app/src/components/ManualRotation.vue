@@ -5,7 +5,7 @@
       <button
         class="medium bold"
         :class="{ 'btn-pressed': isLeftBtnPressed }"
-        title="Drehe den Rotor gegen den Uhrzeigersinn"
+        title="Dreht den Rotor gegen den Uhrzeigersinn."
         @mousedown.prevent="rotateLeft()"
         @touchstart.prevent="rotateLeft()"
         @mouseup.prevent="stopRotation()"
@@ -16,14 +16,14 @@
         <Icon icon="fa-solid fa-rotate-left" />
       </button>
 
-      <button class="medium bold" title="Stoppe den Rotor" @click.prevent="stopRotation()">
+      <button class="medium bold" title="Stoppt den Rotor." @click.prevent="stopRotation()">
         Stop
       </button>
 
       <button
         class="medium bold"
         :class="{ 'btn-pressed': isRightBtnPressed }"
-        title="Drehe den Rotor mit dem Uhrzeigersinn"
+        title="Dreht den Rotor mit dem Uhrzeigersinn."
         @mousedown.prevent="rotateRight()"
         @touchstart.prevent="rotateRight()"
         @mouseup.prevent="stopRotation()"
@@ -66,11 +66,15 @@ function rotateRight() {
 }
 
 function stopRotation() {
+  /*
   if (isLeftBtnPressed.value || isRightBtnPressed.value) {
     isLeftBtnPressed.value = false;
     isRightBtnPressed.value = false;
-    umbrellaStore.sendRotation(0);
   }
+  */
+  isLeftBtnPressed.value = false;
+  isRightBtnPressed.value = false;
+  umbrellaStore.sendRotation(0);
 }
 
 function startRotationKeyEventListener(event) {

@@ -29,6 +29,17 @@ const router = createRouter({
         },
         {
             path: '/settings',
+            name: 'reboot-failed',
+            component: MessageView,
+            props: {
+                message:
+                    'FEHLER: RotorControl reagiert nicht auf Neustart-Anfrage. Diese Seite aktualisiert sich in 5 Sekunden.',
+                pushTo: 'settings',
+                pushAfter: 5000
+            }
+        },
+        {
+            path: '/settings',
             name: 'disconnect',
             component: MessageView,
             props: {
@@ -36,6 +47,17 @@ const router = createRouter({
                     'RotorControl trennt sich nun vom Netzwerk und startet sich neu. Die Rotor-Steuerung ist damit inaktiv, bis eine neue Netzwerkverbindung eingerichtet wurde. Sie können dieses Fenster schließen.',
                 pushTo: '',
                 pushAfter: 0
+            }
+        },
+        {
+            path: '/settings',
+            name: 'disconnect-failed',
+            component: MessageView,
+            props: {
+                message:
+                    'FEHLER: RotorControl reagiert nicht auf die Anfrage zum Trennen der Netzwerkverbindung. Diese Seite aktualisiert sich in 5 Sekunden.',
+                pushTo: 'settings',
+                pushAfter: 5000
             }
         },
 

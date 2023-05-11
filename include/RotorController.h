@@ -21,6 +21,7 @@ namespace Rotor {
     private:
         Adafruit_ADS1115 adc;
         const int adc_channel = 0;
+        bool ads_failed = false;
 
     public:
         int last_adc_value = 0;
@@ -63,20 +64,28 @@ namespace Rotor {
     public:
         RotorController* rotor_ptr;     // Pointer to parent class instace
         Messenger();
-        void sendLastRotationMsg(const bool &with_angle);
-        void sendNewRotationMsg(const bool &with_angle);
+        void sendLastRotation(const bool &with_angle);
+        void sendNewRotation(const bool &with_angle);
         void sendSpeed();
         void sendCalibration();
+        void sendTarget();
     };
     
 
     // Rotor Controller Class
     // **********************
     class RotorController {
+    private:
+        void startAutoRotation(const int dir);
     public:
         bool is_rotating = false;
         int direction = 0;  // 0: CCW, 1: CW
         int speed = 0;
+        int max_angle = 449;
+        int min_rotation_angle = 2;
+        bool is_auto_rotating = false;
+        float auto_rotation_target;
+        float auto_rotation_buffer = 0.7;
 
         Messenger messenger;
         Rotation rotor;
@@ -89,6 +98,8 @@ namespace Rotor {
         void setCalibration(const float u1, const float u2,
                             const float a1, const float a2);
         void setAngleOffset(const int offset);
+        void rotateTo(const float angle, const bool use_overlap);
+        void watchAutoRotation();
     };
 }
 

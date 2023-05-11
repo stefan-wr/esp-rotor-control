@@ -4,8 +4,8 @@
     font-style: normal;
     font-weight: 400;
     src: local('Inter'),
-         local('Inter-Regular'),
-         url('/inter-regular.woff2') format('woff2');
+        local('Inter-Regular'),
+        url('/inter-regular.woff2') format('woff2');
 }
 
 @font-face {
@@ -13,8 +13,8 @@
     font-style: normal;
     font-weight: 700;
     src: local('Inter'),
-         local('Inter-Bold'),
-         url('/inter-700.woff2') format('woff2');
+        local('Inter-Bold'),
+        url('/inter-700.woff2') format('woff2');
 }
 
 /* HTML and BODY */
@@ -31,7 +31,9 @@ html {
     --text-color-accent: #162f36;
 }
 
-*, *:before, *:after {
+*,
+*:before,
+*:after {
     box-sizing: inherit;
     font-family: Inter, Helvetica, Arial, sans-serif;
 }
@@ -57,7 +59,7 @@ body {
 
 .wrd-break {
     word-wrap: break-word;
-    overflow: hidden;    
+    overflow: hidden;
 }
 
 /* Website content */
@@ -75,7 +77,7 @@ body {
     justify-content: center;
 }
 
-.content-card > h1 {
+.content-card>h1 {
     margin-top: 0;
 }
 
@@ -89,7 +91,7 @@ body {
     gap: 1em;
 }
 
-.blocks > li {
+.blocks>li {
     background-color: var(--content-color-2);
     padding: 1em;
     border-radius: 1em;
@@ -111,15 +113,15 @@ button {
     user-select: none;
 }
 
-/* Network form */
-.network-form {
-    display: grid;
-    grid-template: auto auto / minmax(auto, 100%) min-content;
-    gap: 12px;
-    place-items: center / stretch;
+.dots {
+    text-align: left;
+    width: 16px;
 }
 
-.network-form input[type="password"] {
+/* Input */
+input[type="password"],
+input[type="number"],
+input[type="text"] {
     border: none;
     border-radius: 0.4em;
     height: 32px;
@@ -127,4 +129,35 @@ button {
     margin: 0;
     min-width: 100px;
     color: var(--text-color-accent);
+}
+
+/* Network form */
+.network-form {
+    display: grid;
+    grid-template: auto auto / minmax(auto, 100%) minmax(85px, auto);
+    place-items: center / stretch;
+    gap: 12px;
+}
+
+/* Server Config Form */
+#config-form {
+    display: grid;
+    grid-template-columns: auto minmax(auto, 100%);
+    align-items: center;
+    justify-content: stretch;
+    gap: 12px;
+}
+
+.server-config-btns {
+    grid-column: 1 / span 2;
+    display: flex;
+    justify-content: stretch;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.server-config-btns button {
+    flex-grow: 1;
+    flex-basis: 47%;
 }

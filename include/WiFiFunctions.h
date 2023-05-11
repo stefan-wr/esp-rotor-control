@@ -11,6 +11,26 @@ extern String wifi_ssid;
 extern String wifi_bssid;
 extern String wifi_pw;
 extern uint8_t wifi_bssid_uint8[6];
+extern int sta_user_port;
+
+// STATION server config
+// Defined in WiFiFunctions.cpp
+extern int sta_port;
+extern String sta_user_str;
+extern String sta_pw_str;
+
+// --------------------------------
+
+// => Load server config in PREFS
+void loadServerConfig();
+
+// => Save server config from PREFS
+void saveServerConfig();
+
+// Reset saved server config to default
+void resetServerConfig();
+
+// --------------------------------
 
 // => Load WiFi credentials from SPIFFS
 void loadCredentials();
@@ -20,6 +40,8 @@ void saveCredentials();
 
 // => Overwrite the saved credentials with empty strings
 void resetCredentials();
+
+// --------------------------------
 
 // => React to button inmterrupt for resetting WiFi credentials
 void resetCredentialsInterrupt();
@@ -34,11 +56,14 @@ void blinkWifiLed(const int n);
 String networkItemHTML(const String &ssid, const String &bssid, const int &rssi);
 
 // => Scan for WiFi-networks and create <ul> of found networks
-void scanNetworks(String &networks_html);
+void scanNetworks();
 
 // => Initialise WiFi connection from saved parameters.
 // Return false when connecting fails.
 bool initWiFi();
+
+// => Load server config
+void initServerConfig();
 
 // Start AP mode server and ask for local WiFi credentials.
 void getCredentials(AsyncWebServer *server, DNSServer &dns_server);

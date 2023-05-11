@@ -1,5 +1,6 @@
 import { ref, computed, reactive } from 'vue';
 import { defineStore } from 'pinia';
+import { useStorage } from '@vueuse/core';
 import useColors from '@/stores/colors';
 
 export const useUIStore = defineStore('ui', () => {
@@ -12,15 +13,17 @@ export const useUIStore = defineStore('ui', () => {
     // **********************
 
     const ui = reactive({
-        kbscEnabled: true,
-        showSettings: false,
-        fontSize: 14,
-        activeColorTheme: 'default',
+        // useStorgae saves these properties in localStorage
+        kbscEnabled: useStorage('kbsc-enabled', true),
+        fontSize: useStorage('font-size', 14),
+        activeColorTheme: useStorage('active-color-theme', 'default'),
 
-        cards: {},
+        cards: useStorage('cards', {}),
 
-        reqAngle: 0,
-        reqAngleLocked: false,
+        requestAngle: 0,
+        targetAngle: 0,
+        targetAngleLocked: false,
+        useOverlap: useStorage('use-overlap', true),
         isMouseInCompass: false
     });
 
@@ -43,7 +46,6 @@ export const useUIStore = defineStore('ui', () => {
         return theme === ui.activeColorTheme;
     }
 
-
     // *************
     //    Actions
     // *************
@@ -52,7 +54,7 @@ export const useUIStore = defineStore('ui', () => {
     function fontSizePlus() {
         if (!this.isFontSizeMax) {
             ui.fontSize++;
-            applyFontsize();
+            applyFontSize();
         }
     }
 
@@ -60,32 +62,38 @@ export const useUIStore = defineStore('ui', () => {
     function fontSizeMinus() {
         if (!this.isFontSizeMin) {
             ui.fontSize--;
-            applyFontsize();
+            applyFontSize();
         }
     }
 
     // Apply font size
-    function applyFontsize() {
+    function applyFontSize() {
         document.documentElement.style.setProperty('--font-size', ui.fontSize + 'px');
     }
 
-    // Apply color theme
-    function applyColorTheme(theme) {
-        console.log("A")
-        colorThemes[theme].isActive = true;
+    // Set color theme
+    function setColorTheme(theme) {
         ui.activeColorTheme = theme;
-        for (const [variable, color] of Object.entries(colorThemes[theme].vars)) {
+        applyColorTheme();
+    }
+
+    // Apply color theme
+    function applyColorTheme() {
+        for (const [variable, color] of Object.entries(colorThemes[ui.activeColorTheme].vars)) {
             document.documentElement.style.setProperty('--' + variable, color);
         }
     }
 
+    // **********
     return {
         ui,
         fontSizePlus,
         fontSizeMinus,
+        applyFontSize,
         isFontSizeMax,
         isFontSizeMin,
         colorThemes,
+        setColorTheme,
         applyColorTheme,
         isActiveColorTheme
     };

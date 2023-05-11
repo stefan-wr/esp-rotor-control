@@ -229,18 +229,21 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         sendData(`${identifiers.lock}|${msg}`);
     }
 
-    function sendUiMsg(msg) {
-        sendData(`${identifiers.ui}|${msg}`);
-    }
-
     // Specific senders
     // ----------------
     function sendRotation(dir) {
         sendRotorMsg(rotorStore.getRotationMsg(dir));
+        if (true) {
+            uiStore.ui.targetAngleLocked = false;
+        }
     }
 
     function sendSpeed() {
         sendRotorMsg(rotorStore.getSpeedMsg);
+    }
+
+    function sendTarget(angle) {
+        sendRotorMsg(rotorStore.getTargetMessage(angle, uiStore.ui.useOverlap));
     }
 
     function sendCalibration(a1, u1, a2, u2) {
@@ -264,6 +267,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         hasLostConnection,
         sendRotation,
         sendSpeed,
+        sendTarget,
         sendCalibration,
         sendFavorites,
         resetFavorites,
