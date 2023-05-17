@@ -90,19 +90,25 @@
         <span
           class="fav-index fav-head fav-head-sort"
           @click="settingsStore.sortFavoritesBy.id"
+          @keydown.enter="settingsStore.sortFavoritesBy.id"
           title="Favoriten nach ID sortieren."
+          tabindex="0"
           >#</span
         >
         <span
           class="fav-name fav-head fav-head-sort"
           @click="settingsStore.sortFavoritesBy.name"
+          @keydown.enter="settingsStore.sortFavoritesBy.name"
           title="Favoriten nach Namen sortieren."
+          tabindex="0"
           >Name</span
         >
         <span
           class="fav-angle fav-head fav-head-sort"
           @click="settingsStore.sortFavoritesBy.angle"
+          @keydown.enter="settingsStore.sortFavoritesBy.angle"
           title="Favoriten nach Winkel sortieren."
+          tabindex="0"
         >
           Azimuth
         </span>
@@ -324,7 +330,7 @@ function requestAngle(angle) {
     cursor: pointer;
     justify-self: start;
 
-    &:hover {
+    &:hover, &:focus-visible {
       opacity: 0.9;
     }
   }

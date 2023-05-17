@@ -30,8 +30,13 @@ export default function useColors() {
                 'footer-text-color-hover': 'var(--text-color)',
 
                 'compass-color': 'var(--text-color)',
+                'compass-background-color': 'var(--content-color-1)',
+                'compass-cross-color': 'var(--content-color-2)',
+                'compass-center-color': 'var(--content-color-3)',
                 'compass-needle-color': 'var(--text-color)',
-                'compass-req-needle-color': 'var(--content-color-0)',
+                'compass-req-needle-color': 'var(--text-color-accent)',
+                'compass-cardinals-color': 'var(--content-color-3)',
+                'compass-degrees-color': '#12262c',
 
                 'button-color': 'var(--accent-color)',
                 'button-text-color': 'var(-text-color-accent)',
@@ -70,8 +75,13 @@ export default function useColors() {
                 'footer-text-color-hover': 'var(--text-color)',
 
                 'compass-color': 'var(--text-color)',
+                'compass-background-color': 'var(--content-color-1)',
+                'compass-cross-color': 'var(--content-color-2)',
+                'compass-center-color': 'var(--content-color-3)',
                 'compass-needle-color': 'var(--text-color)',
                 'compass-req-needle-color': 'var(--text-color-accent)',
+                'compass-cardinals-color': 'var(--content-color-3)',
+                'compass-degrees-color': 'var(--text-color-accent)',
 
                 'button-color': 'var(--accent-color)',
                 'button-text-color': 'var(-text-color-accent)',
@@ -110,8 +120,13 @@ export default function useColors() {
                 'footer-text-color-hover': 'var(--text-color)',
 
                 'compass-color': 'var(--text-color)',
+                'compass-background-color': 'var(--content-color-1)',
+                'compass-cross-color': 'var(--content-color-3)',
+                'compass-center-color': 'var(--content-color-3)',
                 'compass-needle-color': 'var(--text-color)',
-                'compass-req-needle-color': 'var(--text-color-accent)',
+                'compass-req-needle-color': 'var(--accent-color)',
+                'compass-cardinals-color': 'var(--content-color-3)',
+                'compass-degrees-color': 'var(--text-color-darker)',
 
                 'button-color': 'var(--accent-color)',
                 'button-text-color': 'var(-text-color-accent)',
@@ -150,8 +165,13 @@ export default function useColors() {
                 'footer-text-color-hover': 'var(--text-color)',
 
                 'compass-color': 'var(--content-color-3)',
+                'compass-background-color': 'var(--content-color-0)',
+                'compass-cross-color': 'var(--content-color-2)',
+                'compass-center-color': 'var(--content-color-3)',
                 'compass-needle-color': 'var(--text-color)',
                 'compass-req-needle-color': 'var(--text-color)',
+                'compass-cardinals-color': 'var(--content-color-3)',
+                'compass-degrees-color': 'var(--content-color-darker)',
 
                 'button-color': 'var(--accent-color)',
                 'button-text-color': 'var(-text-color-accent)',

@@ -12,11 +12,17 @@
         @mouseleave.prevent="stopRotation()"
         @touchend.prevent="stopRotation()"
         @touchcancel.prevent="stopRotation()"
+        :disabled="settingsStore.isLockedByElse"
       >
         <Icon icon="fa-solid fa-rotate-left" />
       </button>
 
-      <button class="medium bold" title="Stoppt den Rotor." @click.prevent="stopRotation()">
+      <button
+        class="medium bold"
+        title="Stoppt den Rotor."
+        @click.prevent="stopRotation()"
+        :disabled="settingsStore.isLockedByElse"
+      >
         Stop
       </button>
 
@@ -30,6 +36,7 @@
         @mouseleave.prevent="stopRotation()"
         @touchend.prevent="stopRotation()"
         @touchcancel.prevent="stopRotation()"
+        :disabled="settingsStore.isLockedByElse"
       >
         <Icon icon="fa-solid fa-rotate-right" />
       </button>
@@ -44,9 +51,11 @@ import { ref } from 'vue';
 import { useEventListener } from '@vueuse/core';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
+import { useSettingsStore } from '@/stores/settings';
 import { useUIStore } from '@/stores/ui';
 
 const umbrellaStore = useUmbrellaStore();
+const settingsStore = useSettingsStore();
 const uiStore = useUIStore();
 
 const isLeftBtnPressed = ref(false);
@@ -72,7 +81,12 @@ function stopRotation() {
 
 // Press left/right arrow keys -> start rotation event listener
 function startRotationKeyEventListener(event) {
-  if (!event.repeat && uiStore.ui.kbscEnabled && event.target.tagName !== 'INPUT') {
+  if (
+    !event.repeat &&
+    uiStore.ui.kbscEnabled &&
+    !settingsStore.isLockedByElse &&
+    event.target.tagName !== 'INPUT'
+  ) {
     switch (event.key) {
       case 'ArrowLeft':
         rotateLeft();
@@ -86,7 +100,7 @@ function startRotationKeyEventListener(event) {
 
 // Lift left/right arrow keys: stop rotation event listener
 function stopRotationKeyEventListener(event) {
-  if (uiStore.ui.kbscEnabled && event.target.tagName !== 'INPUT') {
+  if (uiStore.ui.kbscEnabled && !settingsStore.isLockedByElse && event.target.tagName !== 'INPUT') {
     if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
       stopRotation();
     }

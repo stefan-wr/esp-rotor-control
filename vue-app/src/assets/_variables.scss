@@ -67,3 +67,10 @@ $text-light-opacity: 0.6;
     display: none;
   }
 }
+
+/* Touch devices */
+@mixin touch() {
+  @media (hover: none) {
+      @content;
+  }
+}

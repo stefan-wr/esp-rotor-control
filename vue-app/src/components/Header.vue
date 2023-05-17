@@ -14,6 +14,7 @@
       :title="ledTitle"
     >
       RotorControl
+      <span class="small">{{ fps }} FPS</span>
     </h1>
     <h1 v-else class="normal l-align blink-txt no-wrap-ellip" :title="ledTitle">
       <span class="hide-s">Keine </span>Verbindung&hellip;
@@ -30,8 +31,12 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useFps } from '@vueuse/core';
 import { useUmbrellaStore } from '@/stores/umbrella';
+
 const umbrellaStore = useUmbrellaStore();
+
+var fps = useFps();
 
 const ledTitle = computed(() => {
   if (umbrellaStore.hasLostConnection) {

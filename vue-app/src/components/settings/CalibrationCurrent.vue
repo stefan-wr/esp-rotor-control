@@ -54,7 +54,7 @@ const settingsStore = useSettingsStore();
 function resetCalibration(event) {
   let msg = 'Kalibrierung auf Werkseinstellungen zurücksetzen?\n\n';
   msg +=
-    'Für eine genaue Positionsanzeige ist eine weitere Kalibrierung auf jeden Fall erforderlich!';
+    'Für eine genaue Positionsanzeige ist eine individuelle Kalibrierung auf jeden Fall erforderlich!';
   if (confirm(msg)) {
     umbrellaStore.sendCalibration(0.0, 0.05, 450, 4.1);
   }

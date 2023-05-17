@@ -1,14 +1,19 @@
 <template>
-  <div class="switch" :class="{'disabled': disabled}">
+  <div class="switch" :class="{ disabled: disabled }">
     <input
       type="checkbox"
       @change="$emit('toggle')"
       autocomplete="off"
-      :class="{'disabled': disabled}"
+      :class="{ disabled: disabled }"
       :checked="toggle"
       :disabled="disabled"
     />
-    <span class="switch-slider"></span>
+    <span
+      class="switch-slider"
+      tabindex="0"
+      @keyup.enter="$emit('toggle')"
+      @keyup.space="$emit('toggle')"
+    ></span>
     <span class="switch-on small">
       <slot name="on">AN</slot>
     </span>
@@ -62,6 +67,19 @@ $slider-trans: 0.2s;
   width: var(--switch-width);
   height: var(--switch-height);
   flex-shrink: 0;
+
+  @media (hover: none) {
+    --switch-height: 2em;
+    font-size: 1.1rem !important;
+
+    @include medium {
+      font-size: 1.2rem !important;
+    }
+
+    @include small {
+      font-size: 1.2rem !important;
+    }
+  }
 }
 
 .switch input {
@@ -91,6 +109,12 @@ $slider-trans: 0.2s;
   border-radius: var(--switch-bradius);
   background-color: var(--content-color-1);
   transition: background-color $slider-trans;
+
+  &:focus-visible {
+    border-radius: var(--switch-bradius);
+    outline: 0.2em solid var(--accent-color);
+    outline-offset: 0.2em;
+  }
 }
 
 .switch input:checked + .switch-slider {

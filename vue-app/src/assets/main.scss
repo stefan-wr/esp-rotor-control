@@ -59,8 +59,13 @@ html {
     --footer-text-color-hover: var(--text-color);
 
     --compass-color: var(--text-color);
+    --compass-background-color: var(--content-color-1);
+    --compass-cross-color: var(--content-color-2);
+    --compass-center-color: var(--content-color-3);
     --compass-needle-color: var(--text-color);
     --compass-req-needle-color: var(--content-color-0);
+    --compass-cardinals-color: var(--content-color-3);
+    --compass-degrees-color: var(--content-color-3);
 
     --button-color: var(--accent-color);
     --button-text-color: var(--text-color-accent);
@@ -68,8 +73,8 @@ html {
     --input-color: var(--text-color);
     --input-text-color: var(--text-color-accent);
 
-    /* Color Variables */ 
-    --test-color: #cfcfcf;
+    /* Color Variables */
+    --test-color: #12262c;
 }
 
 body {
@@ -391,6 +396,7 @@ input[type='number'] {
     outline: none;
     color: var(--input-text-color);
     background-color: var(--input-color);
+    position: relative;
 }
 
 input:disabled {

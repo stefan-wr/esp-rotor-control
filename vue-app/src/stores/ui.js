@@ -20,6 +20,9 @@ export const useUIStore = defineStore('ui', () => {
 
         cards: useStorage('cards', {}),
 
+        hasDegreeLabels: useStorage('has-degree-labels', true),
+        hasCardinalLabels: useStorage('has-cardinal-labels', true),
+        hasFavoritesDots: useStorage('has-favorites-dots', true),
         requestAngle: 0,
         targetAngle: 0,
         useOverlap: useStorage('use-overlap', true),

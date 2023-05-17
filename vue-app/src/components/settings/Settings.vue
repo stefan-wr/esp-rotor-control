@@ -5,6 +5,7 @@
     <Reboot></Reboot>
     <FontSize></FontSize>
     <ColorTheme></ColorTheme>
+    <CompassSettings></CompassSettings>
     <KeyboardShortcuts></KeyboardShortcuts>
     <UseOverlap></UseOverlap>
     <ResetLock></ResetLock>
@@ -21,6 +22,7 @@ import ADC from '@/components/settings/ADC.vue';
 import FontSize from '@/components/settings/FontSize.vue';
 import ColorTheme from '@/components/settings/ColorTheme.vue';
 import ResetLock from '@/components/settings/ResetLock.vue';
+import CompassSettings from './CompassSettings.vue';
 
 import { ref } from 'vue';
 

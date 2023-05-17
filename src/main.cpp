@@ -25,7 +25,9 @@ bool reset_now = false;           // Set by button, tested in main loop
 int clients_connected = 0;        // Number of connected socket clients
 bool safety_stop_now = false;     // Set by button, tested in main loop
 bool authenticate = true;         // Authenticate HTTP connections
-String lock_msg = "LOCK|{}";      // Buffer storing lock message
+
+// Buffer storing lock message, default message resets lock on ESP restart
+String lock_msg = "LOCK|{\"isLocked\":false,\"by\":\"\"}";
 
 // Create AsyncWebServer object
 AsyncWebServer *server;

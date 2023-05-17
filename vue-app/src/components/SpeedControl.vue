@@ -11,7 +11,8 @@
         max="100"
         step="10"
         @change="umbrellaStore.sendSpeed()"
-        @keydown.prevent=""
+        @keydown="preventRepeat($event)"
+        :disabled="settingsStore.isLockedByElse"
       />
       <div class="ticks flex-csp no-select">
         <div v-for="n in 11" class="no-select"></div>
@@ -30,10 +31,12 @@ import { computed } from 'vue';
 import { useEventListener } from '@vueuse/core';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
+import { useSettingsStore } from '@/stores/settings';
 import { useRotorStore } from '@/stores/rotor';
 import { useUIStore } from '@/stores/ui';
 
 const umbrellaStore = useUmbrellaStore();
+const settingsStore = useSettingsStore();
 const rotorStore = useRotorStore();
 const uiStore = useUIStore();
 
@@ -48,7 +51,7 @@ const speedLabel = computed(() => {
 
 // Event listener for setting speed with up/down arrow keys
 function speedKeyEventListener(event) {
-  if (!event.repeat && uiStore.ui.kbscEnabled && event.target.tagName !== 'INPUT') {
+  if (!event.repeat && uiStore.ui.kbscEnabled && event.target.tagName !== 'INPUT' && !settingsStore.isLockedByElse) {
     switch (event.key) {
       case 'ArrowUp':
         if (rotorStore.rotor.speed < 100) {
@@ -65,6 +68,13 @@ function speedKeyEventListener(event) {
         event.preventDefault();
         break;
     }
+  }
+}
+
+// Block key-hold on slider
+function preventRepeat(event) {
+  if (event.repeat) {
+    event.preventDefault();
   }
 }
 
@@ -120,6 +130,10 @@ useEventListener(document, 'keydown', speedKeyEventListener);
     background: var(--content-color-0);
   }
 
+  input[type='range']:disabled:hover {
+    background: var(--content-color-1);
+  }
+
   /* Range-Track */
   input[type='range']::-moz-range-track {
     margin: 0 var(--range-track-margin);
@@ -160,6 +174,15 @@ useEventListener(document, 'keydown', speedKeyEventListener);
     box-shadow: none;
   }
 
+  input[type='range']:disabled::-moz-range-thumb {
+    cursor: not-allowed;
+  }
+
+  input[type='range']:disabled::-webkit-slider-thumb {
+    cursor: not-allowed;
+  }
+
+  /* Thumb Hover */
   input[type='range']::-moz-range-thumb:hover {
     filter: brightness(0.9);
   }
@@ -167,6 +190,15 @@ useEventListener(document, 'keydown', speedKeyEventListener);
   input[type='range']::-webkit-slider-thumb:hover {
     filter: brightness(0.9);
   }
+
+  input[type='range']:disabled::-moz-range-thumb:hover {
+    filter: brightness(1.0);
+  }
+
+  input[type='range']:disabled::-webkit-slider-thumb:hover {
+    filter: brightness(1.0);
+  }
+
 
   /* Ticks */
   .ticks {
