@@ -109,7 +109,12 @@
             v-for="(fav, index) in settingsStore.favorites.array"
             :key="fav"
             class="cmp-favorite-dot"
-            @click="umbrellaStore.sendTarget(fav.angle)"
+            :class="{ 'cmp-lbl-disabled': settingsStore.isLockedByElse }"
+            @click="
+              if (!settingsStore.isLockedByElse) {
+                umbrellaStore.sendTarget(fav.angle);
+              }
+            "
           >
             <title>{{ fav.name }}</title>
             <circle
@@ -220,8 +225,17 @@
             v-for="deg in degreeLabels"
             :x="deg.x"
             :y="deg.y"
-            @click="umbrellaStore.sendTarget(deg.angle)"
-            @keydown.enter="umbrellaStore.sendTarget(deg.angle)"
+            @click="
+              if (!settingsStore.isLockedByElse) {
+                umbrellaStore.sendTarget(deg.angle);
+              }
+            "
+            @keydown.enter="
+              if (!settingsStore.isLockedByElse) {
+                umbrellaStore.sendTarget(deg.angle);
+              }
+            "
+            :class="{ 'cmp-lbl-disabled': settingsStore.isLockedByElse }"
             tabindex="0"
             dominant-baseline="middle"
           >
@@ -513,6 +527,13 @@ const favoritesRingColor = computed(() => {
   }
   &:active {
     font-weight: normal;
+  }
+}
+
+.cmp-lbl-disabled {
+  cursor: not-allowed;
+  &:hover {
+    font-weight: unset !important;
   }
 }
 

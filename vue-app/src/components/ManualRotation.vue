@@ -62,21 +62,27 @@ const isLeftBtnPressed = ref(false);
 const isRightBtnPressed = ref(false);
 
 function rotateLeft() {
-  umbrellaStore.sendRotation(0);
-  isLeftBtnPressed.value = true;
-  umbrellaStore.sendRotation(-1);
+  if (!settingsStore.isLockedByElse) {
+    umbrellaStore.sendRotation(0);
+    isLeftBtnPressed.value = true;
+    umbrellaStore.sendRotation(-1);
+  }
 }
 
 function rotateRight() {
-  umbrellaStore.sendRotation(0);
-  isRightBtnPressed.value = true;
-  umbrellaStore.sendRotation(1);
+  if (!settingsStore.isLockedByElse) {
+    umbrellaStore.sendRotation(0);
+    isRightBtnPressed.value = true;
+    umbrellaStore.sendRotation(1);
+  }
 }
 
 function stopRotation() {
-  isLeftBtnPressed.value = false;
-  isRightBtnPressed.value = false;
-  umbrellaStore.sendRotation(0);
+  if (!settingsStore.isLockedByElse) {
+    isLeftBtnPressed.value = false;
+    isRightBtnPressed.value = false;
+    umbrellaStore.sendRotation(0);
+  }
 }
 
 // Press left/right arrow keys -> start rotation event listener

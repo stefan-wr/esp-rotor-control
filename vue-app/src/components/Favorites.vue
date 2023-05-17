@@ -125,6 +125,7 @@
         <button
           class="fav-rot btn-std-resp flex-cc"
           title="Favoriten anfahren."
+          :disabled="settingsStore.isLockedByElse"
           @click="requestAngle(fav.angle)"
         >
           <span>
@@ -269,10 +270,12 @@ function addFavorite() {
 // Move to favorite
 // ----------------
 function requestAngle(angle) {
-  if (angle > 360) {
-    angle -= 360;
+  if (!settingsStore.isLockedByElse) {
+    if (angle > 360) {
+      angle -= 360;
+    }
+    umbrellaStore.sendTarget(angle);
   }
-  umbrellaStore.sendTarget(angle);
 }
 </script>
 
@@ -330,7 +333,8 @@ function requestAngle(angle) {
     cursor: pointer;
     justify-self: start;
 
-    &:hover, &:focus-visible {
+    &:hover,
+    &:focus-visible {
       opacity: 0.9;
     }
   }
