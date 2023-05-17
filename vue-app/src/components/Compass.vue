@@ -404,12 +404,12 @@ const favoritesRingRadius = computed(() => {
 
 // Dot X-coordinate
 function favoriteXCoordinate(angle) {
-  return 500 + Math.sin((angle / 180) * Math.PI) * this.favoritesRingRadius;
+  return 500 + Math.sin((angle / 180) * Math.PI) * favoritesRingRadius.value;
 }
 
 // Dot Y-coordinate
 function favoriteYCoordinate(angle) {
-  return 500 - Math.cos((angle / 180) * Math.PI) * this.favoritesRingRadius;
+  return 500 - Math.cos((angle / 180) * Math.PI) * favoritesRingRadius.value;
 }
 
 // Color of favorite rings depends on position
