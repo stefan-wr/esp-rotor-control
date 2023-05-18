@@ -336,13 +336,17 @@ void setup() {
     server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (authenticate && !request->authenticate(http_username, http_password))
         return request->requestAuthentication();
-      request->send(SPIFFS, "/index.html");
+      AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.html");
+      response->addHeader("cache-control", "private, max-age=86400");
+      request->send(response);
     });
 
     server->on("/index.js", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (authenticate && !request->authenticate(http_username, http_password))
         return request->requestAuthentication();
-      request->send(SPIFFS, "/index.js");
+      AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.js");
+      response->addHeader("cache-control", "private, max-age=86400");
+      request->send(response);
     });
 
     // Catch all route, necessary for page reloads in Vue-App
@@ -351,7 +355,7 @@ void setup() {
     });
 
     // CSS
-    server->serveStatic("/index.css", SPIFFS, "/index.css");
+    server->serveStatic("/index.css", SPIFFS, "/index.css").setCacheControl("public, max-age=86400");
 
     // Favicons
     server->serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2").setCacheControl("public,max-age=31536000");
