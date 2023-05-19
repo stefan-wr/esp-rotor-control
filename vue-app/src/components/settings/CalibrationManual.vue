@@ -74,7 +74,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
 

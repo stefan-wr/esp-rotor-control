@@ -285,18 +285,18 @@
     <!-- Additional Information -->
     <!-- ====================== -->
     <div class="compass-label border-box">
-      <span class="small">Position</span>
-      <span class="small">Richtung</span>
-      <span class="small">Zielposition</span>
+      <span class="small txt-dark">Position</span>
+      <span class="small txt-dark">Zielposition</span>
+      <span class="small txt-dark">Uhrzeit</span>
       <span class="large bold">{{ rotorStore.angle1D }}°</span>
-      <span class="large bold">{{ rotorStore.cardinal }}</span>
-      <span class="bold">{{ uiStore.ui.requestAngle.toFixed(1) }}°</span>
+      <span class="large bold">{{ target }}</span>
+      <span class="medium bold monospace" title="Die aktuelle Systemzeit">{{ currentTime }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useEventListener, useMouseInElement } from '@vueuse/core';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
@@ -336,6 +336,37 @@ const cardinalLabels = [
   { dir: 'W', x: 182, y: 513, rot: 0 },
   { dir: 'NW', x: 263, y: 313, rot: -45 }
 ];
+
+// Target position, null replaced with dashes
+const target = computed(() => {
+  if (rotorStore.rotor.target == null) {
+    return '--';
+  }
+  return String(rotorStore.rotor.target) + '°';
+});
+
+// Current time label
+// ------------------
+const today = ref(new Date());
+const currentTime = computed(() => {
+  let time = String(today.value.getHours()).padStart(2, '0') + ":";
+  time += String(today.value.getMinutes()).padStart(2, '0') + ":";
+  time += String(today.value.getSeconds()).padStart(2, '0');
+  return time;
+});
+
+// Enable Update time with mount
+let intervalId;
+onMounted(() => {
+  intervalId = setInterval(() => {
+    today.value = new Date();
+  }, 100)
+})
+
+// Disable update time on unmount
+onUnmounted(() => {
+  clearInterval(intervalId)
+});
 
 // Change ring color if rotor is locked by someone else
 // ----------------------------------------------------

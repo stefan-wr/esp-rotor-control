@@ -217,6 +217,10 @@ a {
     user-select: none;
 }
 
+.monospace {
+    font-variant-numeric: tabular-nums;
+}
+
 /* Flexbox Utilities */
 .flex {
     display: flex;
