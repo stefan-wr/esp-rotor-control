@@ -1,7 +1,7 @@
 <template>
   <footer id="footer" class="border-box flex-cc">
     <span class="small">
-      RotorControl UI - v0.0.8 - made by
+      RotorControl UI - v0.9.0 - made by
       <a href="https://github.com/stefan-wr">Stefan Wraase</a>
     </span>
   </footer>

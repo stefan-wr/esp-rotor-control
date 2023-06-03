@@ -6,7 +6,7 @@
 
     <template #content>
       <p class="txt-dark">
-        Aktivere / Deaktiviere einzelne Elemente der Positionsanzeige.
+        Aktiviere / Deaktiviere einzelne Elemente der Positionsanzeige.
       </p>
       <div class="flex-vst gap-half settings-box-list">
         <div class="border-box flex-cst gap-one">
