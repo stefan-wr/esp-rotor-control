@@ -88,13 +88,13 @@ void resetCredentials() {
 void resetCredentialsInterrupt() {
   Serial.print("Button pressed. Waiting 2s to confirm...");
   delay(2000);
-  if (!digitalRead(button_pin)) {
+  if (!digitalRead(wifi_button_pin)) {
     blinkWifiLed(4);
     Serial.println("Button pressed. Resetting WiFi credentials and restart.");
     resetCredentials();
     ESP.restart();
   } else {
-    reset_now = false;
+    button_pressed = false;
     Serial.println("failed.");
   }
 }
@@ -252,7 +252,7 @@ bool initWiFi() {
   // Try continuously
   while (WiFi.status() != WL_CONNECTED) {
     // Check for interrupt
-    if (reset_now) {
+    if (button_pressed) {
       resetCredentialsInterrupt();
     }
     // Retry after interval

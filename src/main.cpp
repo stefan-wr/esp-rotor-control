@@ -21,9 +21,9 @@ Settings::Favorites favorites;
 // State variables
 bool in_station_mode = true;      // ESP is connected with WiFi -> STA mode
 bool scan_now = false;            // Scan for networks now
-bool reset_now = false;           // Set by button, tested in main loop
+bool button_pressed = false;      // Set true by interrupt button
+bool button_hold = false;         // True if button is being held
 int clients_connected = 0;        // Number of connected socket clients
-bool safety_stop_now = false;     // Set by button, tested in main loop
 bool authenticate = true;         // Authenticate HTTP connections
 
 // Buffer storing lock message, default message resets lock on ESP restart
@@ -50,18 +50,19 @@ void IRAM_ATTR wifiButtonAction() {
   // Debounce 250 ms
   if (btn_ms - wifi_btn_last_ms > 250) {
     wifi_btn_last_ms = btn_ms;
-    reset_now = true;
+    button_pressed = true;
   }
 }
 
 // => Initialise interrupt button
 void initWiFiButton() {
-  pinMode(button_pin, INPUT_PULLUP);
-  attachInterrupt(button_pin, wifiButtonAction, FALLING);
+  pinMode(wifi_button_pin, INPUT_PULLUP);
+  attachInterrupt(wifi_button_pin, wifiButtonAction, FALLING);
 }
 
 // Setup an interrupt button (Rotor Safety-Stop)
 // *********************************************
+/**
 unsigned long rotor_btn_last_ms = 0;
 
 // => Interrupt for button press
@@ -79,6 +80,7 @@ void initRotorButton() {
   pinMode(safety_stop_pin, INPUT_PULLUP);
   attachInterrupt(safety_stop_pin, rotorButtonAction, FALLING);
 }
+**/
 
 
 // **********************************************************************************
@@ -300,7 +302,7 @@ void setup() {
   pinMode(wifi_status_led, OUTPUT);    // Configure WiFi status LED
   digitalWrite(wifi_status_led, LOW);  // Turn off WiFi status LED
   initWiFiButton();                    // Initialise WiFi reset button
-  initRotorButton();                   // Initialise rotor stop button
+  //initRotorButton();                   // Initialise rotor stop button
   rotor_ctrl.init();                   // Initialise rotor
   favorites.init();                    // Initialise favorites
 
@@ -410,10 +412,10 @@ void setup() {
 // LOOP -----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------
 
-const int n_timers = 5;
+const int n_timers = 6;
 unsigned long lasts[n_timers];
-// Intervals: { network-scan, WiFi reconnect, remove old websocket, read ADS1115, send COMPASS }
-const unsigned long intervals[n_timers] = { 20000, 8000, 1000, 66, 1000 };
+// Intervals: { network-scan, WiFi reconnect, remove old websocket, read ADS1115, send COMPASS, WiFi reset }
+const unsigned long intervals[n_timers] = { 20000, 8000, 1000, 66, 1000, 2000 };
 unsigned long current_loop_ms;
 unsigned long previous_loop_ms = 0;
 
@@ -434,41 +436,46 @@ void loop() {
   }
   previous_loop_ms = current_loop_ms;
 
-  // Checking for WiFi button interrupt
-  if (reset_now) {
-    Serial.print("Button pressed. Waiting 2s to confirm...");
-    delay(2000);
-    if (!digitalRead(button_pin)) {
+
+  // Checking for button being pressed down
+  if (button_pressed && !button_hold) {
+    // Stop rotor
+    Serial.println("[BTN] pressed. Stopping rotor.");
+    if (rotor_ctrl.is_rotating) {
+      rotor_ctrl.stop();
+      blinkWifiLed(1);
+    }
+  
+    // Start watching for button being held
+    button_hold = true;
+    lasts[5] = millis();
+  }
+
+
+  // Reset WiFi if button is held for 2s
+  if (button_hold) {
+    // Button released
+    if (digitalRead(wifi_button_pin)) {
+      button_hold = false;
+      button_pressed = false;
+    }
+
+    // Button held for 2s -> reset WiFi
+    if (button_hold && millis() - lasts[5] >= intervals[5]) {
       rotor_ctrl.stop();
       blinkWifiLed(4);
-      Serial.println("resetting WiFi credentials and restart.");
+      Serial.println("[BTN] held for 2s. Resetting WiFi credentials and restart.");
       resetCredentials();
       ESP.restart();
-    } else {
-      reset_now = false;
-      Serial.println("failed.");
     }
   }
 
-  // Checking for rotor button interrupt
-  if (safety_stop_now) {
-    Serial.print("Stop button pressed. Waiting 400ms to confirm...");
-    delay(400);
-    if (!digitalRead(safety_stop_pin)) {
-      rotor_ctrl.stop();
-      blinkWifiLed(1);
-      Serial.println("stopped rotor.");
-      safety_stop_now = false;
-    } else {
-      safety_stop_now = false;
-      Serial.println("failed.");
-    }
-  }
 
   // Watch active auto rotation
   if (rotor_ctrl.is_auto_rotating) {
     rotor_ctrl.watchAutoRotation();
   }
+
 
   // Send rotation data
   if (in_station_mode && (clients_connected > 0)) {
