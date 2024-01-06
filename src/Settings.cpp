@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 
 extern String wifi_ssid;
+extern String esp_id;
 
 namespace Settings {
     // Path to save favorites at in SPIFFS
@@ -51,10 +52,11 @@ namespace Settings {
 
     // Send settings
     void sendSettings() {
-        settings_buffer.reserve(60);
+        settings_buffer.reserve(90);
         settings_buffer = "SETTINGS|";
 
-        StaticJsonDocument<100> doc;
+        StaticJsonDocument<128> doc;
+        doc["esp_id"] = esp_id; 
         doc["ssid"] = wifi_ssid;
         doc["rssi"] = (String)WiFi.RSSI();
 

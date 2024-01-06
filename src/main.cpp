@@ -11,6 +11,10 @@
 #include <WiFiFunctions.h>
 #include <RotorController.h>
 #include <Settings.h>
+#include <Timer.h>
+
+// ESP ID
+String esp_id = "";
 
 // Create rotor-controller instance
 Rotor::RotorController rotor_ctrl;
@@ -21,8 +25,8 @@ Settings::Favorites favorites;
 // State variables
 bool in_station_mode = true;      // ESP is connected with WiFi -> STA mode
 bool scan_now = false;            // Scan for networks now
-bool button_pressed = false;      // Set true by interrupt button
-bool button_hold = false;         // True if button is being held
+bool multi_btn_pressed = false;   // Set true by interrupt button
+bool multi_btn_hold = false;      // True if button is being held
 int clients_connected = 0;        // Number of connected socket clients
 bool authenticate = true;         // Authenticate HTTP connections
 
@@ -40,47 +44,23 @@ const char* http_password = sta_default_pw.c_str();
 // Create DNS Server
 DNSServer dns_server;
 
-// Setup an interrupt button (WiFi Reset)
-// *************************************
-unsigned long wifi_btn_last_ms = 0;
+// Setup an interrupt button
+// *************************
+Timer multi_btn_debounce_timer(250);
 
 // => Interrupt for button press
-void IRAM_ATTR wifiButtonAction() {
-  unsigned long btn_ms = millis();
+void IRAM_ATTR multiButtonAction() {
   // Debounce 250 ms
-  if (btn_ms - wifi_btn_last_ms > 250) {
-    wifi_btn_last_ms = btn_ms;
-    button_pressed = true;
+  if (multi_btn_debounce_timer.passed()) {
+    multi_btn_pressed = true;
   }
 }
 
 // => Initialise interrupt button
-void initWiFiButton() {
-  pinMode(wifi_button_pin, INPUT_PULLUP);
-  attachInterrupt(wifi_button_pin, wifiButtonAction, FALLING);
+void initMultiButton() {
+  pinMode(multi_button_pin, INPUT_PULLUP);
+  attachInterrupt(multi_button_pin, multiButtonAction, FALLING);
 }
-
-// Setup an interrupt button (Rotor Safety-Stop)
-// *********************************************
-/**
-unsigned long rotor_btn_last_ms = 0;
-
-// => Interrupt for button press
-void IRAM_ATTR rotorButtonAction() {
-  unsigned long btn_ms = millis();
-  // Debounce 250 ms
-  if (btn_ms - rotor_btn_last_ms > 250) {
-    rotor_btn_last_ms = btn_ms;
-    safety_stop_now = true;
-  }
-}
-
-// => Initialise interrupt button
-void initRotorButton() {
-  pinMode(safety_stop_pin, INPUT_PULLUP);
-  attachInterrupt(safety_stop_pin, rotorButtonAction, FALLING);
-}
-**/
 
 
 // **********************************************************************************
@@ -138,7 +118,13 @@ void socketReceive(char* msg, const size_t &len) {
     // Speed
     val = doc["speed"];
     if (!val.isNull()) {
-      rotor_ctrl.setSpeed(val.as<const int>());
+      if (val < 0) {
+        rotor_ctrl.setSpeed(0);
+      } else if (val > 100) {
+        rotor_ctrl.setSpeed(100);
+      } else {
+        rotor_ctrl.setSpeed(val.as<const int>());
+      }
     }
 
     // Auto-rotation request
@@ -214,11 +200,12 @@ void socketReceive(char* msg, const size_t &len) {
 // Initialise new client connection
 // ********************************
 void socketInitClient(){
+  socket.textAll(lock_msg);
+  Settings::sendSettings();
   rotor_ctrl.messenger.sendSpeed();
   rotor_ctrl.messenger.sendCalibration();
-  Settings::sendSettings();
+  rotor_ctrl.messenger.sendLastRotation(false);
   favorites.send();
-  socket.textAll(lock_msg);
 }
 
 // Websocket event handler
@@ -284,6 +271,12 @@ void setup() {
   // Open serial port
   Serial.begin(serial_speed);
 
+  // ESP ID derived from MAC address
+  esp_id = WiFi.macAddress();
+  esp_id.replace(":", "");
+  Serial.print("\nHardware-ID: ");
+  Serial.println(esp_id);
+
   // Show CPU Frequency
   if (verbose) {
     Serial.print("CPU Frequency: ");
@@ -301,8 +294,7 @@ void setup() {
   // Initialise I/O
   pinMode(wifi_status_led, OUTPUT);    // Configure WiFi status LED
   digitalWrite(wifi_status_led, LOW);  // Turn off WiFi status LED
-  initWiFiButton();                    // Initialise WiFi reset button
-  //initRotorButton();                   // Initialise rotor stop button
+  initMultiButton();                   // Initialise multi purpose button
   rotor_ctrl.init();                   // Initialise rotor
   favorites.init();                    // Initialise favorites
 
@@ -412,56 +404,47 @@ void setup() {
 // LOOP -----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------
 
-const int n_timers = 6;
-unsigned long lasts[n_timers];
-// Intervals: { network-scan, WiFi reconnect, remove old websocket, read ADS1115, send COMPASS, WiFi reset }
-const unsigned long intervals[n_timers] = { 20000, 8000, 1000, 66, 1000, 2000 };
-unsigned long current_loop_ms;
-unsigned long previous_loop_ms = 0;
+// Timers that control who often each task is executed
+struct {
+  Timer *networkScan = new Timer(20000);
+  Timer *checkWiFi = new Timer(8000);
+  Timer *reconnectTimeout = new Timer(90000); //600000
+  Timer *reboot = new Timer(86400000 * 3);
+  Timer *multiBtnHold = new Timer(2000);
+  Timer *cleanSockets = new Timer(1000);
+  Timer *rotorUpdate = new Timer(66);
+  Timer *rotorMessage = new Timer(1000);
+} timers;
 
-float adc_volts;                // Current ADC volts
-float adc_volts_previous = -1;  // Previous ADC volts
-
+float adc_volts;  // Current ADC volts
+float adc_volts_prev = -1;  // Previous ADC volts
 bool is_rotating_prev = false;
 int clients_connected_prev;
+bool reconnecting = false;
 
 void loop() {
-  
-  // Handle millis() overflow, resets lasts
-  current_loop_ms = millis();
-  if (current_loop_ms < previous_loop_ms) {
-    for (int i = 0; i < n_timers; i++) {
-      lasts[i] = 0;
-    }
-  }
-  previous_loop_ms = current_loop_ms;
 
-
-  // Checking for button being pressed down
-  if (button_pressed && !button_hold) {
+  // Check for multi button being pressed down
+  if (multi_btn_pressed && !multi_btn_hold) {
     // Stop rotor
     Serial.println("[BTN] pressed. Stopping rotor.");
     if (rotor_ctrl.is_rotating) {
       rotor_ctrl.stop();
       blinkWifiLed(1);
     }
-  
-    // Start watching for button being held
-    button_hold = true;
-    lasts[5] = millis();
+    // Enable further checks for wether multi button is being held down
+    multi_btn_pressed = false;
+    multi_btn_hold = true;
+    timers.multiBtnHold->start();
   }
 
-
-  // Reset WiFi if button is held for 2s
-  if (button_hold) {
-    // Button released
-    if (digitalRead(wifi_button_pin)) {
-      button_hold = false;
-      button_pressed = false;
-    }
-
-    // Button held for 2s -> reset WiFi
-    if (button_hold && millis() - lasts[5] >= intervals[5]) {
+  // Check wether button is being held down
+  if (multi_btn_hold) {
+    if (digitalRead(multi_button_pin)) {
+      // Button was released
+      multi_btn_hold = false;
+    } else if (timers.multiBtnHold->passed()) {
+      // Button held for 2s -> reset WiFi 
       rotor_ctrl.stop();
       blinkWifiLed(4);
       Serial.println("[BTN] held for 2s. Resetting WiFi credentials and restart.");
@@ -471,44 +454,41 @@ void loop() {
   }
 
 
+
   // Watch active auto rotation
   if (rotor_ctrl.is_auto_rotating) {
     rotor_ctrl.watchAutoRotation();
   }
 
 
-  // Send rotation data
-  if (in_station_mode && (clients_connected > 0)) {
-    if (millis() - lasts[3] >= intervals[3]) {
-     adc_volts = rotor_ctrl.rotor.getADCVolts();
+
+  // Update rotor values and send rotation message to clients
+  if (in_station_mode && clients_connected > 0) {
+    if (timers.rotorUpdate->passed()) {
+      adc_volts = rotor_ctrl.rotor.getADCVolts();
 
       /* Send rotation message if either:
           1. voltage changed significantly compared to last message
           2. rotor started or stopped rotation
           3. last message was sent more than 1 second ago
       */
-      if ((abs(adc_volts - adc_volts_previous) > 0.003) ||
+      if ((abs(adc_volts - adc_volts_prev) > 0.002) ||
           (rotor_ctrl.is_rotating != is_rotating_prev) ||
-          (millis() - lasts[4] >= intervals[4])) {
-        rotor_ctrl.messenger.sendNewRotation(true);
+          (timers.rotorMessage->passed())) {
+        rotor_ctrl.update();
+        rotor_ctrl.messenger.sendLastRotation(true);
       }
 
-      adc_volts_previous = adc_volts;
+      adc_volts_prev = adc_volts;
       is_rotating_prev = rotor_ctrl.is_rotating;
-      lasts[3] = millis();
-
-      if (millis() - lasts[4] >= intervals[4]) {
-        lasts[4] = millis();
-      }
     }
   }
 
 
+
   // Stop rotor if all clients disconnected
   if (clients_connected == 0 && clients_connected_prev) {
-    if (rotor_ctrl.is_rotating) {
-      rotor_ctrl.stop();
-    }
+    rotor_ctrl.stop();
     Serial.println("[Websocket] ALL clients disconnected.");
     clients_connected_prev = 0;
   } else {
@@ -516,43 +496,69 @@ void loop() {
   }
 
 
-  // Checking for WiFi disconnects -> try reconnect, stop rotor
-  if (in_station_mode) {
-    if (millis() - lasts[1] >= intervals[1]) {
-      lasts[1] = millis();
-      if (WiFi.status() != WL_CONNECTED) {
+
+  // Check for lost of WiFi connection -> stop rotor, try to reconnect
+  if (in_station_mode && timers.checkWiFi->passed()) {
+    if (WiFi.status() != WL_CONNECTED) {
+      // Stop rotor
+      if (rotor_ctrl.is_rotating) {
         rotor_ctrl.stop();
-        Serial.println("WiFi disconnected. Try reconnecting...");
-        // Try to reconnect WiFi
-        WiFi.disconnect();
-        blinkWifiLed(1);
-        WiFi.reconnect();
       }
+
+      // Start reboot timer
+      if (!reconnecting) {
+        timers.reconnectTimeout->start();
+        reconnecting = true;
+      }
+
+      // Try to reconnect
+      Serial.println("[WiFi] WiFi disconnected. Try reconnecting...");
+      WiFi.disconnect();
+      blinkWifiLed(1);
+      WiFi.reconnect();
     }
   }
+
+  // Stop timeout if connection was reestablished
+  if (in_station_mode && reconnecting && WiFi.status() == WL_CONNECTED) {
+    reconnecting = false;
+    Serial.println("[WiFi] Reconnected.");
+  }
+
+  // Reboot ESP after reconnect timeout
+  if (in_station_mode && reconnecting && timers.reconnectTimeout->passed()) {
+    Serial.println("[WiFi] Reconnecting failed. Restarting device.");
+    delay(1000);
+    ESP.restart();
+  }
+
 
 
   // Clean old websocket connections
-  // Interval: 1s
-  if (in_station_mode) {
-    if (millis() - lasts[2] >= intervals[2]) {
-      socket.cleanupClients();
-      lasts[2] = millis();
-    }
+  if (in_station_mode && timers.cleanSockets->passed()) {
+    socket.cleanupClients();
   }
+
+
+
+  // Reboot ESP after a few days
+  if (in_station_mode && timers.reboot->passed()) {
+    ESP.restart();
+  }
+
 
 
   // ********** AP MODE  **********
   // ******************************
 
-  // Scanning for networks if not connected to WiFi
+  // Scanning for networks
   if (!in_station_mode) {
-    if (scan_now || (millis() - lasts[0] >= intervals[0])) {
-      if (verbose) Serial.println("Scanning for networks after: " + (String)(millis() - lasts[0]) + " ms");
-      scanNetworks();
+    if (scan_now || timers.networkScan->passed()) {
+      if (verbose) Serial.println("Scanning for networks after.");
+      startNetworkScan();
       scan_now = false;
-      lasts[0] = millis();
     }
+    watchNetworkScan();
   }
 
   // DNS Server
@@ -560,4 +566,3 @@ void loop() {
     dns_server.processNextRequest();
   }
 }
-

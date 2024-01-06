@@ -5,6 +5,7 @@
 #include <Preferences.h>
 #include <SPIFFS.h>
 #include <DNSServer.h>
+#include <Timer.h>
 
 // PREFS instance
 Preferences wifi_prefs;
@@ -13,8 +14,11 @@ Preferences server_prefs;
 // Stores the HTML-code for list of available networks in AP mode
 String networks_html = "";
 
-// Stores alert message
+// Stores alert message for AP mode UI
 String alert = "";
+
+// ESPs unique ID derived from MAC address
+//String esp_id = "";
 
 // STATION mode WiFi-credentials
 String wifi_ssid;
@@ -47,7 +51,7 @@ void loadServerConfig() {
   server_prefs.end();
 }
 
-// Reset saved server config to default
+// => Reset saved server config to default
 void resetServerConfig() {
   sta_port = sta_default_port;
   sta_user_str = sta_default_user;
@@ -86,15 +90,15 @@ void resetCredentials() {
 
 // => React to button interrupt for resetting WiFi credentials
 void resetCredentialsInterrupt() {
-  Serial.print("Button pressed. Waiting 2s to confirm...");
+  Serial.print("[BTN] pressed. Waiting 2s to confirm...");
   delay(2000);
-  if (!digitalRead(wifi_button_pin)) {
+  if (!digitalRead(multi_button_pin)) {
     blinkWifiLed(4);
-    Serial.println("Button pressed. Resetting WiFi credentials and restart.");
+    Serial.println("[BTN] pressed. Resetting WiFi credentials and restart.");
     resetCredentials();
     ESP.restart();
   } else {
-    button_pressed = false;
+    multi_btn_pressed = false;
     Serial.println("failed.");
   }
 }
@@ -169,38 +173,50 @@ String networkItemHTML(int id, const String &ssid, const String &bssid, const in
 
 // => Scan for WiFi-networks and create <ul> of found networks
 // ***********************************************************
-void scanNetworks() {
-  Serial.println("Scanning for WiFi networks...");
-  int n = WiFi.scanNetworks();
 
-  // Show found networks on serial monitor
-  if (verbose) {
-    if (n != 0) {
-      Serial.println("-----------------------------");
-      for (int i = 0; i < n; ++i) {
-        Serial.print(i + 1);
-        Serial.print(": ");
-        Serial.print(WiFi.SSID(i));
-        Serial.print(" | ");
-        Serial.print(WiFi.BSSIDstr(i));
-        Serial.print(" (");
-        Serial.print(WiFi.RSSI(i));
-        Serial.println(")");
+// => Start async scan for WiFi-networks
+void startNetworkScan() {
+  Serial.println("[WiFi] Start async WiFi networks scan.");
+  WiFi.scanNetworks(true);
+}
+
+// => Check for completion of async network scan and create <ul> of found networks
+void watchNetworkScan() {
+  int n = WiFi.scanComplete();
+
+  if (n < 0) {
+    // Scan in progress or not triggered
+  } else if  (n == 0 ) {
+    // No networks found
+    networks_html = "<p>Keine verfügbaren Netzwerke gefunden.<br>Bitte warte etwas und lade dann diese Seite erneut.</p>";
+  } else if (n > 0) {
+    // At least one network found
+    // Show found networks on serial monitor
+    if (verbose) {
+      if (n != 0) {
+        Serial.println("-----------------------------");
+        for (int i = 0; i < n; ++i) {
+          Serial.print(i + 1);
+          Serial.print(": ");
+          Serial.print(WiFi.SSID(i));
+          Serial.print(" | ");
+          Serial.print(WiFi.BSSIDstr(i));
+          Serial.print(" (");
+          Serial.print(WiFi.RSSI(i));
+          Serial.println(")");
+        }
+        Serial.println("");
       }
-      Serial.println("");
     }
-  }
 
-  // Create network HTML-list
-  if (n != 0) {
+    // Create network HTML-list
     String nws = "<ul class=\"blocks\">";
     for (int i = 0; i < n; ++i) {
       nws += networkItemHTML(i, WiFi.SSID(i), WiFi.BSSIDstr(i), WiFi.RSSI(i));
     }
     nws += "</ul>";
     networks_html = nws;
-  } else {
-    networks_html = "<p>Keine verfügbaren Netzwerke gefunden.<br>Bitte warte etwas und lade dann diese Seite erneut.</p>";
+    WiFi.scanDelete();
   }
 }
 
@@ -210,7 +226,7 @@ void scanNetworks() {
 bool initWiFi() {
   // Load WiFi settings from Prefs
   loadCredentials();
-  Serial.print("WiFi from PREFS: ");
+  Serial.print("[WiFi] from PREFS: ");
   Serial.print(wifi_ssid);
   Serial.print(" {");
   Serial.print(wifi_bssid);
@@ -219,16 +235,16 @@ bool initWiFi() {
 
   // Check for SSID
   if (wifi_ssid == "") {
-    Serial.println("Can not start in STATION-mode. SSID is missing.");
+    Serial.println("[WiFi] Can not start in STATION-mode. SSID is missing.");
     return false;
   }
 
   // Check for MAC address
   if (wifi_bssid == "") {
-    Serial.println("Can not start in STATION-mode. BSSID is missing.");
+    Serial.println("[WiFi] Can not start in STATION-mode. BSSID is missing.");
     return false;
   } else if (!bssidToUint8()) {
-    Serial.println("Can not start in STATION-mode. BSSID conversion failed.");
+    Serial.println("[WiFi] Can not start in STATION-mode. BSSID conversion failed.");
     return false;
   }
 
@@ -238,25 +254,25 @@ bool initWiFi() {
   // Try repeatedly to connect to WiFi for 6 seconds
   // Reset when button pressed for two seconds
   int n_try = 1;
-  const long interval = 6000;
-  unsigned long start = millis();
+  Timer reconnect_timer(6000);  // 6s
+  Timer reboot_timer(600000);   // 10min
 
-  // Start WiFi, first try
-  Serial.print("Connecting WiFi to ");
+  // Connect WiFi, first try
+  Serial.print("[WiFi] Connecting to ");
   Serial.print(wifi_ssid);
   Serial.print(" {");
   Serial.print(wifi_bssid);
   Serial.println("}");
   WiFi.begin(wifi_ssid.c_str(), wifi_pw.c_str(), 0, wifi_bssid_uint8);
 
-  // Try continuously
+  // Try continuously to connect WiFi
   while (WiFi.status() != WL_CONNECTED) {
     // Check for interrupt
-    if (button_pressed) {
+    if (multi_btn_pressed) {
       resetCredentialsInterrupt();
     }
     // Retry after interval
-    if (millis() - start >= interval) {
+    if (reconnect_timer.passed()) {
       Serial.print("[Try ");
       Serial.print(n_try);
       Serial.print("] Failed to connect. WiFi-Status: ");
@@ -264,8 +280,13 @@ bool initWiFi() {
       WiFi.disconnect();
       blinkWifiLed(1);
       WiFi.begin(wifi_ssid.c_str(), wifi_pw.c_str(), 0, wifi_bssid_uint8);
-      start = millis();
       n_try++;
+    }
+    // Reboot after 10 min
+    if (reboot_timer.passed()) {
+      Serial.println("[WiFi] Failed to connect for 10 min. Rebooting device.");
+      delay(1000);
+      ESP.restart();
     }
   }
 
@@ -316,6 +337,7 @@ void getCredentials(AsyncWebServer *server, DNSServer &dns_server) {
   initMDNS();
   
   // Start WiFI AP
+  const char* ap_ssid = (ap_ssid_name + "-" + esp_id).c_str();
   WiFi.softAP(ap_ssid, NULL);
   Serial.print("Starting AP-mode. AP-IP: ");
   Serial.println(WiFi.softAPIP());
@@ -415,7 +437,7 @@ void getCredentials(AsyncWebServer *server, DNSServer &dns_server) {
   // ------------------------
   // Required
 	server->on("/connecttest.txt",[](AsyncWebServerRequest *request){request->redirect("http://logout.net");}); // windows 11 captive portal workaround
-	server->on("/wpad.dat",[](AsyncWebServerRequest *request){request->send(404);});                            // Honestly don't understand what this is but a 404 stops win 10 keep calling this repeatedly and panicking the esp32
+	server->on("/wpad.dat",[](AsyncWebServerRequest *request){request->send(404);});                            // honestly don't understand what this is but a 404 stops win 10 keep calling this repeatedly and panicking the esp32
   //-----
 	server->on("/generate_204",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});         // android captive portal redirect
 	server->on("/redirect",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});             // microsoft redirect

@@ -38,6 +38,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
     // Other settings
     const settings = reactive({
+        esp_id: '--',
         ssid: '--',
         rssi: '--'
     });

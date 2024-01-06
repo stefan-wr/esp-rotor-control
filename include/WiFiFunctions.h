@@ -5,13 +5,16 @@
 #include<ESPAsyncWebServer.h>
 #include<DNSServer.h>
 
+// ESP unique ID derived from MAC address
+// Defined in WiFiFunctions.cpp
+//extern String esp_id;
+
 // STATION mode global WiFi-credentials
 // Defined in WiFiFunctions.cpp
 extern String wifi_ssid;
 extern String wifi_bssid;
 extern String wifi_pw;
 extern uint8_t wifi_bssid_uint8[6];
-extern int sta_user_port;
 
 // STATION server config
 // Defined in WiFiFunctions.cpp
@@ -27,7 +30,7 @@ void loadServerConfig();
 // => Save server config from PREFS
 void saveServerConfig();
 
-// Reset saved server config to default
+// => Reset saved server config to default
 void resetServerConfig();
 
 // --------------------------------
@@ -43,7 +46,7 @@ void resetCredentials();
 
 // --------------------------------
 
-// => React to button inmterrupt for resetting WiFi credentials
+// => React to button interrupt for resetting WiFi credentials
 void resetCredentialsInterrupt();
 
 // => Convert wifi_bssid BSSID string to uint8_t
@@ -57,6 +60,12 @@ String networkItemHTML(const String &ssid, const String &bssid, const int &rssi)
 
 // => Scan for WiFi-networks and create <ul> of found networks
 void scanNetworks();
+
+// => Start asnc scan for WiFi-networks
+void startNetworkScan();
+
+// => Check for completion of async network scan and create <ul> of found networks
+void watchNetworkScan();
 
 // => Initialise WiFi connection from saved parameters.
 // Return false when connecting fails.
