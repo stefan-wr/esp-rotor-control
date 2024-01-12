@@ -1,17 +1,24 @@
+#include <Arduino.h>
 #include <Timer.h>
 
+// A simple timer class that can be checked for expiration in the main loop.
+// When it was checked and the timer has passed, the timer is restarted.
+// The number of times the timer was checked and it was passed is counted.
 Timer::Timer(unsigned long interval): interval_ms(interval) {
     start_ms = millis();
 }
 
+// => Start/Restart timer
 void Timer::start() {
     start_ms = millis();
 }
 
+// => Reset counter
 void Timer::reset() {
     n_passed = 0;
 }
 
+// => Test wether timer has passed. Restart timer if it did.
 bool Timer::passed() {
     unsigned long current_ms = millis();
 

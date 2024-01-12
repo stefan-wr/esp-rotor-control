@@ -1,16 +1,18 @@
+#include <Arduino.h>
+#include <SPIFFS.h>
 #include <SimpleSPIFFS.h>
 
 // => Initialise SPIFFS
 bool mountSPIFFS() {
-    if (!SPIFFS.begin(true)) {
-        Serial.println("Mounting SPIFFS failed.");
-        return false;
-    } else {
-        return true;
-    }
+  if (!SPIFFS.begin(true)) {
+      Serial.println("Mounting SPIFFS failed.");
+      return false;
+  } else {
+      return true;
+  }
 }
 
-// => Read file from SPIFFS
+// => Read file from SPIFFS, retuns the content of the file
 String readFromSPIFFS(const char* path) {
   Serial.print("Reading file " + (String)path + "...");
 

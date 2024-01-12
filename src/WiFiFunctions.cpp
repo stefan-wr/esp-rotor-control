@@ -1,11 +1,15 @@
-#include <WiFiFunctions.h>
-#include <WiFi.h>
+#include <Arduino.h>
+#include <ESPAsyncWebServer.h>
+#include <DNSServer.h>
 #include <ESPmDNS.h>
-#include <globals.h>
+#include <WiFi.h>
 #include <Preferences.h>
 #include <SPIFFS.h>
-#include <DNSServer.h>
+
+#include <globals.h>
+#include <WiFiFunctions.h>
 #include <Timer.h>
+
 
 // PREFS instance
 Preferences wifi_prefs;
@@ -235,16 +239,16 @@ bool initWiFi() {
 
   // Check for SSID
   if (wifi_ssid == "") {
-    Serial.println("[WiFi] Can not start in STATION-mode. SSID is missing.");
+    Serial.println("[WiFi] Can not connect WiFi. SSID is missing.");
     return false;
   }
 
   // Check for MAC address
   if (wifi_bssid == "") {
-    Serial.println("[WiFi] Can not start in STATION-mode. BSSID is missing.");
+    Serial.println("[WiFi] Can not connect WiFi. BSSID is missing.");
     return false;
   } else if (!bssidToUint8()) {
-    Serial.println("[WiFi] Can not start in STATION-mode. BSSID conversion failed.");
+    Serial.println("[WiFi] Can not connect WiFi. BSSID conversion failed.");
     return false;
   }
 
@@ -311,6 +315,11 @@ void initServerConfig() {
     Serial.print(" | Port: ");
     Serial.println(sta_port);
 }
+
+
+
+
+
 
 
 // Start AP mode server and ask for local WiFi credentials.
@@ -424,7 +433,7 @@ void getCredentials(AsyncWebServer *server, DNSServer &dns_server) {
 
   // Catch all route
   server->onNotFound([](AsyncWebServerRequest *request){
-    request->redirect(ip_url);
+    request->redirect(get_ip_url());
   });
 
   // Static files (CSS, fonts)
@@ -451,4 +460,17 @@ void getCredentials(AsyncWebServer *server, DNSServer &dns_server) {
 
   // Start first network scan
   scan_now = true;
+}
+
+
+
+
+
+
+
+
+
+
+APServer::APServer(AsyncWebServer *server_arg) {
+  server = new AsyncWebServer(80);
 }

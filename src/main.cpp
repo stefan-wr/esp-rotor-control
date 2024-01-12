@@ -4,6 +4,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
+#include <SPIFFS.h>
 #include <math.h>
 
 #include <globals.h>
@@ -12,14 +13,15 @@
 #include <RotorController.h>
 #include <Settings.h>
 #include <Timer.h>
+#include <Screen.h>
+
 
 // ESP ID
 String esp_id = "";
 
-// Create rotor-controller instance
+// Create instances
 Rotor::RotorController rotor_ctrl;
-
-// Create favorites instance
+Screen::Screen screen;
 Settings::Favorites favorites;
 
 // State variables
@@ -29,6 +31,7 @@ bool multi_btn_pressed = false;   // Set true by interrupt button
 bool multi_btn_hold = false;      // True if button is being held
 int clients_connected = 0;        // Number of connected socket clients
 bool authenticate = true;         // Authenticate HTTP connections
+bool use_screen = true;
 
 // Buffer storing lock message, default message resets lock on ESP restart
 String lock_msg = "LOCK|{\"isLocked\":false,\"by\":\"\"}";
@@ -271,6 +274,11 @@ void setup() {
   // Open serial port
   Serial.begin(serial_speed);
 
+  // Initialise screen
+  if (use_screen) {
+    use_screen = screen.init();
+  }
+
   // ESP ID derived from MAC address
   esp_id = WiFi.macAddress();
   esp_id.replace(":", "");
@@ -291,7 +299,7 @@ void setup() {
     return;
   }
 
-  // Initialise I/O
+  // Initialise I/O and classes
   pinMode(wifi_status_led, OUTPUT);    // Configure WiFi status LED
   digitalWrite(wifi_status_led, LOW);  // Turn off WiFi status LED
   initMultiButton();                   // Initialise multi purpose button
@@ -404,7 +412,7 @@ void setup() {
 // LOOP -----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------
 
-// Timers that control who often each task is executed
+// Timers, that control how often each task in the mainloop is executed
 struct {
   Timer *networkScan = new Timer(20000);
   Timer *checkWiFi = new Timer(8000);
@@ -412,17 +420,23 @@ struct {
   Timer *reboot = new Timer(86400000 * 3);
   Timer *multiBtnHold = new Timer(2000);
   Timer *cleanSockets = new Timer(1000);
-  Timer *rotorUpdate = new Timer(66);
+  Timer *rotorUpdate = new Timer(40);
   Timer *rotorMessage = new Timer(1000);
+  Timer *updateScreen = new Timer(40);
+  Timer *loopTimer = new Timer(1000);
 } timers;
 
-float adc_volts;  // Current ADC volts
 float adc_volts_prev = -1;  // Previous ADC volts
 bool is_rotating_prev = false;
 int clients_connected_prev;
 bool reconnecting = false;
 
+unsigned long loopCounter = 0;
+unsigned long loop_mus = micros();
+
+
 void loop() {
+  loopCounter += 1;
 
   // Check for multi button being pressed down
   if (multi_btn_pressed && !multi_btn_hold) {
@@ -455,6 +469,30 @@ void loop() {
 
 
 
+  // Update rotor values and send rotation message to clients.
+  // Update angular speed every 10th update.
+  if (in_station_mode && timers.rotorUpdate->passed()) {
+    rotor_ctrl.update(!(timers.rotorUpdate->n_passed % 5));
+
+    // Send rotation message every second update only if clients are connected
+    if (clients_connected > 0 && timers.rotorUpdate->n_passed % 2 == 0) {
+      /* Send rotation message if either:
+          1. voltage changed significantly compared to last message
+          2. rotor started or stopped rotation
+          3. last message was sent more than 1 second ago
+      */
+      if ((abs(rotor_ctrl.rotor.last_adc_volts - adc_volts_prev) > 0.003) ||
+          (rotor_ctrl.is_rotating != is_rotating_prev) ||
+          (timers.rotorMessage->passed())) {
+        rotor_ctrl.messenger.sendLastRotation(true);
+        adc_volts_prev = rotor_ctrl.rotor.last_adc_volts;
+        is_rotating_prev = rotor_ctrl.is_rotating;
+      }      
+    }
+  }
+
+
+
   // Watch active auto rotation
   if (rotor_ctrl.is_auto_rotating) {
     rotor_ctrl.watchAutoRotation();
@@ -462,32 +500,9 @@ void loop() {
 
 
 
-  // Update rotor values and send rotation message to clients
-  if (in_station_mode && clients_connected > 0) {
-    if (timers.rotorUpdate->passed()) {
-      adc_volts = rotor_ctrl.rotor.getADCVolts();
-
-      /* Send rotation message if either:
-          1. voltage changed significantly compared to last message
-          2. rotor started or stopped rotation
-          3. last message was sent more than 1 second ago
-      */
-      if ((abs(adc_volts - adc_volts_prev) > 0.002) ||
-          (rotor_ctrl.is_rotating != is_rotating_prev) ||
-          (timers.rotorMessage->passed())) {
-        rotor_ctrl.update();
-        rotor_ctrl.messenger.sendLastRotation(true);
-      }
-
-      adc_volts_prev = adc_volts;
-      is_rotating_prev = rotor_ctrl.is_rotating;
-    }
-  }
-
-
-
   // Stop rotor if all clients disconnected
   if (clients_connected == 0 && clients_connected_prev) {
+    screen.setAlert("Alle Verbindungen wurden getrennt.");
     rotor_ctrl.stop();
     Serial.println("[Websocket] ALL clients disconnected.");
     clients_connected_prev = 0;
@@ -548,6 +563,13 @@ void loop() {
 
 
 
+  // Update screen
+  if (use_screen && timers.updateScreen->passed()) {
+    screen.update();
+  }
+
+
+
   // ********** AP MODE  **********
   // ******************************
 
@@ -564,5 +586,19 @@ void loop() {
   // DNS Server
   if (!in_station_mode) {
     dns_server.processNextRequest();
+  }
+
+
+
+  // ****** Loop Cycle Time  ******
+  // ******************************
+
+  if (timers.loopTimer->passed() && false) {
+    double loop_cycle = (float) ((micros() - loop_mus) / loopCounter) / 1000.0;
+    Serial.print("Loop cycle: ");
+    Serial.printf("%3.2f", loop_cycle);
+    Serial.println(" ms");
+    loopCounter = 0;
+    loop_mus = micros();
   }
 }

@@ -1,7 +1,12 @@
-#include <Settings.h>
-#include <SimpleSPIFFS.h>
+#include <Arduino.h>
+#include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 
+#include <Settings.h>
+#include <SimpleSPIFFS.h>
+
+
+extern AsyncWebSocket socket;
 extern String wifi_ssid;
 extern String esp_id;
 
@@ -32,7 +37,7 @@ namespace Settings {
         writeToSPIFFS(favs_path, favs_buffer);
     }
 
-    // Set and save favorites from message
+    // Set, save and send favorites from message
     void Favorites::set(char* msg) {
         favs_buffer = (String) msg;
         save();
