@@ -9,7 +9,7 @@
         @mousedown.prevent="rotateLeft()"
         @touchstart.prevent="rotateLeft()"
         @mouseup.prevent="stopRotation()"
-        @mouseleave.prevent="stopRotation()"
+        @mouseleave.prevent="stopRotationMouseLeave()"
         @touchend.prevent="stopRotation()"
         @touchcancel.prevent="stopRotation()"
         :disabled="settingsStore.isLockedByElse"
@@ -33,7 +33,7 @@
         @mousedown.prevent="rotateRight()"
         @touchstart.prevent="rotateRight()"
         @mouseup.prevent="stopRotation()"
-        @mouseleave.prevent="stopRotation()"
+        @mouseleave.prevent="stopRotationMouseLeave()"
         @touchend.prevent="stopRotation()"
         @touchcancel.prevent="stopRotation()"
         :disabled="settingsStore.isLockedByElse"
@@ -82,6 +82,12 @@ function stopRotation() {
     isLeftBtnPressed.value = false;
     isRightBtnPressed.value = false;
     umbrellaStore.sendRotation(0);
+  }
+}
+
+function stopRotationMouseLeave() {
+  if (isLeftBtnPressed.value || isRightBtnPressed.value) {
+    stopRotation();
   }
 }
 
