@@ -230,6 +230,10 @@ a {
     flex-grow: 1;
 }
 
+.flex-shrink {
+    flex-shrink: 1;
+}
+
 .flex-vc {
     display: flex;
     flex-direction: column;
@@ -240,6 +244,12 @@ a {
     display: flex;
     flex-direction: column;
     align-items: start;
+}
+
+.flex-vr {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
 }
 
 .flex-vst {
@@ -449,6 +459,20 @@ input:disabled {
     }
     100% {
         transform: translateX(0%);
+    }
+}
+
+/* Spin animation */
+.spin {
+    animation: spin 4s linear infinite;
+}
+  
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
     }
 }
 

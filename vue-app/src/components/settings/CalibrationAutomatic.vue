@@ -219,7 +219,7 @@ function confirmPos1(event) {
     // Only reset input if event cam from button, shouldn't be reachable
     shakePos1Form();
     newPos1Angle.value = null;
-    pos1Input.focus();
+    pos1Input.value.focus();
   } else {
     shakePos1Form();
   }
@@ -236,7 +236,7 @@ function confirmPos2(event) {
     // Only reset input if event cam from button, shouldn't be reachable
     shakePos2Form();
     newPos2Angle.value = null;
-    pos2Input.focus();
+    pos2Input.value.focus();
   } else {
     shakePos2Form();
   }

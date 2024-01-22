@@ -105,7 +105,6 @@ onUpdated(() => {
 </script>
 
 <style lang="scss" scoped>
-$card-trans-spd: 0.2s;
 
 .card {
   width: 100%;

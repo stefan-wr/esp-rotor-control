@@ -17,7 +17,7 @@
 
     <template #content>
       <div class="flex-hc gap-one" style="width: 100%">
-        <span class="ssid no-wrap-ellip larger">{{ settingsStore.settings.ssid }}</span>
+        <span class="flex-grow no-wrap-ellip larger">{{ settingsStore.settings.ssid }}</span>
         <span class="smaller">RSSI:&nbsp;{{ settingsStore.settings.rssi }}</span>
       </div>
       <hr />
@@ -78,8 +78,5 @@ function disconnect(event) {
 </script>
 
 <style lang="scss" scoped>
-.ssid {
-  flex-shrink: 1;
-  flex-grow: 1;
-}
+
 </style>

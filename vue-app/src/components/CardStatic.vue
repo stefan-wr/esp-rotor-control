@@ -11,7 +11,6 @@
 </template>
 
 <script setup>
-import { ref, onUpdated, onMounted } from 'vue';
 
 defineProps({
   title: String

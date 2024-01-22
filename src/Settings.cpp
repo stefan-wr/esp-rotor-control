@@ -6,9 +6,10 @@
 #include <SimpleSPIFFS.h>
 
 
-extern AsyncWebSocket socket;
+extern AsyncWebSocket websocket;
 extern String wifi_ssid;
 extern String esp_id;
+extern String version;
 
 namespace Settings {
     // Path to save favorites at in SPIFFS
@@ -46,7 +47,7 @@ namespace Settings {
 
     // Send favorites to clients
     void Favorites::send() {
-        socket.textAll(favs_buffer);
+        websocket.textAll(favs_buffer);
     }
 
 
@@ -57,15 +58,16 @@ namespace Settings {
 
     // Send settings
     void sendSettings() {
-        settings_buffer.reserve(90);
+        settings_buffer.reserve(110);
         settings_buffer = "SETTINGS|";
 
-        StaticJsonDocument<128> doc;
-        doc["esp_id"] = esp_id; 
+        StaticJsonDocument<200> doc;
+        doc["version"] = version;
+        doc["esp_id"] = esp_id;
         doc["ssid"] = wifi_ssid;
         doc["rssi"] = (String)WiFi.RSSI();
 
         serializeJson(doc, settings_buffer);
-        socket.textAll(settings_buffer);
+        websocket.textAll(settings_buffer);
     }
 }

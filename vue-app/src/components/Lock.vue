@@ -29,7 +29,7 @@
 
         <ToggleSwitch
           :toggle="settingsStore.lock.isLocked"
-          :disabled="settingsStore.isLockedByElse"
+          :disabled="settingsStore.isLockedByElse" 
           @toggle="toggleLock"
         >
           <template #on>

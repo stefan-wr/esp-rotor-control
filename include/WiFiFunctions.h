@@ -5,10 +5,6 @@
 #include<ESPAsyncWebServer.h>
 #include<DNSServer.h>
 
-// ESP unique ID derived from MAC address
-// Defined in WiFiFunctions.cpp
-//extern String esp_id;
-
 // STATION mode global WiFi-credentials
 // Defined in WiFiFunctions.cpp
 extern String wifi_ssid;
@@ -24,25 +20,25 @@ extern String sta_pw_str;
 
 // --------------------------------
 
+// => Save server config from PREFS
+bool saveServerConfig();
+
 // => Load server config in PREFS
 void loadServerConfig();
 
-// => Save server config from PREFS
-void saveServerConfig();
-
 // => Reset saved server config to default
-void resetServerConfig();
+bool resetServerConfig();
 
 // --------------------------------
 
-// => Load WiFi credentials from SPIFFS
+// => Save credentials to PREFS
+bool saveCredentials();
+
+// => Load WiFi credentials from PREFS
 void loadCredentials();
 
-// => Save credentials to SPIFFS
-void saveCredentials();
-
 // => Overwrite the saved credentials with empty strings
-void resetCredentials();
+bool resetCredentials();
 
 // --------------------------------
 
@@ -52,8 +48,8 @@ void resetCredentialsInterrupt();
 // => Convert wifi_bssid BSSID string to uint8_t
 bool bssidToUint8();
 
-// => Blink WiFi LED n-times, blocking
-void blinkWifiLed(const int n);
+// => Return ip url from current AP IP
+String get_ip_url();
 
 // => Create HTML <li> item for a scanned network
 String networkItemHTML(const String &ssid, const String &bssid, const int &rssi);
@@ -61,7 +57,7 @@ String networkItemHTML(const String &ssid, const String &bssid, const int &rssi)
 // => Scan for WiFi-networks and create <ul> of found networks
 void scanNetworks();
 
-// => Start asnc scan for WiFi-networks
+// => Start async scan for WiFi-networks
 void startNetworkScan();
 
 // => Check for completion of async network scan and create <ul> of found networks
@@ -75,6 +71,6 @@ bool initWiFi();
 void initServerConfig();
 
 // Start AP mode server and ask for local WiFi credentials.
-void getCredentials(AsyncWebServer *server, DNSServer &dns_server);
+bool startAPServer(AsyncWebServer *server, DNSServer &dns_server);
 
 #endif // WIFIFUNCTIONS_H

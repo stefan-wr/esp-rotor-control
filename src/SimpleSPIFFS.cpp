@@ -4,8 +4,8 @@
 
 // => Initialise SPIFFS
 bool mountSPIFFS() {
-  if (!SPIFFS.begin(true)) {
-      Serial.println("Mounting SPIFFS failed.");
+  if (!SPIFFS.begin()) {
+      Serial.println("[SPIFFS] Mounting SPIFFS failed.");
       return false;
   } else {
       return true;
@@ -14,7 +14,7 @@ bool mountSPIFFS() {
 
 // => Read file from SPIFFS, retuns the content of the file
 String readFromSPIFFS(const char* path) {
-  Serial.print("Reading file " + (String)path + "...");
+  Serial.print("[SPIFFS] Reading file " + (String)path + "...");
 
   File file = SPIFFS.open(path);
   if (!file) {
@@ -33,7 +33,7 @@ String readFromSPIFFS(const char* path) {
 
 // => Write a String to file from SPIFFS
 bool writeToSPIFFS(const char* path, const String &data) {
-  Serial.print("Writing to file " + (String)path + "...");
+  Serial.print("[SPIFFS] Writing to file " + (String)path + "...");
   File file = SPIFFS.open(path, FILE_WRITE);
 
   if (!file) {
@@ -55,11 +55,11 @@ bool writeToSPIFFS(const char* path, const String &data) {
 // => Remove file from SPIFFS
 bool removeFromSPIFFS(const char* path) {
   if (SPIFFS.remove(path)) {
-    Serial.print("Deleted file ");
+    Serial.print("[SPIFFS] Deleted file ");
     Serial.println(path);
     return true;
   } else {
-    Serial.print("Failed deleting file ");
+    Serial.print("[SPIFFS] Failed deleting file ");
     Serial.println(path);
     return false;
   }

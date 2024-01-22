@@ -12,7 +12,8 @@
       class="switch-slider"
       tabindex="0"
       @keyup.enter="$emit('toggle')"
-      @keyup.space="$emit('toggle')"
+      @keyup.space.prevent="$emit('toggle')"
+      @keydown.space.prevent=""
     ></span>
     <span class="switch-on small">
       <slot name="on">AN</slot>

@@ -1,6 +1,15 @@
 <template>
   <div class="trans-wrap" ref="transWrap">
-    <Transition name="childA-trans" @enter="applyCurrentWrapHeight" v-show="!toggle">
+    <Transition
+      name="childA-trans"
+      @before-enter="$emit('before-transition')"
+      @enter="onEnter"
+      @after-enter="$emit('after-transition')"
+      @before-leave="$emit('before-transition')"
+      @leave="$emit('while-transition')"
+      @after-leave="$emit('after-transition')"
+      v-show="!toggle"
+    >
       <slot name="childA"></slot>
     </Transition>
 
@@ -14,14 +23,24 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useUIStore } from '../stores/ui';
-import { storeToRefs } from 'pinia';
 
 const uiStore = useUIStore();
 
 // Toggle prop: false -> show Child A, true -> show Child B
 const props = defineProps({
-  toggle: false
+  toggle: {
+    type: Boolean,
+    default: false,
+    required: true
+  }
 });
+
+// Emitted events
+const emit = defineEmits(['while-transition', 'before-transition', 'after-transition']);
+function onEnter() {
+  applyCurrentWrapHeight();
+  emit('while-transition');
+}
 
 // Transition between child-A and child-B.
 // For a smooth transition, adjust the height of the wrapping
@@ -42,9 +61,12 @@ onBeforeUnmount(() => {
 });
 
 // Also reapply height when font size changes
-watch(() => uiStore.ui.fontSize, () => {
-  applyCurrentWrapHeight();
-});
+watch(
+  () => uiStore.ui.fontSize,
+  () => {
+    applyCurrentWrapHeight();
+  }
+);
 
 // Adjust height of wrapper to height of currently shown child
 function applyCurrentWrapHeight() {
@@ -56,6 +78,11 @@ function applyCurrentWrapHeight() {
     transWrap.value.style.height = String(childA.offsetHeight) + 'px';
   }
 }
+
+// Expose to parent components
+defineExpose({
+  applyCurrentWrapHeight
+});
 </script>
 
 <style lang="scss" scoped>

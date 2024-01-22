@@ -12,6 +12,8 @@
         @mouseleave.prevent="stopRotationMouseLeave()"
         @touchend.prevent="stopRotation()"
         @touchcancel.prevent="stopRotation()"
+        @keydown.space.prevent="startRotationKeyDown(0)"
+        @keyup.space.prevent="stopRotationKeyDown()"
         :disabled="settingsStore.isLockedByElse"
       >
         <Icon icon="fa-solid fa-rotate-left" />
@@ -21,6 +23,7 @@
         class="medium bold"
         title="Stoppt den Rotor."
         @click.prevent="stopRotation()"
+        @keyup.space.prevent="stopRotation()"
         :disabled="settingsStore.isLockedByElse"
       >
         Stop
@@ -36,6 +39,8 @@
         @mouseleave.prevent="stopRotationMouseLeave()"
         @touchend.prevent="stopRotation()"
         @touchcancel.prevent="stopRotation()"
+        @keydown.space.prevent="startRotationKeyDown(1)"
+        @keyup.space.prevent="stopRotationKeyDown()"
         :disabled="settingsStore.isLockedByElse"
       >
         <Icon icon="fa-solid fa-rotate-right" />
@@ -47,7 +52,7 @@
 <script setup>
 import Card from '@/components/Card.vue';
 
-import { ref } from 'vue';
+import { callWithAsyncErrorHandling, ref } from 'vue';
 import { useEventListener } from '@vueuse/core';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
@@ -89,6 +94,20 @@ function stopRotationMouseLeave() {
   if (isLeftBtnPressed.value || isRightBtnPressed.value) {
     stopRotation();
   }
+}
+
+// Start/stop rotation by holding/releasing space on tab-selected buttons
+let rotationKeyDown = false;
+function startRotationKeyDown(dir) {
+  if (!rotationKeyDown) {
+    rotationKeyDown = true;
+    [rotateLeft, rotateRight][dir]();
+  }
+}
+
+function stopRotationKeyDown() {
+  rotationKeyDown = false;
+  stopRotation();
 }
 
 // Press left/right arrow keys -> start rotation event listener

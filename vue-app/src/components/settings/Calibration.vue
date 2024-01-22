@@ -1,58 +1,52 @@
 <template>
-  <div class="flex-vst gap-one">
-    <h2 class="medium">Kalibrierung</h2>
-    <ADC></ADC>
-    <CalibrationCurrent></CalibrationCurrent>
+  <SettingCard title="Rotor-Kalibrierung" class="l-align">
+    <template #icon>
+      <Icon icon="fa-solid fa-wrench"></Icon>
+    </template>
 
-    <SettingCard title="Rotor-Kalibrierung" class="l-align">
-      <template #icon>
-        <Icon icon="fa-solid fa-wrench"></Icon>
-      </template>
+    <template #content>
+      <!-- Description -->
+      <p class="txt-dark">
+        Damit der Rotor-Controller die richtige Position anzeigt, muss er kalibiert werden. Wähle
+        entweder die geführte Kalibrierung, oder gebe die Parameter manuell ein.
+      </p>
 
-      <template #content>
-        <!-- Description -->
-        <p class="txt-dark">
-          Damit der Rotor-Controller die richtige Position anzeigt, muss er kalibiert werden. Wähle
-          entweder die geführte Kalibrierung, oder gebe die Parameter manuell ein.
-        </p>
+      <!-- Tabs Navigation -->
+      <div id="calibration">
+        <nav class="flex-cl">
+          <button
+            class="cal-tab normal"
+            :class="{ 'cal-tab-active': !isManualTabActive }"
+            @click="setTabActive(0)"
+          >
+            <span class="txt-dark">Geführt</span>
+          </button>
+          <button
+            class="cal-tab normal"
+            :class="{ 'cal-tab-active': isManualTabActive }"
+            @click="setTabActive(1)"
+          >
+            <span class="txt-dark">Manuell</span>
+          </button>
+        </nav>
 
-        <!-- Tabs Navigation -->
-        <div id="calibration">
-          <nav class="flex-cl">
-            <button
-              class="cal-tab normal"
-              :class="{ 'cal-tab-active': !isManualTabActive }"
-              @click="setTabActive(0)"
-            >
-              <span class="txt-dark">Geführt</span>
-            </button>
-            <button
-              class="cal-tab normal"
-              :class="{ 'cal-tab-active': isManualTabActive }"
-              @click="setTabActive(1)"
-            >
-              <span class="txt-dark">Manuell</span>
-            </button>
-          </nav>
+        <!-- Tabs Content-->
+        <div class="border-box cal-page">
+          <CardToggleContentTransition :toggle="isManualTabActive" style="width: 100%">
+            <!-- Automatic Calibration-->
+            <template #childA>
+              <CalibrationAutomatic ref="automaticCalibration"></CalibrationAutomatic>
+            </template>
 
-          <!-- Tabs Content-->
-          <div class="border-box cal-page">
-            <CardToggleContentTransition :toggle="isManualTabActive" style="width: 100%">
-              <!-- Automatic Calibration-->
-              <template #childA>
-                <CalibrationAutomatic ref="automaticCalibration"></CalibrationAutomatic>
-              </template>
-
-              <!-- Manual Calibration -->
-              <template #childB>
-                <CalibrationManual ref="manualCalibration"></CalibrationManual>
-              </template>
-            </CardToggleContentTransition>
-          </div>
+            <!-- Manual Calibration -->
+            <template #childB>
+              <CalibrationManual ref="manualCalibration"></CalibrationManual>
+            </template>
+          </CardToggleContentTransition>
         </div>
-      </template>
-    </SettingCard>
-  </div>
+      </div>
+    </template>
+  </SettingCard>
 </template>
 
 <script setup>
@@ -60,8 +54,6 @@ import SettingCard from '@/components/settings/SettingCard.vue';
 import CardToggleContentTransition from '@/components/CardToggleContentTransition.vue';
 import CalibrationAutomatic from '@/components/settings/CalibrationAutomatic.vue';
 import CalibrationManual from '@/components/settings/CalibrationManual.vue';
-import CalibrationCurrent from '@/components/settings/CalibrationCurrent.vue';
-import ADC from '@/components/settings/ADC.vue';
 
 import { useSettingsStore } from '@/stores/settings';
 import { useUmbrellaStore } from '@/stores/umbrella';
@@ -86,6 +78,7 @@ function setTabActive(tab) {
 </script>
 
 <style lang="scss" scoped>
+
 #calibration {
   width: 100%;
   align-self: center;

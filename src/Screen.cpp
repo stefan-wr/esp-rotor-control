@@ -9,6 +9,7 @@
 #include <RotorController.h>
 #include <WiFiFunctions.h>
 #include <Timer.h>
+#include <SimpleUpdater.h>
 
 extern Rotor::RotorController rotor_ctrl;
 
@@ -24,12 +25,13 @@ namespace Screen {
 
         // Clear screen and configurate charset
         clearScreen();
+        screen->display();
         screen->dim(true);
         screen->cp437(true);
 
         // Show splash screen at ESP setup until timer expires
         showSplashScreen();
-        splash_screen_timer = new Timer(1000);
+        splash_screen_timer = new Timer(2000);
         screen->display();
 
         // Setup alert messages
@@ -94,12 +96,17 @@ namespace Screen {
         }        
     }
 
+    // => Set a fullscreen text to screen RAM
+    void Screen::setFullscreenText(const String &txt) {
+        uint16_t txt_w, txt_h;
+        getTextDimensions(txt, &txt_w, &txt_h);
+        setCenteredTextCursor(txt_w, txt_h);
+        screen->print(txt);    
+    }
+
     // => Show a fullscreen centered message for a few seconds
     void Screen::showFullscreenAlert() {
-        uint16_t txt_w, txt_h;
-        getTextDimensions(alert_txt, &txt_w, &txt_h);
-        setCenteredTextCursor(txt_w, txt_h);
-        screen->print(alert_txt);
+        setFullscreenText(alert_txt);
     }
 
     // => Set splash-screen to screen RAM
@@ -110,7 +117,11 @@ namespace Screen {
         setCenteredTextCursor(txt_w, txt_h);
         screen->drawRect(screen->getCursorX() - 5, screen->getCursorY() - 5,
                          txt_w + 8, txt_h + 9, WHITE);
-        screen->print(txt);            
+        screen->print(txt);
+        getTextDimensions(version, &txt_w, &txt_h);
+        setCenteredTextCursor(txt_w, txt_h);
+        moveCursor(0, 18);
+        screen->print(version);
     }
 
     // => Set screen for AP-mode to screen RAM
@@ -176,10 +187,30 @@ namespace Screen {
         //screen->drawBitmap(114, 54, bits, 10, 2, BLACK);
     }
 
+    // => Set screen for firmware update
+    void Screen::showUpdateScreen() {
+        setFullscreenText("Updating Firmware");
+        uint16_t txt_w, txt_h;
+        getTextDimensions("100%", &txt_w, &txt_h);
+        setCenteredTextCursor(txt_w, txt_h);
+        moveCursor(0, 16);
+        screen->print(update_progress);
+        screen->print("%");
+    }
+
     // => Set an alert message to be shown full screen for a few seconds
     void Screen::setAlert(const String &txt) {
         alert_txt = txt;
         alert_timer->start();
+    }
+
+    // => Set an alert message and show it on  the screen immediatly
+    void Screen::setAlertImmediatly(const String &txt) {
+        alert_txt = txt;
+        alert_timer->start();
+        clearScreen();
+        showFullscreenAlert();
+        screen->display();
     }
 
     // => Main draw function, to be called from main loop
@@ -197,8 +228,8 @@ namespace Screen {
         // Clear screen
         clearScreen();
 
-        // Alert message, full screen
-        if (alert_txt != "") {
+        // Alert message, full screen, until timed out
+        if (alert_txt != "" && !updating_firmware) {
             if (alert_timer->passed()) {
                 alert_txt = "";
             } else {
@@ -208,12 +239,22 @@ namespace Screen {
             }
         }
 
-        // ------------
+        // ----------
+
         if (in_station_mode) {
-            showDefaultScreen();
+            if (updating_firmware) {
+                showUpdateScreen();
+            } else {
+                showDefaultScreen();
+            }
         } else {
             showAPModeScreen();
         }
+
+        // ----------
+        
         screen->display();
     }    
 }
+
+Screen::Screen screen;

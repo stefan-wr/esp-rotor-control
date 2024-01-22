@@ -6,6 +6,7 @@ import './assets/main.scss';
 import App from './App.vue';
 import router from './router';
 
+
 // FontAwesome icons
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
@@ -15,12 +16,14 @@ import {
     faRotateLeft,
     faArrowDown,
     faArrowRight,
+    faArrowLeft,
     faXmark,
     faPlus,
     faMinus,
     faCheck,
     faGaugeHigh,
     faArrowsSpin,
+    faArrowsRotate,
     faCompass,
     faBookmark,
     faGear,
@@ -33,7 +36,16 @@ import {
     faLock,
     faLockOpen,
     faPalette,
-    faCircleHalfStroke
+    faCircleHalfStroke,
+    faFile,
+    faCode,
+    faMicrochip,
+    faCirclePlus,
+    faFileArrowUp,
+    faFileImport,
+    faCircleInfo,
+    faCircleCheck,
+    faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -42,12 +54,14 @@ library.add(
     faRotateRight,
     faArrowDown,
     faArrowRight,
+    faArrowLeft,
     faXmark,
     faPlus,
     faMinus,
     faCheck,
     faGaugeHigh,
     faArrowsSpin,
+    faArrowsRotate,
     faCompass,
     faBookmark,
     faGear,
@@ -60,13 +74,22 @@ library.add(
     faLock,
     faLockOpen,
     faPalette,
-    faCircleHalfStroke
+    faCircleHalfStroke,
+    faFile,
+    faCode,
+    faMicrochip,
+    faCirclePlus,
+    faFileArrowUp,
+    faFileImport,
+    faCircleInfo,
+    faCircleCheck,
+    faSpinner
 );
 
 // Setup app
 const app = createApp(App);
 
-// Add ofontawesome
+// Add fontawesome
 app.component('Icon', FontAwesomeIcon);
 
 // Add Pinia

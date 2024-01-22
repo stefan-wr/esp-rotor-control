@@ -1,4 +1,4 @@
-import { computed, reactive, ref } from 'vue';
+import { ReactiveEffect, computed, reactive, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { useStorage } from '@vueuse/core';
 
@@ -36,9 +36,18 @@ export const useSettingsStore = defineStore('settings', () => {
         name: useStorage('lock-name', '')
     });
 
+    // New firmware file
+    const firmware = reactive({
+        file: null,
+        name: '--',
+        size: 0,    // Bytes
+        md5: ''
+    })
+
     // Other settings
     const settings = reactive({
         esp_id: '--',
+        version: '--',
         ssid: '--',
         rssi: '--'
     });
@@ -84,6 +93,30 @@ export const useSettingsStore = defineStore('settings', () => {
     // Get lock JSON message
     const getLockMsg = computed(() => {
         return JSON.stringify(lock, ['isLocked', 'by']);
+    });
+
+    // Get site of selected firmware in KBytes
+    const getFirmwareKBytes = computed(() => {
+        if (firmware.size == 0) {
+            return 0;
+        } else {
+            return (firmware.size / 1024).toFixed(0);
+        }
+    })
+
+    // Is firmware valid?
+    const isFirmwareValid = computed(() => {
+        if (
+            firmware.name === '--' ||
+            firmware.name.split('.').pop() !== 'bin' ||
+            firmware.size === 0 ||
+            firmware.size > 1310720 ||
+            firmware.md5 === '' ||
+            firmware.md5.length !== 32
+            ) {
+            return false;
+        }
+        return true;
     });
 
     // *************
@@ -214,11 +247,14 @@ export const useSettingsStore = defineStore('settings', () => {
         favorites,
         settings,
         lock,
+        firmware,
         hasMaxFavorites,
         isLockedByElse,
         getCalibrationMsg,
         getFavoritesMsg,
         getLockMsg,
+        getFirmwareKBytes,
+        isFirmwareValid,
         isValidFavoritesArray,
         addFavorite,
         remFavorite,

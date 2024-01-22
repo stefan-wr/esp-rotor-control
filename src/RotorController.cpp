@@ -199,7 +199,7 @@ namespace Rotor {
     // => Send last rotation values over web socket
     void Messenger::sendLastRotation(const bool &with_angle) {
         setLastRotationMsg(with_angle);
-        socket.textAll(msg_buffer);
+        websocket.textAll(msg_buffer);
     }
 
     // => Send new rotation values over web socket, always with angle
@@ -214,7 +214,7 @@ namespace Rotor {
         StaticJsonDocument<20> doc;
         doc["speed"] = rotor_ptr->speed;
         serializeJson(doc, msg_buffer);
-        socket.textAll(msg_buffer);
+        websocket.textAll(msg_buffer);
     }
 
     // => Send current calibration parameters over web socket
@@ -227,7 +227,7 @@ namespace Rotor {
         doc["u2"] = round(rotor_ptr->rotor.calibration.u2 * 10000.0) / 10000.0;
         doc["offset"] = rotor_ptr->rotor.calibration.offset;
         serializeJson(doc, msg_buffer);
-        socket.textAll(msg_buffer);
+        websocket.textAll(msg_buffer);
     }
 
     // => Send auto rotation target over web socket
@@ -236,7 +236,7 @@ namespace Rotor {
         StaticJsonDocument<40> doc;
         doc["target"] = round(rotor_ptr->auto_rotation_target * 100.0) / 100.0;
         serializeJson(doc, msg_buffer);
-        socket.textAll(msg_buffer);
+        websocket.textAll(msg_buffer);
     }
     
 
@@ -281,8 +281,8 @@ namespace Rotor {
 
     // => Stop rotor, distribute new state to clients
     void RotorController::stop() {
+        rotor.stopRotor();
         if (is_rotating) {
-            rotor.stopRotor();
             is_rotating = false;
             is_auto_rotating = false;
             messenger.sendLastRotation(false);
@@ -343,8 +343,8 @@ namespace Rotor {
         // -> this means it's possible to reach it with +360°, too.
         if (use_overlap && target_angle <= overlap_border) {
             // If distance is less than -180° -> flip it.
-            if (distance < -180) {
-                distance += 360;
+            if (distance < -180.0f) {
+                distance += 360.0f;
             }
         }
 

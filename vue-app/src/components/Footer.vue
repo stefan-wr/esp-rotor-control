@@ -15,8 +15,9 @@ const settingsStore = useSettingsStore();
 
 <style lang="scss" scoped>
 #footer {
-  padding: 0 1em !important;
-  height: calc($border-box-bradius * 2);
+  padding: 0.5em 1.25em !important;
+  min-height: calc($border-box-bradius * 2);
+  border-radius: 100em;
   background-color: var(--footer-color);
   color: var(--footer-text-color);
 

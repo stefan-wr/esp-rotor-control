@@ -2,9 +2,6 @@
 #define SETTINGS_H
 
 #include <Arduino.h>
-#include <ESPAsyncWebServer.h>
-
-extern AsyncWebSocket socket;
 
 namespace Settings {
 

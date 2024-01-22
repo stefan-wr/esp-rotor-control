@@ -106,8 +106,8 @@
           />
 
           <g
-            v-for="(fav, index) in settingsStore.favorites.array"
-            :key="fav"
+            v-for="fav in settingsStore.favorites.array"
+            :key="fav.id"
             class="cmp-favorite-dot"
             :class="{ 'cmp-lbl-disabled': settingsStore.isLockedByElse }"
             @click="
@@ -235,6 +235,12 @@
                 umbrellaStore.sendTarget(deg.angle);
               }
             "
+            @keyup.space="
+              if (!settingsStore.isLockedByElse) {
+                umbrellaStore.sendTarget(deg.angle);
+              }
+            "
+            @keydown.space.prevent=""
             :class="{ 'cmp-lbl-disabled': settingsStore.isLockedByElse }"
             tabindex="0"
             dominant-baseline="middle"

@@ -20,6 +20,10 @@ $ol-left-padding: 2.2em;
 
 /* Styles */
 $text-light-opacity: 0.6;
+
+/* Speeds */
+$card-trans-spd: 0.2s;
+$slide-speed: 0.2s;
   
 /* SCSS Mixins & Classes for Responsiveness */
 @mixin small() {

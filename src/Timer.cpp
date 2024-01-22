@@ -18,6 +18,12 @@ void Timer::reset() {
     n_passed = 0;
 }
 
+// => Change interval of timer and restart
+void Timer::changeInterval(unsigned long new_interval) {
+    interval_ms = new_interval;
+    start();
+}
+
 // => Test wether timer has passed. Restart timer if it did.
 bool Timer::passed() {
     unsigned long current_ms = millis();

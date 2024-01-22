@@ -3,7 +3,21 @@
         "bitset": "cpp",
         "algorithm": "cpp",
         "functional": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "cmath": "cpp",
+        "cstring": "cpp",
+        "array": "cpp",
+        "*.tcc": "cpp",
+        "deque": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "vector": "cpp",
+        "string_view": "cpp",
+        "memory": "cpp",
+        "random": "cpp",
+        "initializer_list": "cpp",
+        "regex": "cpp"
     },
     "cmake.configureOnOpen": true
 }

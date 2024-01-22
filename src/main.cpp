@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <WiFi.h>
-#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <Update.h>
+#include <AsyncTCP.h>
 #include <DNSServer.h>
 #include <SPIFFS.h>
 #include <math.h>
@@ -14,31 +15,38 @@
 #include <Settings.h>
 #include <Timer.h>
 #include <Screen.h>
+#include <SimpleUpdater.h>
+#include <BlinkingLED.h>
 
+#define USE_SCREEN true
+#define COUNT_LOOP_CYCLE_TIME false
+
+// Software version
+const String version = "0.9.0";
 
 // ESP ID
 String esp_id = "";
 
 // Create instances
 Rotor::RotorController rotor_ctrl;
-Screen::Screen screen;
 Settings::Favorites favorites;
+BlinkingLED wifi_led(wifi_led_pin, LOW, 250);
 
 // State variables
-bool in_station_mode = true;      // ESP is connected with WiFi -> STA mode
-bool scan_now = false;            // Scan for networks now
-bool multi_btn_pressed = false;   // Set true by interrupt button
-bool multi_btn_hold = false;      // True if button is being held
-int clients_connected = 0;        // Number of connected socket clients
-bool authenticate = true;         // Authenticate HTTP connections
-bool use_screen = true;
+bool in_station_mode = true;        // ESP is connected with WiFi -> STA mode
+bool scan_now = false;              // Scan for networks now
+bool multi_btn_pressed = false;     // Set true by pressing interrupt button
+bool multi_btn_hold = false;        // True if button is being held
+int clients_connected = 0;          // Number of connected socket clients
+bool authenticate = true;           // Authenticate HTTP connections
+bool use_screen = USE_SCREEN;       // Use an SSD1306 screen
 
 // Buffer storing lock message, default message resets lock on ESP restart
 String lock_msg = "LOCK|{\"isLocked\":false,\"by\":\"\"}";
 
 // Create AsyncWebServer object
 AsyncWebServer *server;
-AsyncWebSocket socket("/ws");
+AsyncWebSocket websocket("/ws");
 
 // STATION mode default HTTP login-credentials
 const char* http_username = sta_default_user.c_str();
@@ -47,14 +55,15 @@ const char* http_password = sta_default_pw.c_str();
 // Create DNS Server
 DNSServer dns_server;
 
+
 // Setup an interrupt button
 // *************************
-Timer multi_btn_debounce_timer(250);
+Timer multi_btn_press_debounce_timer(250);
 
 // => Interrupt for button press
-void IRAM_ATTR multiButtonAction() {
+void IRAM_ATTR multiButtonPressAction() {
   // Debounce 250 ms
-  if (multi_btn_debounce_timer.passed()) {
+  if (multi_btn_press_debounce_timer.passed()) {
     multi_btn_pressed = true;
   }
 }
@@ -62,7 +71,21 @@ void IRAM_ATTR multiButtonAction() {
 // => Initialise interrupt button
 void initMultiButton() {
   pinMode(multi_button_pin, INPUT_PULLUP);
-  attachInterrupt(multi_button_pin, multiButtonAction, FALLING);
+  attachInterrupt(multi_button_pin, multiButtonPressAction, FALLING);
+}
+
+// => Show a fatal error message and restart ESP
+// *********************************************
+void fatalError(String err) {
+  Serial.print("[FATAL ERROR] ");
+  Serial.println(err);
+  if (use_screen) {
+    screen.setAlertImmediatly("ERROR:\n" + err);
+  }
+  delay(2000);
+  Serial.println("[ESP] Restart in 10 seconds.");
+  delay(10000);
+  ESP.restart();
 }
 
 
@@ -83,7 +106,7 @@ void socketReceive(char* msg, const size_t &len) {
   if (sep_idx != 0 && sep_idx != len) {
     msg[sep_idx] = '\0';
   } else {
-    Serial.println("Can't parse message.");
+    Serial.println("[Websocket] Error: Could not parse message.");
     return;
   }
 
@@ -98,7 +121,7 @@ void socketReceive(char* msg, const size_t &len) {
 
     // Test wether deserialization succeeded
     if (err) {
-      Serial.print("JSON parse failed: ");
+      Serial.print("[Websocket] Error: JSON parse failed: ");
       Serial.println(err.f_str());
       return;
     }
@@ -151,7 +174,7 @@ void socketReceive(char* msg, const size_t &len) {
 
     // Test wether deserialization succeeded
     if (err) {
-      Serial.print("JSON parse failed: ");
+      Serial.print("[Websocket] Error: JSON parse failed: ");
       Serial.println(err.f_str());
       return;
     }
@@ -178,7 +201,7 @@ void socketReceive(char* msg, const size_t &len) {
   // ----- FAVORITES -----
   // ---------------------
   if(identifier == "FAVORITES") {
-    // For favorites we just save the JSON message with
+    // For favorites, just save the JSON message with
     // the identifier rejoined by inserting back '|' into msg
     msg[sep_idx] = '|';
     favorites.set(msg);
@@ -189,13 +212,13 @@ void socketReceive(char* msg, const size_t &len) {
   if (identifier == "LOCK") {
     msg[sep_idx] = '|';
     lock_msg = (String) msg;
-    socket.textAll(msg);
+    websocket.textAll(msg);
   }
 
   // ----- SETTINGS -----
   // --------------------
   if (identifier == "SETTINGS") {
-    Serial.print("Received SETTINGS message: ");
+    Serial.print("[Websocket] Received SETTINGS message: ");
     Serial.println(msg);
   }
 }
@@ -203,7 +226,7 @@ void socketReceive(char* msg, const size_t &len) {
 // Initialise new client connection
 // ********************************
 void socketInitClient(){
-  socket.textAll(lock_msg);
+  websocket.textAll(lock_msg);
   Settings::sendSettings();
   rotor_ctrl.messenger.sendSpeed();
   rotor_ctrl.messenger.sendCalibration();
@@ -235,35 +258,37 @@ void onSocketEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEven
       break;     
 
     case WS_EVT_DATA:
-    AwsFrameInfo * info = (AwsFrameInfo*)arg;
+      AwsFrameInfo * info = (AwsFrameInfo*)arg;
       if(info->final && info->index == 0 && info->len == len){
-        //the whole message is in a single frame and we got all of it's data
+        // The whole message is a single frame and was fully received
         if(info->opcode == WS_TEXT){
           data[len] = 0;
 
           // Print message
           if (verbose) {
             Serial.print("[Websocket] Data, client "); Serial.print(client->id());
-             Serial.print(": "); Serial.println((char*) data);
+            Serial.print(": "); Serial.println((char*) data);
           }
 
           // Receive
           socketReceive((char*) data, len);
         } else {
-          Serial.println("[Websocket] Binary data recieved unexpectedly.");
+          Serial.println("[Websocket] Binary data received unexpectedly.");
         }
       } else {
         Serial.println("[Websocket] Data recieved in multiple frames.");
       }
-    break;
+      break;
   }
 }
 
 // => Add event handler to socket
 void initWebSocket() {
-  socket.onEvent(onSocketEvent);
-  server->addHandler(&socket);
+  websocket.onEvent(onSocketEvent);
+  server->addHandler(&websocket);
 }
+
+
 
 
 
@@ -274,48 +299,54 @@ void setup() {
   // Open serial port
   Serial.begin(serial_speed);
 
+  // Software version
+  Serial.print("\n##########  RotorControl v");
+  Serial.print(version);
+  Serial.println("  ##########");
+
   // Initialise screen
   if (use_screen) {
     use_screen = screen.init();
+    if (!use_screen) {
+      Serial.println("[SCREEN] Failed to initialise the screen.");
+    }
   }
 
   // ESP ID derived from MAC address
   esp_id = WiFi.macAddress();
   esp_id.replace(":", "");
-  Serial.print("\nHardware-ID: ");
+  Serial.print("[ESP] Hardware-ID: ");
   Serial.println(esp_id);
 
   // Show CPU Frequency
   if (verbose) {
-    Serial.print("CPU Frequency: ");
+    Serial.print("[ESP] CPU Frequency: ");
     Serial.print(getCpuFrequencyMhz());
     Serial.println(" MHz");
   }
 
   // Initialise SPIFFS
   if (!mountSPIFFS()) {
-    Serial.println("Mounting SPIFFS failed.");
-    delay(5000);
+    fatalError("Failed to mount filesystem! ESP may require reflashing.");
     return;
   }
 
   // Initialise I/O and classes
-  pinMode(wifi_status_led, OUTPUT);    // Configure WiFi status LED
-  digitalWrite(wifi_status_led, LOW);  // Turn off WiFi status LED
-  initMultiButton();                   // Initialise multi purpose button
-  rotor_ctrl.init();                   // Initialise rotor
-  favorites.init();                    // Initialise favorites
+  initMultiButton();                // Initialise multi purpose button
+  rotor_ctrl.init();                // Initialise rotor
+  favorites.init();                 // Initialise favorites
 
-  // Try the loaded settings
-  // -----------------------
+  // Start WiFi connection
+  // ---------------------
   if (!initWiFi()) {
-    // WiFi connection failed -> launch AccessPoint WiFi mode
-    digitalWrite(wifi_status_led, HIGH);
-    getCredentials(server, dns_server);
-
+    // WiFi connection failed -> launch ESP in AccessPoint WiFi mode
+    wifi_led.invert();
+    if (!startAPServer(server, dns_server)) {
+      fatalError("Failed to start WiFi in AP mode! Try resetting WiFi with button, or reflash firmware.");
+    }
   } else {
     // WiFi connection established
-    digitalWrite(wifi_status_led, LOW);
+    wifi_led.off();
 
     // ----- \/\/ CONFIGURE STA SERVER \/\/ -----
     // ------------------------------------------
@@ -334,6 +365,25 @@ void setup() {
     // Define server to set port
     server = new AsyncWebServer(sta_port);
 
+    // Add headers for CORS preflight request when uploading firmware from VUE dev environment
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET, POST");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "Content-Type, Firmware-MD5, Firmware-Size");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Credentials", "true");
+    DefaultHeaders::Instance().addHeader("Access-Control-Expose-Headers", "Firmware-MD5, Firmware-Size");
+
+  // Catch all route, necessary for page reloads in Vue-App
+    server->onNotFound([](AsyncWebServerRequest *request) {
+      if (request->method() == HTTP_OPTIONS) {
+        request->send(200);
+      } else {
+        // Catch all route, necessary for page reloads in Vue-App
+        if (authenticate && !request->authenticate(http_username, http_password))
+          return request->requestAuthentication();
+        request->send(SPIFFS, "/index.html");
+        }
+    });
+
     // Root route, Vue-App index files
     server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (authenticate && !request->authenticate(http_username, http_password))
@@ -349,11 +399,6 @@ void setup() {
       AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.js");
       response->addHeader("cache-control", "private, max-age=86400");
       request->send(response);
-    });
-
-    // Catch all route, necessary for page reloads in Vue-App
-    server->onNotFound([](AsyncWebServerRequest *request){
-      request->send(SPIFFS, "/index.html");
     });
 
     // CSS
@@ -394,14 +439,43 @@ void setup() {
       request->send(401);
     });
 
+    // Update firmware
+    server->on("/update", HTTP_POST,
+      // Response handler
+      [](AsyncWebServerRequest *request) {
+        if (authenticate && !request->authenticate(http_username, http_password))
+          return request->requestAuthentication();
+
+        AsyncWebServerResponse *response;
+  		  if (!Update.hasError()) {
+  		    response = request->beginResponse(200, "text/html", "success");
+          request->send(response);
+          Serial.print("[ESP] Restart in 1 second.");
+          delay(1000);
+          ESP.restart();
+        } else {
+          response = request->beginResponse(200, "text/html", Update.errorString());
+          request->send(response);
+          wifi_led.blinkBlocking(10, 100ul);
+        }
+  		  
+        updating_firmware = false;
+        wifi_led.stopBlinking();
+      },
+
+      // Upload handler
+      handleUpdateUpload
+    );
+
     // Start server
     initWebSocket();
     server->begin();
 
-    Serial.print("Started Server on http://");
+    Serial.print("[Server] started on http://");
     Serial.print(WiFi.localIP());
     Serial.print(":");
     Serial.println(sta_port);
+    Serial.println();
   }
 }
 
@@ -413,38 +487,45 @@ void setup() {
 // ----------------------------------------------------------------------------------
 
 // Timers, that control how often each task in the mainloop is executed
-struct {
-  Timer *networkScan = new Timer(20000);
-  Timer *checkWiFi = new Timer(8000);
-  Timer *reconnectTimeout = new Timer(90000); //600000
-  Timer *reboot = new Timer(86400000 * 3);
-  Timer *multiBtnHold = new Timer(2000);
-  Timer *cleanSockets = new Timer(1000);
-  Timer *rotorUpdate = new Timer(40);
-  Timer *rotorMessage = new Timer(1000);
-  Timer *updateScreen = new Timer(40);
-  Timer *loopTimer = new Timer(1000);
+struct {                                      // Intervals
+  Timer *networkScan = new Timer(20000);      // 20 s
+  Timer *checkWiFi = new Timer(8000);         // 8 s
+  Timer *reconnectTimeout = new Timer(90000); // 90 s
+  Timer *reboot = new Timer(86400000 * 3);    // 3 days
+  Timer *multiBtnHold = new Timer(2000);      // 2 s
+  Timer *cleanSockets = new Timer(1000);      // 1 s
+  Timer *rotorUpdate = new Timer(40);         // 40 ms, 25 Hz
+  Timer *rotorMessage = new Timer(1000);      // 1 s
+  Timer *updateScreen = new Timer(40);        // 40 ms, 25 Hz
+  Timer *loopTimer = new Timer(1000);         // 1 s
+  Timer *updateLedBlinker = new Timer(500);   // 500 ms, 2 Hz
+  Timer *stationLedBlinker = new Timer(2);    // 250 ms, 4 Hz
 } timers;
 
-float adc_volts_prev = -1;  // Previous ADC volts
-bool is_rotating_prev = false;
-int clients_connected_prev;
-bool reconnecting = false;
+float adc_volts_prev = -1;            // Previous loop ADC-Volts
+bool is_rotating_prev = false;        // Was rotor rotating in previous loop
+int clients_connected_prev;           // N of clients connected in previous loop
+bool reconnecting = false;            // Is WiFi trying to reconnect
+bool updating_firmware_prev = false;  // Was firmware updating in previous loop
 
 unsigned long loopCounter = 0;
 unsigned long loop_mus = micros();
 
 
+
 void loop() {
-  loopCounter += 1;
+  if (COUNT_LOOP_CYCLE_TIME) loopCounter += 1;
+
+  // *********** Button ***********
+  // ******************************
 
   // Check for multi button being pressed down
-  if (multi_btn_pressed && !multi_btn_hold) {
+  if (multi_btn_pressed && !multi_btn_hold && !updating_firmware) {
     // Stop rotor
     Serial.println("[BTN] pressed. Stopping rotor.");
     if (rotor_ctrl.is_rotating) {
       rotor_ctrl.stop();
-      blinkWifiLed(1);
+      wifi_led.blinkBlocking(1, 250ul);
     }
     // Enable further checks for wether multi button is being held down
     multi_btn_pressed = false;
@@ -453,14 +534,14 @@ void loop() {
   }
 
   // Check wether button is being held down
-  if (multi_btn_hold) {
+  if (multi_btn_hold && !updating_firmware) {
     if (digitalRead(multi_button_pin)) {
       // Button was released
       multi_btn_hold = false;
     } else if (timers.multiBtnHold->passed()) {
       // Button held for 2s -> reset WiFi 
       rotor_ctrl.stop();
-      blinkWifiLed(4);
+      wifi_led.blinkBlocking(4, 250ul);
       Serial.println("[BTN] held for 2s. Resetting WiFi credentials and restart.");
       resetCredentials();
       ESP.restart();
@@ -469,9 +550,12 @@ void loop() {
 
 
 
-  // Update rotor values and send rotation message to clients.
-  // Update angular speed every 10th update.
-  if (in_station_mode && timers.rotorUpdate->passed()) {
+  // *********** Rotor ***********
+  // *****************************
+
+  // Update rotor values and send rotation message to clients every second update.
+  // Update angular speed every 5th update.
+  if (in_station_mode && timers.rotorUpdate->passed() && !updating_firmware) {
     rotor_ctrl.update(!(timers.rotorUpdate->n_passed % 5));
 
     // Send rotation message every second update only if clients are connected
@@ -492,19 +576,19 @@ void loop() {
   }
 
 
-
   // Watch active auto rotation
   if (rotor_ctrl.is_auto_rotating) {
     rotor_ctrl.watchAutoRotation();
   }
 
 
-
   // Stop rotor if all clients disconnected
-  if (clients_connected == 0 && clients_connected_prev) {
-    screen.setAlert("Alle Verbindungen wurden getrennt.");
+  if (!clients_connected && clients_connected_prev) {
     rotor_ctrl.stop();
     Serial.println("[Websocket] ALL clients disconnected.");
+    if (use_screen) {
+      screen.setAlert("Alle Verbindungen wurden getrennt.");
+    }
     clients_connected_prev = 0;
   } else {
     clients_connected_prev = clients_connected;
@@ -512,60 +596,80 @@ void loop() {
 
 
 
-  // Check for lost of WiFi connection -> stop rotor, try to reconnect
+  // ************ WiFi ************
+  // ******************************
+
+  // Check for loss of WiFi connection -> stop rotor, try to reconnect
   if (in_station_mode && timers.checkWiFi->passed()) {
-    if (WiFi.status() != WL_CONNECTED) {
+    if (!WiFi.isConnected()) {
       // Stop rotor
       if (rotor_ctrl.is_rotating) {
         rotor_ctrl.stop();
       }
 
-      // Start reboot timer
+      // Start reconnect timeout
       if (!reconnecting) {
         timers.reconnectTimeout->start();
         reconnecting = true;
       }
 
       // Try to reconnect
-      Serial.println("[WiFi] WiFi disconnected. Try reconnecting...");
+      Serial.println("[WiFi] disconnected! Try reconnecting...");
       WiFi.disconnect();
-      blinkWifiLed(1);
+      wifi_led.blinkBlocking(1, 250ul);
       WiFi.reconnect();
     }
   }
 
   // Stop timeout if connection was reestablished
-  if (in_station_mode && reconnecting && WiFi.status() == WL_CONNECTED) {
+  if (in_station_mode && reconnecting && WiFi.isConnected()) {
     reconnecting = false;
-    Serial.println("[WiFi] Reconnected.");
+    Serial.println("[WiFi] reconnected.");
   }
 
   // Reboot ESP after reconnect timeout
   if (in_station_mode && reconnecting && timers.reconnectTimeout->passed()) {
-    Serial.println("[WiFi] Reconnecting failed. Restarting device.");
+    Serial.println("[WiFi] Reconnecting failed! Restarting ESP.");
     delay(1000);
     ESP.restart();
   }
 
 
 
-  // Clean old websocket connections
-  if (in_station_mode && timers.cleanSockets->passed()) {
-    socket.cleanupClients();
-  }
-
-
-
-  // Reboot ESP after a few days
-  if (in_station_mode && timers.reboot->passed()) {
-    ESP.restart();
-  }
-
-
+  // ******** Housekeeping ********
+  // ******************************
 
   // Update screen
   if (use_screen && timers.updateScreen->passed()) {
     screen.update();
+  }
+
+  // Blinking LED ticks 
+  wifi_led.tick();
+
+
+  // Clean old websocket connections
+  if (in_station_mode && timers.cleanSockets->passed() && !updating_firmware) {
+    websocket.cleanupClients();
+  }
+
+
+  // Reboot ESP after a few days
+  if (in_station_mode && timers.reboot->passed() && !updating_firmware) {
+    ESP.restart();
+  }
+
+
+  // ESP receives firmware update
+  if (updating_firmware) {
+    websocket.closeAll();
+
+    // Reboot if update times out
+    if (updateTimeout.passed()) {
+      Serial.print("[ESP] Update error: Connection lost during upload.");
+      delay(1000);
+      ESP.restart();
+    }
   }
 
 
@@ -576,7 +680,6 @@ void loop() {
   // Scanning for networks
   if (!in_station_mode) {
     if (scan_now || timers.networkScan->passed()) {
-      if (verbose) Serial.println("Scanning for networks after.");
       startNetworkScan();
       scan_now = false;
     }
@@ -593,9 +696,9 @@ void loop() {
   // ****** Loop Cycle Time  ******
   // ******************************
 
-  if (timers.loopTimer->passed() && false) {
+  if (timers.loopTimer->passed() && COUNT_LOOP_CYCLE_TIME) {
     double loop_cycle = (float) ((micros() - loop_mus) / loopCounter) / 1000.0;
-    Serial.print("Loop cycle: ");
+    Serial.print("[ESP] Loop cycle time: ");
     Serial.printf("%3.2f", loop_cycle);
     Serial.println(" ms");
     loopCounter = 0;

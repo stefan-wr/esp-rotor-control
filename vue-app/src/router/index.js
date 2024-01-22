@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import MainView from '../views/MainView.vue';
 import SettingsView from '../views/SettingsView.vue';
 import MessageView from '../views/MessageView.vue';
+import UpdateView from '../views/UpdateView.vue';
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -59,6 +60,11 @@ const router = createRouter({
                 pushTo: 'settings',
                 pushAfter: 5000
             }
+        },
+        {
+            path: '/update',
+            name: 'update',
+            component: UpdateView,
         },
 
         // Catch-all route to main page

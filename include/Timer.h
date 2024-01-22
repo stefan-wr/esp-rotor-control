@@ -1,19 +1,31 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-#include <Arduino.h>
-
+// A simple timer class that can be checked for expiration in the main loop.
+// When it was checked and the timer has passed, the timer is restarted.
+// The number of times the timer was checked and it was passed is counted.
 class Timer {
 private:
     unsigned long interval_ms;
     unsigned long start_ms;
-    
+
 public:
     Timer(unsigned long interval);
+    
+    // N of times, the timer was checked and returned true
     int n_passed = 0;
+
+    // => Start/Restart timer
     void start();
-    bool passed();
+
+    // => Return wether timer has expired. Restart timer if true.
     void reset();
+
+    // => Change interval of timer and restart
+    void changeInterval(unsigned long new_interval);
+    
+    // => Reset counter
+    bool passed();    
 };
 
 #endif //TIMER_H

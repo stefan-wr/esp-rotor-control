@@ -46,6 +46,9 @@ namespace Screen {
         // => Draw compass with radius r, centered at (cx, cy)
         void drawCompass(const uint16_t &cx, const uint16_t &cy, const float &r, uint16_t color);
 
+        // => Set a fullscreen text to screen RAM
+        void setFullscreenText(const String &txt);
+
         // => Show a fullscreen centered message for a few seconds
         void showFullscreenAlert();
 
@@ -57,9 +60,10 @@ namespace Screen {
 
         // => Set the default screen when in STATION mode.
         void showDefaultScreen();
-        
-        
 
+        // => Set screen for firmware update
+        void showUpdateScreen();
+        
     public:
         Adafruit_SSD1306 *screen;
 
@@ -74,7 +78,12 @@ namespace Screen {
 
         // => Set an alert message to be shown full screen for a few seconds
         void setAlert(const String &txt);
+
+        // => Set an alert message and show it on  the screen immediatly
+        void setAlertImmediatly(const String &txt);        
     };
 }
+
+extern Screen::Screen screen;
 
 #endif // SCREEN_H

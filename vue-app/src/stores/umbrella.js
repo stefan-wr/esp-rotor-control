@@ -39,7 +39,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     }
 
     // Start continuous connection test
-    if (import.meta.env.PROD) {
+    if (import.meta.env.PROD || true) {
         setInterval(checkConnection, connectionTimeout);
     }
 
