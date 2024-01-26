@@ -1,5 +1,5 @@
 <template>
-  <Card id="lock" title="Rotorsperre">
+  <CardCollapsable id="lock" title="Rotorsperre">
     <template #icon>
       <Icon v-if="settingsStore.lock.isLocked" icon="fa-solid fa-lock"></Icon>
       <Icon v-else icon="fa-solid fa-lock-open"></Icon>
@@ -56,15 +56,15 @@
         </template>
 
         <template #childB>
-          <div style="margin-top: -1em; height: 1px"></div>
+          <div style="margin-top: -1em; height: 0px"></div>
         </template>
       </CardToggleContentTransition>
     </div>
-  </Card>
+  </CardCollapsable>
 </template>
 
 <script setup>
-import Card from '@/components/Card.vue';
+import CardCollapsable from '@/components/CardCollapsable.vue';
 import ToggleSwitch from '@/components/ToggleSwitch.vue';
 import CardToggleContentTransition from '@/components/CardToggleContentTransition.vue';
 

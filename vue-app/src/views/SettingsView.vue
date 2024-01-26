@@ -4,7 +4,7 @@
       <h2 class="medium">System</h2>
       <Disconnect></Disconnect>
       <Reboot></Reboot>
-      <Firmware></Firmware>
+      <FirmwareVersion></FirmwareVersion>
       <FirmwareUpdate></FirmwareUpdate>
       <h2 class="medium">Benutzeroberfläche</h2>
       <FontSize></FontSize>
@@ -32,7 +32,7 @@ import KeyboardShortcuts from '@/components/settings/KeyboardShortcuts.vue';
 import UseOverlap from '@/components/settings/UseOverlap.vue';
 import Disconnect from '@/components/settings/Disconnect.vue';
 import Reboot from '@/components/settings/Reboot.vue';
-import Firmware from '@/components/settings/Firmware.vue';
+import FirmwareVersion from '@/components/settings/FirmwareVersion.vue';
 import FirmwareUpdate from '@/components/settings/FirmwareUpdate.vue';
 import FontSize from '@/components/settings/FontSize.vue';
 import ColorTheme from '@/components/settings/ColorTheme.vue';

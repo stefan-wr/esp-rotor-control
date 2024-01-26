@@ -1,5 +1,5 @@
 <template>
-  <Card title="Manuelle Rotation">
+  <CardCollapsable title="Manuelle Rotation">
     <template #icon><Icon icon="fa-solid fa-arrows-spin"></Icon></template>
     <div class="flex-hc gap-one buttons-wrap">
       <button
@@ -46,11 +46,11 @@
         <Icon icon="fa-solid fa-rotate-right" />
       </button>
     </div>
-  </Card>
+  </CardCollapsable>
 </template>
 
 <script setup>
-import Card from '@/components/Card.vue';
+import CardCollapsable from '@/components/CardCollapsable.vue';
 
 import { callWithAsyncErrorHandling, ref } from 'vue';
 import { useEventListener } from '@vueuse/core';

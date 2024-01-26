@@ -1,5 +1,5 @@
 <template>
-  <Card title="Geschwindigkeit">
+  <CardCollapsable title="Geschwindigkeit">
     <template #icon><Icon icon="fa-solid fa-gauge-high"></Icon></template>
     <div class="range-wrap">
       <input
@@ -21,11 +21,11 @@
         {{ speedLabel }}<span class="smaller">&nbsp;%</span>
       </label>
     </div>
-  </Card>
+  </CardCollapsable>
 </template>
 
 <script setup>
-import Card from '@/components/Card.vue';
+import CardCollapsable from '@/components/CardCollapsable.vue';
 
 import { computed } from 'vue';
 import { useEventListener } from '@vueuse/core';

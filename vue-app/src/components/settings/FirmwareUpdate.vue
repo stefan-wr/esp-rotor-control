@@ -12,12 +12,12 @@
           <!-- CHILD A - Choose File-->
           <template #childA>
             <!-- File drop zone -->
-            <div class="flex-vst gap-one update-form" :class="{ 'form-shake': fileSelectFailed }">
-              <div
+            <div class="flex-vst gap-one update-form">
+              <ShakeOnToggle
                 class="border-box flex-hc txt-dark drop-zone-wrap"
                 tabindex="0"
                 ref="dropZone"
-                @click="firmwareInput.click"
+                @click="firmwareInput.click()"
               >
                 <div
                   class="flex-vc flex-cc gap-one flex-grow drop-zone"
@@ -26,25 +26,24 @@
                   <Icon icon="fa-solid fa-file-import" class="large" />
                   <span class="c-align">Datei hier ablegen oder drücken zum Durchsuchen.</span>
                 </div>
-              </div>
+              </ShakeOnToggle>
 
-              <!-- Error message, sliding in -->
-              <Transition
-                name="error"
+              <!-- Error box -->
+              <TransitionSlideIn
                 @after-leave="toggleCard.applyCurrentWrapHeight()"
                 @enter="toggleCard.applyCurrentWrapHeight()"
-                @after-enter="shakeForm()"
-                v-show="errorTxt"
+                @after-enter="dropZone.shake()"
+                :toggle="!!errorTxt"
               >
                 <div class="border-box flex-hc gap-one">
-                  <Icon icon="fa-solid fa-circle-info" class="large" />
+                  <Icon icon="fa-solid fa-circle-exclamation" class="large" />
                   <span>{{ errorTxt }}</span>
                 </div>
-              </Transition>
+              </TransitionSlideIn>
             </div>
           </template>
 
-          <!-- CHILD B - Start Update-->
+          <!-- CHILD B - Start update-->
           <template #childB>
             <div class="flex-vst gap-one flex-grow update-form">
               <!-- Selected file info-->
@@ -52,9 +51,10 @@
                 <!-- Name -->
                 <div class="flex-csp gap-one">
                   <span class="txt-dark" style="align-self: start">Datei:</span>
-                  <div class="firmware-name gap-half r-align" style="">
+                  <div class="firmware-name gap-half r-align">
                     <span
                       class="no-wrap-ellip"
+                      style="width: 100%"
                       :title="'Dateiname: ' + settingsStore.firmware.name"
                     >
                       {{ settingsStore.firmware.name }}
@@ -118,6 +118,8 @@
 
 <script setup>
 import SettingCard from '@/components/settings/SettingCard.vue';
+import TransitionSlideIn from '@/components/TransitionSlideIn.vue';
+import ShakeOnToggle from '@/components/ShakeOnToggle.vue';
 import CardToggleContentTransition from '@/components/CardToggleContentTransition.vue';
 
 import { ref, watch } from 'vue';
@@ -134,6 +136,7 @@ const router = useRouter();
 const toggleCard = ref(null);
 const firmwareInput = ref(null);
 const dropZone = ref(null);
+const dropZoneShakeWrap = ref(null);
 
 const isFileSelected = ref(false);
 const errorTxt = ref('');
@@ -222,8 +225,8 @@ async function onFileChange(event, files = []) {
         errorTxt.value = 'Der MD5-Hash dieser Datei konnte nicht bestimmt werden.';
         break;
     }
-    shakeForm();
   }
+  dropZone.value.shake();
 }
 
 // Get MD5 hash from selected file.
@@ -273,17 +276,6 @@ watch(
   },
   { flush: 'post' }
 );
-
-// Shake form
-// ----------
-const fileSelectFailed = ref(false);
-
-function shakeForm() {
-  fileSelectFailed.value = true;
-  setTimeout(() => {
-    fileSelectFailed.value = false;
-  }, 300);
-}
 </script>
 
 <style lang="scss" scoped>
@@ -320,24 +312,12 @@ function shakeForm() {
 
 .firmware-name {
   display: grid;
-  justify-items: stretch;
+  justify-items: end;
+  width: 100%;
 }
 
 .update-btn {
   flex-basis: 48%;
   flex-shrink: 1;
-}
-
-/* Error text transition */
-$speed: 0.2s;
-
-.error-leave-active,
-.error-enter-active {
-  transition: transform $speed, opacity $speed;
-}
-.error-leave-to,
-.error-enter-from {
-  opacity: 0;
-  transform: translateX(-80%) scaleY(70%);
 }
 </style>

@@ -15,14 +15,14 @@
 #include <Settings.h>
 #include <Timer.h>
 #include <Screen.h>
-#include <SimpleUpdater.h>
+#include <Firmware.h>
 #include <BlinkingLED.h>
 
 #define USE_SCREEN true
 #define COUNT_LOOP_CYCLE_TIME false
 
 // Software version
-const String version = "0.9.0";
+const String version = "0.9.1";
 
 // ESP ID
 String esp_id = "";
@@ -40,6 +40,7 @@ bool multi_btn_hold = false;        // True if button is being held
 int clients_connected = 0;          // Number of connected socket clients
 bool authenticate = true;           // Authenticate HTTP connections
 bool use_screen = USE_SCREEN;       // Use an SSD1306 screen
+uint8_t authentications = 0;        // Number of authentications in /authenticate URL
 
 // Buffer storing lock message, default message resets lock on ESP restart
 String lock_msg = "LOCK|{\"isLocked\":false,\"by\":\"\"}";
@@ -362,16 +363,19 @@ void setup() {
       authenticate = false;
     }
 
-    // Define server to set port
+    // Redeclare server to set port
     server = new AsyncWebServer(sta_port);
 
     // Add headers for CORS preflight request when uploading firmware from VUE dev environment
+    /*
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET, POST");
-    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "Content-Type, Firmware-MD5, Firmware-Size");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "Content-Type, Token");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Credentials", "true");
-    DefaultHeaders::Instance().addHeader("Access-Control-Expose-Headers", "Firmware-MD5, Firmware-Size");
-
+    DefaultHeaders::Instance().addHeader("Access-Control-Max-Age:", "10");
+    DefaultHeaders::Instance().addHeader("Access-Control-Expose-Headers", "Token");
+    */
+    
   // Catch all route, necessary for page reloads in Vue-App
     server->onNotFound([](AsyncWebServerRequest *request) {
       if (request->method() == HTTP_OPTIONS) {
@@ -434,38 +438,27 @@ void setup() {
       ESP.restart();
     });
 
-    // Logout
-    server->on("/logout", HTTP_GET, [](AsyncWebServerRequest* request) {
-      request->send(401);
+    // Authenticate
+    server->on("/authenticate", HTTP_GET, [](AsyncWebServerRequest* request) {
+      if (authenticate) {
+        Serial.println(authentications);
+        if (!authentications || !request->authenticate(http_username, http_password)) {
+          authentications++;
+          return request->requestAuthentication();
+        }
+      }
+      authentications = 0;
+      request->send(200);
     });
 
+    // Request a firmware udate
+    server->on("/request-update", HTTP_POST, handleUpdateRequest);
+
     // Update firmware
-    server->on("/update", HTTP_POST,
-      // Response handler
-      [](AsyncWebServerRequest *request) {
-        if (authenticate && !request->authenticate(http_username, http_password))
-          return request->requestAuthentication();
+    server->on("/update", HTTP_POST, handleFirmwareResponse, handleFirmwareUpload);
 
-        AsyncWebServerResponse *response;
-  		  if (!Update.hasError()) {
-  		    response = request->beginResponse(200, "text/html", "success");
-          request->send(response);
-          Serial.print("[ESP] Restart in 1 second.");
-          delay(1000);
-          ESP.restart();
-        } else {
-          response = request->beginResponse(200, "text/html", Update.errorString());
-          request->send(response);
-          wifi_led.blinkBlocking(10, 100ul);
-        }
-  		  
-        updating_firmware = false;
-        wifi_led.stopBlinking();
-      },
-
-      // Upload handler
-      handleUpdateUpload
-    );
+    // Init firmware instace
+    firmware.initFirmware();
 
     // Start server
     initWebSocket();
@@ -500,13 +493,14 @@ struct {                                      // Intervals
   Timer *loopTimer = new Timer(1000);         // 1 s
   Timer *updateLedBlinker = new Timer(500);   // 500 ms, 2 Hz
   Timer *stationLedBlinker = new Timer(2);    // 250 ms, 4 Hz
+  Timer *updateChecker = new Timer(50);       // 50 ms, 20 Hz
 } timers;
 
-float adc_volts_prev = -1;            // Previous loop ADC-Volts
-bool is_rotating_prev = false;        // Was rotor rotating in previous loop
-int clients_connected_prev;           // N of clients connected in previous loop
 bool reconnecting = false;            // Is WiFi trying to reconnect
-bool updating_firmware_prev = false;  // Was firmware updating in previous loop
+float adc_volts_prev = -1;            // Previous loop ADC-Volts
+bool is_rotating_prev = false;        // Was rotor rotating in previous loop cycle
+int clients_connected_prev;           // N of clients connected in previous loop cycle
+bool is_updating_prev = false;  // Was firmware updating in previous loop cycle
 
 unsigned long loopCounter = 0;
 unsigned long loop_mus = micros();
@@ -514,13 +508,13 @@ unsigned long loop_mus = micros();
 
 
 void loop() {
-  if (COUNT_LOOP_CYCLE_TIME) loopCounter += 1;
+  if (COUNT_LOOP_CYCLE_TIME) loopCounter++;
 
   // *********** Button ***********
   // ******************************
 
   // Check for multi button being pressed down
-  if (multi_btn_pressed && !multi_btn_hold && !updating_firmware) {
+  if (multi_btn_pressed && !multi_btn_hold && !firmware.is_updating) {
     // Stop rotor
     Serial.println("[BTN] pressed. Stopping rotor.");
     if (rotor_ctrl.is_rotating) {
@@ -534,7 +528,7 @@ void loop() {
   }
 
   // Check wether button is being held down
-  if (multi_btn_hold && !updating_firmware) {
+  if (multi_btn_hold && !firmware.is_updating) {
     if (digitalRead(multi_button_pin)) {
       // Button was released
       multi_btn_hold = false;
@@ -555,7 +549,7 @@ void loop() {
 
   // Update rotor values and send rotation message to clients every second update.
   // Update angular speed every 5th update.
-  if (in_station_mode && timers.rotorUpdate->passed() && !updating_firmware) {
+  if (in_station_mode && timers.rotorUpdate->passed() && !firmware.is_updating) {
     rotor_ctrl.update(!(timers.rotorUpdate->n_passed % 5));
 
     // Send rotation message every second update only if clients are connected
@@ -577,17 +571,17 @@ void loop() {
 
 
   // Watch active auto rotation
-  if (rotor_ctrl.is_auto_rotating) {
+  if (in_station_mode && rotor_ctrl.is_auto_rotating) {
     rotor_ctrl.watchAutoRotation();
   }
 
 
   // Stop rotor if all clients disconnected
-  if (!clients_connected && clients_connected_prev) {
+  if (in_station_mode && !clients_connected && clients_connected_prev) {
     rotor_ctrl.stop();
     Serial.println("[Websocket] ALL clients disconnected.");
     if (use_screen) {
-      screen.setAlert("Alle Verbindungen wurden getrennt.");
+      screen.setAlert("Alle Verbind. getr.");
     }
     clients_connected_prev = 0;
   } else {
@@ -649,26 +643,45 @@ void loop() {
 
 
   // Clean old websocket connections
-  if (in_station_mode && timers.cleanSockets->passed() && !updating_firmware) {
+  if (in_station_mode && timers.cleanSockets->passed()) {
     websocket.cleanupClients();
   }
 
 
   // Reboot ESP after a few days
-  if (in_station_mode && timers.reboot->passed() && !updating_firmware) {
+  if (in_station_mode && timers.reboot->passed() && !firmware.is_updating) {
     ESP.restart();
   }
 
 
-  // ESP receives firmware update
-  if (updating_firmware) {
-    websocket.closeAll();
 
-    // Reboot if update times out
-    if (updateTimeout.passed()) {
-      Serial.print("[ESP] Update error: Connection lost during upload.");
-      delay(1000);
-      ESP.restart();
+  // ********** Updating **********
+  // ******************************
+
+  if (in_station_mode && timers.updateChecker->passed()) {
+ 
+    // When update starts 
+    if (!is_updating_prev && firmware.is_updating) {
+      websocket.enable(false);
+      wifi_led.startBlinking(500);
+      firmware.timeout->start();
+      is_updating_prev = true;
+    }
+
+    // During update
+    if (firmware.is_updating) {
+      if (firmware.timeout->passed()) {
+        Serial.println("[ESP] Update error: Connection lost during upload.");
+        delay(1000);
+        ESP.restart();
+      }
+    }
+
+    // When update ends
+    if (is_updating_prev && !firmware.is_updating) {
+      websocket.enable(true);
+      wifi_led.stopBlinking();
+      is_updating_prev = false;
     }
   }
 

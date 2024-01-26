@@ -11,7 +11,8 @@
         ref="disconnectBtn"
         @click="disconnect($event)"
       >
-        Trennen
+      <span v-if="!waitingForDisconnect">Trennen</span>
+       <Icon icon="fa-solid fa-spinner" class="spin" v-else></Icon>
       </button>
     </template>
 
@@ -32,7 +33,8 @@
 
 <script setup>
 import SettingCard from '@/components/settings/SettingCard.vue';
-import { useSettingsStore } from '../../stores/settings';
+
+import { useSettingsStore } from '@/stores/settings';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
 
@@ -40,24 +42,7 @@ const settingsStore = useSettingsStore();
 const router = useRouter();
 
 const disconnectBtn = ref(null);
-
-function animatedDots(el) {
-  el.textContent = ' ...';
-  setTimeout(() => {
-    el.textContent = '. ..';
-  }, 500);
-  setTimeout(() => {
-    el.textContent = '.. .';
-  }, 1000);
-}
-
-function dots(el) {
-  el.style.width = String(el.offsetWidth) + 'px';
-  animatedDots(el);
-  setInterval(() => {
-    animatedDots(el);
-  }, 1500);
-}
+const waitingForDisconnect = ref(false);
 
 // Request conmirmation before sending disconnect request
 function disconnect(event) {
@@ -65,7 +50,8 @@ function disconnect(event) {
   msg += 'Ein Fernzugriff ist dann nicht mehr möglich.\n';
   msg += 'Der Rotor Controller muss danach lokal neu eingerichtet werden.';
   if (confirm(msg)) {
-    dots(disconnectBtn.value);
+    disconnectBtn.value.style.width = String(disconnectBtn.value.offsetWidth) + 'px';
+    waitingForDisconnect.value = true;
     fetch('/disconnect')
       .then(() => {
         router.push({ name: 'disconnect' });

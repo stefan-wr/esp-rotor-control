@@ -25,7 +25,7 @@ public:
     void changeInterval(unsigned long new_interval);
     
     // => Reset counter
-    bool passed();    
+    bool passed(const bool &restart = true);    
 };
 
 #endif //TIMER_H

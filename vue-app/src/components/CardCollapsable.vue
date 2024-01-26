@@ -2,7 +2,7 @@
   <div class="card border-box l-align" :class="{ 'card-show': uiStore.ui.cards[props.title] }">
     <div class="flex-csp gap-half medium">
       <slot name="icon"></slot>
-      <span class="card-title bold">{{ title }}</span>
+      <span class="card-title bold flex-grow">{{ title }}</span>
       <button
         class="card-hide-btn flex-cc"
         @click="toggleCollapse"
@@ -105,13 +105,8 @@ onUpdated(() => {
 </script>
 
 <style lang="scss" scoped>
-
 .card {
   width: 100%;
-}
-
-.card-title {
-  flex-grow: 1;
 }
 
 .card-hide-btn {
@@ -138,6 +133,7 @@ onUpdated(() => {
   overflow: hidden;
 }
 
+// Normally hidden
 .card-content {
   width: 100%;
   opacity: 0;
@@ -146,9 +142,13 @@ onUpdated(() => {
 }
 
 .card-content-trans {
-  transition: margin-top $card-trans-spd, opacity $card-trans-spd, transform $card-trans-spd;
+  transition:
+    margin-top $card-trans-spd,
+    opacity $card-trans-spd,
+    transform $card-trans-spd;
 }
 
+// Applied to show card
 .card-show .card-content {
   height: 100%;
   margin-top: 1em !important;

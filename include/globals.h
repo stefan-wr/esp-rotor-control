@@ -13,7 +13,6 @@ const bool verbose = true;
 const uint8_t wifi_led_pin = 19;
 const uint8_t multi_button_pin = 32;
 const uint8_t rot_pins[2] = {33, 25};   // 0: ccw/left, 1: cw/right
-const uint8_t safety_stop_pin = 13;
 const uint8_t speed_pin = 26;
 
 // AP mode server config
@@ -34,7 +33,6 @@ extern bool scan_now;
 extern bool in_station_mode;
 extern int  clients_connected;
 extern bool use_screen;
-extern bool updating_firmware;
 
 // External ESP ID & software version
 extern String esp_id;

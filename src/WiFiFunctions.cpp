@@ -266,6 +266,9 @@ bool initWiFi() {
     return false;
   }
 
+  // Set hostname
+  WiFi.hostname("RotorControl-" + version);
+
   // Try repeatedly to connect to WiFi for 6 seconds
   // Reset when button pressed for two seconds
   int n_try = 1;

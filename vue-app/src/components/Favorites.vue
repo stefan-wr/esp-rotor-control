@@ -1,6 +1,9 @@
 <template>
-  <Card id="favorites" title="Favoriten">
-    <template #icon><Icon icon="fa-solid fa-bookmark"></Icon></template>
+  <CardCollapsable id="favorites" title="Favoriten">
+    <template #icon>
+      <Icon icon="fa-solid fa-bookmark"></Icon>
+    </template>
+
     <CardToggleContentTransition :toggle="isFormOpen">
       <!-- CHILD A -->
       <!-- Description and add favorite button -->
@@ -9,13 +12,6 @@
           <p>
             Lege bis zu 10 Favoriten an, die per Tastendruck automatisch angefahren werden können.
           </p>
-          <!--button
-            class="btn-std-resp"
-            title="Neuen Favoriten anlegen."
-            @click="umbrellaStore.resetFavorites();"
-          >
-            <Icon icon="fa-solid fa-rotate-left" />
-          </button-->
           <button
             class="btn-std-resp"
             title="Neuen Favoriten anlegen."
@@ -32,8 +28,8 @@
       <template #childB>
         <div id="fav-form" ref="favForm" :class="{ 'form-shake': formFailed }">
           <!-- Input Labels -->
-          <label for="fav-name" class="small">Favoriten-Bezeichner</label>
-          <label for="fav-angle" class="small">Azimuth (0° - 450°)</label>
+          <label for="fav-name" class="small txt-dark">Favoriten-Bezeichner</label>
+          <label for="fav-angle" class="small txt-dark">Azimuth (0° - 450°)</label>
 
           <!-- Name -->
           <input
@@ -86,34 +82,34 @@
 
     <!-- Favorites List Head-->
     <ul v-if="settingsStore.favorites.array.length" id="favorites-list">
-      <li class="small">
+      <li class="small txt-dark">
         <span
-          class="fav-index fav-head fav-head-sort"
+          class="fav-index fav-head-sort-btn"
           @click="settingsStore.sortFavoritesBy.id"
-          @keydown.enter="settingsStore.sortFavoritesBy.id"
+          @keyup.enter="settingsStore.sortFavoritesBy.id"
           title="Favoriten nach ID sortieren."
           tabindex="0"
           >#</span
         >
         <span
-          class="fav-name fav-head fav-head-sort"
+          class="fav-name fav-head-sort-btn"
           @click="settingsStore.sortFavoritesBy.name"
-          @keydown.enter="settingsStore.sortFavoritesBy.name"
+          @keyup.enter="settingsStore.sortFavoritesBy.name"
           title="Favoriten nach Namen sortieren."
           tabindex="0"
           >Name</span
         >
         <span
-          class="fav-angle fav-head fav-head-sort"
+          class="fav-angle fav-head-sort-btn"
           @click="settingsStore.sortFavoritesBy.angle"
-          @keydown.enter="settingsStore.sortFavoritesBy.angle"
+          @keyup.enter="settingsStore.sortFavoritesBy.angle"
           title="Favoriten nach Winkel sortieren."
           tabindex="0"
         >
           Azimuth
         </span>
-        <span class="fav-rot fav-head">Anfahr.</span>
-        <span class="fav-del fav-head">Lösch.</span>
+        <span class="fav-rot">Anfahr.</span>
+        <span class="fav-del">Lösch.</span>
         <hr />
       </li>
 
@@ -128,9 +124,7 @@
           :disabled="settingsStore.isLockedByElse"
           @click="requestAngle(fav.angle)"
         >
-          <span>
-            <Icon icon="fa-solid fa-play" />
-          </span>
+          <Icon icon="fa-solid fa-play" />
         </button>
         <button
           class="fav-del btn-std-resp flex-cc"
@@ -142,11 +136,11 @@
         <hr v-if="index !== settingsStore.favorites.array.length - 1" />
       </li>
     </ul>
-  </Card>
+  </CardCollapsable>
 </template>
 
 <script setup>
-import Card from '@/components/Card.vue';
+import CardCollapsable from '@/components/CardCollapsable.vue';
 import CardToggleContentTransition from '@/components/CardToggleContentTransition.vue';
 
 import { ref, computed } from 'vue';
@@ -297,10 +291,6 @@ function requestAngle(angle) {
   column-gap: 1em;
   width: 100%;
 
-  label {
-    opacity: $text-light-opacity;
-  }
-
   input {
     margin-top: 0.3em;
     margin-bottom: 1em;
@@ -325,17 +315,13 @@ function requestAngle(angle) {
     grid-column: 1 / span 5;
   }
 
-  .fav-head {
-    opacity: $text-light-opacity;
-  }
-
-  .fav-head-sort {
+  .fav-head-sort-btn {
     cursor: pointer;
     justify-self: start;
 
     &:hover,
     &:focus-visible {
-      opacity: 0.9;
+      color: var(--text-color);
     }
   }
 

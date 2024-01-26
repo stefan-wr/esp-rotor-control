@@ -13,7 +13,7 @@
 
     <template #content>
       <p class="txt-dark" style="">
-        Erlaubt dem Rotor den Overlap-Bereich zwischen 360° und 450° für die automatische Rotation zu benutzen.
+        Erlaube dem Rotor den Overlap-Bereich zwischen 360° und 450° für die automatische Rotation zu benutzen.
       </p>
     </template>
   </SettingCard>

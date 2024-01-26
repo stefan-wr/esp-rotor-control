@@ -1,5 +1,6 @@
 <template>
   <div class="trans-wrap" ref="transWrap">
+    <!-- CHILD A -->
     <Transition
       name="childA-trans"
       @before-enter="$emit('before-transition')"
@@ -12,8 +13,8 @@
     >
       <slot name="childA"></slot>
     </Transition>
-
-    <!-- New favorite form -->
+    
+    <!-- CHILD B -->
     <Transition name="childB-trans" @enter="applyCurrentWrapHeight" v-show="toggle">
       <slot name="childB"></slot>
     </Transition>

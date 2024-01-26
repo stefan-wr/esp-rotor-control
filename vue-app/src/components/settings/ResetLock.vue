@@ -22,7 +22,6 @@
 
 <script setup>
 import SettingCard from '@/components/settings/SettingCard.vue';
-import { useRouter } from 'vue-router';
 import { useSettingsStore } from '@/stores/settings';
 
 const settingsStore = useSettingsStore();

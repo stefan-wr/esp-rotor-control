@@ -2,7 +2,7 @@
   <main class="flex-vst gap-one">
     <h2 class="medium">Firmware Udpate</h2>
     <p>
-      Bitte warte, während das Firmware Update hochgeladen wird.<br>Nach erfolgreichem Update wird der
+      Bitte warte, während das Firmware Update hochgeladen wird.<br />Nach erfolgreichem Update wird
       RotorControl neugestartet.
     </p>
 
@@ -13,10 +13,10 @@
 
     <!-- Success Box-->
     <!---------------->
-    <MessageBoxTransition :toggle="!!successTxt">
+    <TransitionSlideIn :toggle="!!successTxt">
       <div class="flex-vc gap-one">
-        <div class="border-box flex-hc l-lign gap-one error">
-          <Icon icon="fa-solid fa-circle-info" class="large" />
+        <div class="border-box flex-hc l-align gap-one error">
+          <Icon icon="fa-solid fa-circle-check" class="large" />
           <span>{{ successTxt }}</span>
         </div>
         <!-- Button-->
@@ -28,22 +28,22 @@
           <Icon icon="fa-solid fa-arrow-right" v-else></Icon>
         </button>
       </div>
-    </MessageBoxTransition>
+    </TransitionSlideIn>
 
     <!-- Error Box -->
     <!--------------->
-    <MessageBoxTransition :toggle="!!errorTxt" :shake="true" v-slot="{ isShaking }">
+    <TransitionSlideIn :toggle="!!errorTxt" @after-enter="errorBox.shake()">
       <div class="flex-vc gap-one">
-        <div class="border-box flex-hc l-align gap-one error" :class="{ 'form-shake': isShaking }">
-          <Icon icon="fa-solid fa-circle-info" class="large" />
+        <ShakeOnToggle ref="errorBox" class="border-box flex-hc l-align gap-one error">
+          <Icon icon="fa-solid fa-circle-exclamation" class="large" />
           <span>{{ errorTxt }}</span>
-        </div>
+        </ShakeOnToggle>
         <!-- Button -->
         <button class="btn-std-resp bold no-wrap-ellip" @click="returnToSettings()">
           <Icon icon="fa-solid fa-arrow-left" />&nbsp;Zurück
         </button>
       </div>
-    </MessageBoxTransition>
+    </TransitionSlideIn>
 
     <!-- Progress Bar-->
     <div class="border-box flex-cst gap-half progress-bar">
@@ -56,7 +56,8 @@
 </template>
 
 <script setup>
-import MessageBoxTransition from '@/components/MessageBoxTransition.vue';
+import TransitionSlideIn from '@/components/TransitionSlideIn.vue';
+import ShakeOnToggle from '@/components/ShakeOnToggle.vue';
 
 import axios from 'axios';
 
@@ -69,13 +70,19 @@ const router = useRouter();
 const settingsStore = useSettingsStore();
 const umbrellaStore = useUmbrellaStore();
 
+const errorBox = ref(null);
+
 const uploadProgress = ref(1);
 const uploadFinished = ref(false);
 const rebootTimerActive = ref(false);
 
 const errorTxt = ref('');
 const successTxt = ref('');
-const errorShaking = ref(false);
+
+// Is reboot pending after update
+const rebootPending = computed(() => {
+  return rebootTimerActive.value || umbrellaStore.hasLostConnection;
+});
 
 // Update upload progress up to 94%
 function updateProgress(e) {
@@ -85,43 +92,72 @@ function updateProgress(e) {
   }
 }
 
-const rebootPending = computed(() => {
-  if (rebootTimerActive.value) {
-    return true;
-  } else if (umbrellaStore.hasLostConnection) {
-    return true;
-  } else {
-    return false;
+// Request approval to upload firmware update from ESP
+// ---------------------------------------------------
+async function requestUpdateApproval() {
+  let formData = new FormData();
+  formData.append('md5', settingsStore.firmware.md5);
+  formData.append('size', settingsStore.firmware.size);
+
+  // Axios config
+  let config = {
+    timeout: 1000 * 60,
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  };
+
+  try {
+    var response = await axios.post('/request-update', formData, config);
+  } catch (err) {
+    throw new Error('Verbindungsfehler bei der Update-Anfrage', { cause: err });
   }
-});
+
+  if (response.data === 'denied') {
+    throw new Error('Update-Anfrage von RotorControl abgelehnt');
+  }
+
+  if (response.data === '') {
+    throw new Error('Leeren Token von RotorControl erhalten');
+  }
+
+  return response.data;
+}
 
 // Upload new firmware file
 // ------------------------
 async function uploadFirmware() {
   uploadFinished.value = false;
 
-  // Create data object
-  let formData = new FormData();
-  formData.append('firmware', settingsStore.firmware.file, settingsStore.firmware.name);
+  // Get approval from server to upload firmware
+  try {
+    var token = await requestUpdateApproval();
+    console.log('Token: ' + token);
+  } catch (err) {
+    uploadFinished.value = true;
+    errorTxt.value = 'Update fehlgeschlagen! (' + err + ')';
+    return;
+  }
 
-  // Create config object
+  // Create form data object
+  let formData = new FormData();
+  formData.append('firmware', settingsStore.firmware.file);
+
+  // Axios config
   let config = {
-    onUploadProgress: updateProgress,
     timeout: 1000 * 60 * 2,
+    withCredentials: true,
+    onUploadProgress: updateProgress,
     headers: {
-      'Content-Type': 'multipart/form-data'
+      'Content-Type': 'multipart/form-data',
+      Token: token
     }
   };
 
-  // Configure Axios, cache common headers
-  let commonHeaders = axios.defaults.headers.common;
-  axios.defaults.withCredentials = true;
-  axios.defaults.headers.common['Firmware-MD5'] = settingsStore.firmware.md5;
-  axios.defaults.headers.common['Firmware-Size'] = settingsStore.firmware.size;
-
   // --------------------
   try {
-    const response = await axios.post('http://rotor.local/update', formData, config);
+    const response = await axios.post('/update', formData, config);
     uploadFinished.value = true;
 
     if (response.data === 'success') {
@@ -132,23 +168,17 @@ async function uploadFirmware() {
       setTimeout(() => {
         rebootTimerActive.value = false;
       }, 10000);
-
     } else {
       // Update failed on ESP
       errorTxt.value =
         'Update fehlgeschlagen! Die Firmware-Datei wurde nicht akzeptiert. (' + response.data + ')';
       console.log(response);
     }
-
-  } catch (error) {
+  } catch (err) {
     // Upload failed
     uploadFinished.value = true;
     errorTxt.value = 'Update fehlgeschlagen! Die Firmware-Datei konnte nicht hochgeladen werden.';
-    console.log(error);
-
-  } finally {
-    // Reset common headers
-    axios.defaults.headers.common = commonHeaders;
+    console.log(err);
   }
 }
 // --------------------
@@ -191,20 +221,5 @@ main {
 .error,
 .success {
   align-self: center;
-}
-
-/* Error text transition */
-$speed: 0.2s;
-
-.error-leave-active,
-.error-enter-active {
-  transition:
-    transform $speed,
-    opacity $speed;
-}
-.error-leave-to,
-.error-enter-from {
-  opacity: 0;
-  transform: translateX(-80%) scaleY(70%);
 }
 </style>

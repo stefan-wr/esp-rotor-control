@@ -9,7 +9,7 @@
 #include <RotorController.h>
 #include <WiFiFunctions.h>
 #include <Timer.h>
-#include <SimpleUpdater.h>
+#include <Firmware.h>
 
 extern Rotor::RotorController rotor_ctrl;
 
@@ -194,7 +194,7 @@ namespace Screen {
         getTextDimensions("100%", &txt_w, &txt_h);
         setCenteredTextCursor(txt_w, txt_h);
         moveCursor(0, 16);
-        screen->print(update_progress);
+        screen->print(firmware.upload_progress);
         screen->print("%");
     }
 
@@ -229,7 +229,7 @@ namespace Screen {
         clearScreen();
 
         // Alert message, full screen, until timed out
-        if (alert_txt != "" && !updating_firmware) {
+        if (alert_txt != "" && !firmware.is_updating) {
             if (alert_timer->passed()) {
                 alert_txt = "";
             } else {
@@ -242,7 +242,7 @@ namespace Screen {
         // ----------
 
         if (in_station_mode) {
-            if (updating_firmware) {
+            if (firmware.is_updating) {
                 showUpdateScreen();
             } else {
                 showDefaultScreen();

@@ -11,7 +11,8 @@
         ref="rebootBtn"
         @click="reboot($event)"
       >
-        Neu starten
+       <span v-if="!waitingForReboot">Neu starten</span>
+       <Icon icon="fa-solid fa-spinner" class="spin" v-else></Icon>
       </button>
     </template>
 
@@ -31,27 +32,11 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 
 const rebootBtn = ref(null);
-
-function animatedDots(el) {
-  el.textContent = ' ...';
-  setTimeout(() => {
-    el.textContent = '. ..';
-  }, 500);
-  setTimeout(() => {
-    el.textContent = '.. .';
-  }, 1000);
-}
-
-function dots(el) {
-  el.style.width = String(el.offsetWidth) + 'px';
-  animatedDots(el);
-  setInterval(() => {
-    animatedDots(el);
-  }, 1500);
-}
+const waitingForReboot = ref(false);
 
 function reboot() {
-  dots(rebootBtn.value);
+  rebootBtn.value.style.width = String(rebootBtn.value.offsetWidth) + 'px';
+  waitingForReboot.value = true;
   fetch('/reboot')
     .then(() => {
       router.push({ name: 'reboot' });
