@@ -4,14 +4,6 @@
       <Icon icon="fa-solid fa-palette"></Icon>
     </template>
 
-    <!--template #action>
-      <div class="flex-cst gap-half">
-        <button class="btn-std-resp bold" title="Auf Standard zurücksetzen." @click="">
-          Standard
-        </button>
-      </div>
-    </template-->
-
     <template #content>
       <p class="txt-dark">
         Wähle eines von mehreren vorgefertigten Farbdesigns für die Benutzeroberfläche aus.
@@ -26,7 +18,11 @@
         >
           <span class="no-wrap-ellip">{{ theme.name }}</span>
           <Transition name="icon-trans">
-            <Icon v-if="uiStore.isActiveColorTheme(key)" icon="fa-solid fa-check" class="active-icon"></Icon>
+            <Icon
+              v-if="uiStore.isActiveColorTheme(key)"
+              icon="fa-solid fa-check"
+              class="active-icon"
+            ></Icon>
           </Transition>
         </button>
       </div>
@@ -101,7 +97,9 @@ const uiStore = useUIStore();
 }
 
 .icon-trans-enter-active {
-  transition: transform 0.2s, opacity 0.2s;
+  transition:
+    transform 0.2s,
+    opacity 0.2s;
   transform: translateX(0);
 }
 .icon-trans-enter-from {
@@ -110,7 +108,9 @@ const uiStore = useUIStore();
 }
 
 .icon-trans-leave-active {
-  transition: transform 0.1s, opacity 0.1s;
+  transition:
+    transform 0.1s,
+    opacity 0.1s;
 }
 
 .icon-trans-leave-to {

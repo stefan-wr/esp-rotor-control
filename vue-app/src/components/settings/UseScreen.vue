@@ -1,19 +1,19 @@
 <template>
-  <SettingCard title="Tastatursteuerung">
+  <SettingCard title="Bildschirm">
     <template #icon>
-      <Icon icon="fa-solid fa-keyboard"></Icon>
+      <Icon icon="fa-solid fa-display"></Icon>
     </template>
 
     <template #action>
       <ToggleSwitch
-        :toggle="uiStore.ui.kbscEnabled"
-        @toggle="uiStore.ui.kbscEnabled = !uiStore.ui.kbscEnabled"
+        :toggle="settingsStore.settings.useScreen"
+        @toggle="settingsStore.toggleScreen()"
       ></ToggleSwitch>
     </template>
 
     <template #content>
       <p class="txt-dark" style="">
-        Erlaubt im Controller-Tab die manuelle Steuerung des Rotors über die Pfeiltasten.
+        Aktiviere / Deaktiviere die Mini-Anzeige am Gerät.
       </p>
     </template>
   </SettingCard>
@@ -22,6 +22,6 @@
 <script setup>
 import SettingCard from '@/components/settings/SettingCard.vue';
 import ToggleSwitch from '@/components/ToggleSwitch.vue';
-import { useUIStore } from '@/stores/ui';
-const uiStore = useUIStore();
+import { useSettingsStore } from '@/stores/settings';
+const settingsStore = useSettingsStore();
 </script>

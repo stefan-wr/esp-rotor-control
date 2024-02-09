@@ -1,7 +1,8 @@
 <template>
   <SettingCard title="Rotorsperre">
     <template #icon>
-      <Icon icon="fa-solid fa-lock-open"></Icon>
+      <Icon v-if="settingsStore.lock.isLocked" icon="fa-solid fa-lock"></Icon>
+      <Icon v-else icon="fa-solid fa-lock-open"></Icon>
     </template>
 
     <template #action>

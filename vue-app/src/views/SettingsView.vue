@@ -16,6 +16,7 @@
       <h2 class="medium">Funktionen</h2>
       <KeyboardShortcuts></KeyboardShortcuts>
       <UseOverlap></UseOverlap>
+      <UseScreen v-if="settingsStore.settings.hasScreen"></UseScreen>
       <ResetLock></ResetLock>
       <h2 class="medium">Kalibrierung</h2>
       <ADC></ADC>
@@ -30,6 +31,7 @@
 <script setup>
 import KeyboardShortcuts from '@/components/settings/KeyboardShortcuts.vue';
 import UseOverlap from '@/components/settings/UseOverlap.vue';
+import UseScreen from '@/components/settings/UseScreen.vue';
 import Disconnect from '@/components/settings/Disconnect.vue';
 import Reboot from '@/components/settings/Reboot.vue';
 import FirmwareVersion from '@/components/settings/FirmwareVersion.vue';
@@ -42,6 +44,9 @@ import CalibrationCurrent from '@/components/settings/CalibrationCurrent.vue';
 import ADC from '@/components/settings/ADC.vue';
 import Calibration from '@/components/settings/Calibration.vue';
 import Footer from '@/components/Footer.vue';
+
+import { useSettingsStore } from '@/stores/settings';
+const settingsStore = useSettingsStore();
 </script>
 
 <style lang="scss" scoped>

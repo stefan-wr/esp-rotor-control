@@ -5,7 +5,7 @@
     </template>
 
     <template #content>
-      <p class="txt-dark">Aktualisiert die Firmware durch hochladen einer neuen Firmware Datei.</p>
+      <p class="txt-dark">Aktualisiere die Firmware durch hochladen einer neuen Firmware Datei.</p>
 
       <div class="">
         <CardToggleContentTransition :toggle="isFileSelected" style="width: 100%" ref="toggleCard">

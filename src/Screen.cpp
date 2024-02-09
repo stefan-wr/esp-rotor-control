@@ -20,10 +20,11 @@ namespace Screen {
         screen = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
         if (!screen->begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
             Serial.println("[SCREEN] Failed to allocate RAM for the screen.");
+            disabled = true;
             return false;
         }
-
-        // Clear screen and configurate charset
+       
+        // Clear screen and configure charset
         clearScreen();
         screen->display();
         screen->dim(true);
@@ -55,10 +56,15 @@ namespace Screen {
         screen->setCursor(screen->getCursorX() + nx, screen->getCursorY() + ny);
     }
 
+    // => Print degree char
+    void Screen::printDegree() {
+        screen->write(0xF8);
+    }
+
     // => Get width and height of given text on screen
     void Screen::getTextDimensions(const String &txt, uint16_t *txt_w, uint16_t  *txt_h) {
         int16_t cx, cy;
-        screen->getTextBounds(txt, 0, 0, &cx, &cy, txt_w, txt_h);                              
+        screen->getTextBounds(txt, 0, 0, &cx, &cy, txt_w, txt_h);  
     }
 
     // => Set cursor so that text to be printed next is centered on full screen.
@@ -67,9 +73,36 @@ namespace Screen {
         screen->setCursor((SCREEN_WIDTH - txt_w) / 2, (SCREEN_HEIGHT - txt_h) / 2);
     }
 
+    // => Set a fullscreen text to screen RAM
+    void Screen::setFullscreenText(const String &txt) {
+        uint16_t txt_w, txt_h;
+        getTextDimensions(txt, &txt_w, &txt_h);
+        setCenteredTextCursor(txt_w, txt_h);
+        screen->print(txt);    
+    }
+
+    // => Set an alert message to be shown full screen for a few seconds
+    void Screen::setAlert(const String &txt) {
+        alert_txt = txt;
+        alert_timer->start();
+    }
+
+    // => Set an alert message and show it on  the screen immediatly
+    void Screen::setAlertImmediatly(const String &txt) {
+        if (!disabled) {
+            alert_txt = txt;
+            alert_timer->start();
+            clearScreen();
+            showFullscreenAlert();
+            screen->display();
+        }
+    }
+
+
     // => Draw compass with radius r, centered at (cx, cy)
+    // ---------------------------------------------------
     void Screen::drawCompass(const uint16_t &cx, const uint16_t &cy, const float &r, uint16_t color) {
-        // Draw compass outline and center
+        // Draw compass outline and center dot
         screen->drawCircle(cx, cy, r, color);
         screen->fillCircle(cx, cy, 2, color);
 
@@ -89,76 +122,17 @@ namespace Screen {
             compass.target_cos = cos(rotor_ctrl.auto_rotation_target_rad);
             compass.target_x1 = round(cx + compass.target_sin * (r - 4));
             compass.target_y1 = round(cy - compass.target_cos * (r - 4));
-            compass.target_x2 = round(cx + compass.target_sin * (r - 14));
-            compass.target_y2 = round(cy - compass.target_cos * (r - 14));
+            compass.target_x2 = round(cx + compass.target_sin * (r / 2));
+            compass.target_y2 = round(cy - compass.target_cos * (r / 2));
             screen->drawLine(compass.target_x2, compass.target_y2,
                              compass.target_x1, compass.target_y1, color); 
         }        
     }
 
-    // => Set a fullscreen text to screen RAM
-    void Screen::setFullscreenText(const String &txt) {
-        uint16_t txt_w, txt_h;
-        getTextDimensions(txt, &txt_w, &txt_h);
-        setCenteredTextCursor(txt_w, txt_h);
-        screen->print(txt);    
-    }
 
-    // => Show a fullscreen centered message for a few seconds
-    void Screen::showFullscreenAlert() {
-        setFullscreenText(alert_txt);
-    }
-
-    // => Set splash-screen to screen RAM
-    void Screen::showSplashScreen() {
-        String txt = "RotorControl";
-        uint16_t txt_w, txt_h;
-        getTextDimensions(txt, &txt_w, &txt_h);
-        setCenteredTextCursor(txt_w, txt_h);
-        screen->drawRect(screen->getCursorX() - 5, screen->getCursorY() - 5,
-                         txt_w + 8, txt_h + 9, WHITE);
-        screen->print(txt);
-        getTextDimensions(version, &txt_w, &txt_h);
-        setCenteredTextCursor(txt_w, txt_h);
-        moveCursor(0, 18);
-        screen->print(version);
-    }
-
-    // => Set screen for AP-mode to screen RAM
-    void Screen::showAPModeScreen() {
-        screen->setCursor(0, 0);
-        screen->print("WiFi nicht verbunden.");
-        screen->drawFastHLine(0, 11, 128, WHITE);
-        screen->setCursor(0, 15);
-        screen->println("URL:");
-        moveCursor(0, 3);
-        screen->println(get_ip_url());
-        moveCursor(0, 3);
-        screen->println("oder");
-        moveCursor(0, 4);
-        screen->print("http://");
-        screen->print(local_url);
-        screen->println(".local");
-    }    
-
-    // => Set the default screen when in STATION mode.
-    void Screen::showDefaultScreen() {
-        // Draw compass
-        drawCompass(SCREEN_HALF_WIDTH + 8, SCREEN_HALF_HEIGHT, 30, WHITE);
-
-        // Angle label
-        screen->setCursor(0, 0);
-        screen->printf("%5.0f", round(rotor_ctrl.rotor.last_angle));
-        screen->write(0xF8); //° (degree char)
-
-        // Angular speed label
-        screen->setCursor(0, SCREEN_HEIGHT - 7);
-        screen->printf("%5.1f", rotor_ctrl.angular_speed);
-        screen->write(0xF8); //° (degree char)
-        screen->print("/s");
-
-        // Sidebar
-        // -------
+    // => Draw sidebar with additional information
+    // -------------------------------------------
+    void Screen::drawSidebar() {
         screen->fillRoundRect(SCREEN_WIDTH - 19, 0, 19, SCREEN_HEIGHT, 4, WHITE); // 109,0
         screen->setTextColor(BLACK);
         
@@ -182,12 +156,114 @@ namespace Screen {
         // N of connected clients
         screen->setCursor(116, 52);
         screen->print(clients_connected);
-        
-        //const uint8_t PROGMEM bits [] = {0xF0, 0xC3, 0xC0};
-        //screen->drawBitmap(114, 54, bits, 10, 2, BLACK);
     }
 
-    // => Set screen for firmware update
+
+    // => Set splash-screen
+    // --------------------
+    void Screen::showSplashScreen() {
+        String txt = "RotorControl";
+        uint16_t txt_w, txt_h;
+        getTextDimensions(txt, &txt_w, &txt_h);
+        setCenteredTextCursor(txt_w, txt_h);
+        screen->drawRect(screen->getCursorX() - 5, screen->getCursorY() - 5,
+                         txt_w + 8, txt_h + 9, WHITE);
+        screen->print(txt);
+        getTextDimensions(version, &txt_w, &txt_h);
+        setCenteredTextCursor(txt_w, txt_h);
+        moveCursor(0, 18);
+        screen->print(version);
+    }
+
+
+    // => Set screen for AP-mode
+    // -------------------------
+    void Screen::showAPModeScreen() {
+        screen->setCursor(0, 0);
+        screen->print("WiFi nicht verbunden.");
+        screen->drawFastHLine(0, 11, 128, WHITE);
+        screen->setCursor(0, 15);
+        screen->println("URL:");
+        moveCursor(0, 3);
+        screen->println(get_ip_url());
+        moveCursor(0, 3);
+        screen->println("oder");
+        moveCursor(0, 4);
+        screen->print("http://");
+        screen->print(local_url);
+        screen->println(".local");
+    }    
+
+
+    // => Set the default screen when in STATION mode.
+    // -----------------------------------------------
+    void Screen::showDefaultScreen() {
+        // Draw compass
+        drawCompass(SCREEN_HALF_WIDTH + 8, SCREEN_HALF_HEIGHT, 30, WHITE);
+
+        // Sidebar
+        drawSidebar();
+
+        // Draw labels
+        // ***********
+        int16_t ly = 1;
+        int16_t gap = 4;
+        screen->setTextColor(WHITE);
+
+        // Angle
+        ly += gap;
+        screen->setCursor(0, ly);
+        screen->printf("%3.0f", round(rotor_ctrl.rotor.last_angle));
+        printDegree();
+        
+        // ---
+        ly += CHAR_H + gap;
+        screen->drawFastHLine(0, ly, 41, WHITE);
+
+        // Volts
+        ly += 1 + gap;
+        screen->setCursor(0, ly);
+        screen->printf("%4.2f V", rotor_ctrl.rotor.last_adc_volts * rotor_ctrl.rotor.calibration.volt_div_factor);
+
+        // ---
+        ly += CHAR_H + gap;
+        screen->drawFastHLine(0, ly, 38, WHITE);
+
+        // Target
+        ly += 1 + gap;
+        screen->setCursor(0, ly);
+        if (rotor_ctrl.is_auto_rotating) {
+            screen->printf("T %3.0f", round(rotor_ctrl.auto_rotation_target));
+            printDegree();
+        } else {
+            screen->print("T ---");
+        }
+
+        // ---
+        ly += CHAR_H + gap;
+        screen->drawFastHLine(0, ly, 41, WHITE);
+
+        // Speed
+        ly += 1 + gap;
+        screen->setCursor(0, ly);
+        if (rotor_ctrl.speed) {
+            screen->printf("S %3d%%", rotor_ctrl.speed);
+        } else {
+            screen->printf("S %3d%%", rotor_ctrl.speed + 1);
+        }
+
+        // Angular speed label
+        if (false) {
+            screen->setCursor(0, SCREEN_HEIGHT - CHAR_H);
+            screen->printf("%5.1f", rotor_ctrl.angular_speed);
+            printDegree();
+            screen->print("/s");
+        }
+    }
+
+
+    // => Set screen during firmware update
+    // ------------------------------------
     void Screen::showUpdateScreen() {
         setFullscreenText("Updating Firmware");
         uint16_t txt_w, txt_h;
@@ -198,23 +274,24 @@ namespace Screen {
         screen->print("%");
     }
 
-    // => Set an alert message to be shown full screen for a few seconds
-    void Screen::setAlert(const String &txt) {
-        alert_txt = txt;
-        alert_timer->start();
+    // => Show a fullscreen alert
+    // --------------------------
+    void Screen::showFullscreenAlert() {
+        setFullscreenText(alert_txt);
     }
 
-    // => Set an alert message and show it on  the screen immediatly
-    void Screen::setAlertImmediatly(const String &txt) {
-        alert_txt = txt;
-        alert_timer->start();
-        clearScreen();
-        showFullscreenAlert();
-        screen->display();
-    }
 
+    // **************************************************
     // => Main draw function, to be called from main loop
+    // **************************************************
     void Screen::update() {
+        // Only clear screen if it is disabled
+        if (disabled) {
+            screen->clearDisplay();
+            screen->display();
+            return;
+        }
+
         // The splash screen is shown during setup, set by init().
         // Show splash screen, until timer expires.
         if (on_splash_screen) {

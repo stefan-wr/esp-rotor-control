@@ -48,7 +48,7 @@ const waitingForDisconnect = ref(false);
 function disconnect(event) {
   let msg = 'ACHTUNG!\nWirklich die Netzwerkverbindung trennen?\n\n';
   msg += 'Ein Fernzugriff ist dann nicht mehr möglich.\n';
-  msg += 'Der Rotor Controller muss danach lokal neu eingerichtet werden.';
+  msg += 'Der RotorControl muss danach lokal neu eingerichtet werden.';
   if (confirm(msg)) {
     disconnectBtn.value.style.width = String(disconnectBtn.value.offsetWidth) + 'px';
     waitingForDisconnect.value = true;

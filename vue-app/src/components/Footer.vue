@@ -1,7 +1,7 @@
 <template>
   <footer id="footer" class="border-box flex-cc">
     <span class="small">
-      Hardware-ID: {{ settingsStore.settings.esp_id }} -
+      Hardware-ID: {{ settingsStore.settings.espID }} -
       RotorControl UI v0.9.0 - made by
       <a href="https://github.com/stefan-wr">Stefan Wraase</a>
     </span>

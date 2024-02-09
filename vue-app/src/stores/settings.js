@@ -46,10 +46,12 @@ export const useSettingsStore = defineStore('settings', () => {
 
     // Other settings
     const settings = reactive({
-        esp_id: '--',
+        espID: '--',
         version: '--',
         ssid: '--',
-        rssi: '--'
+        rssi: '--',
+        hasScreen: false,
+        useScreen: false
     });
 
     // *************
@@ -93,6 +95,11 @@ export const useSettingsStore = defineStore('settings', () => {
     // Get lock JSON message
     const getLockMsg = computed(() => {
         return JSON.stringify(lock, ['isLocked', 'by']);
+    });
+    
+    // Get screen JSON message
+    const getScreenMsg = computed(() => {
+        return JSON.stringify(settings, ['useScreen']);
     });
 
     // Get site of selected firmware in KBytes
@@ -241,6 +248,19 @@ export const useSettingsStore = defineStore('settings', () => {
         umbrellaStore.sendLock();
     }
 
+    // Screen
+    // ------
+
+    // Toggle on/off hardware screen
+    function toggleScreen() {
+        if (settings.hasScreen) {
+            settings.useScreen = !settings.useScreen;
+            umbrellaStore.sendScreen();
+        } else {
+            settings.useScreen = false;
+        }
+    }
+
     // *************
     return {
         calibration,
@@ -253,6 +273,7 @@ export const useSettingsStore = defineStore('settings', () => {
         getCalibrationMsg,
         getFavoritesMsg,
         getLockMsg,
+        getScreenMsg,
         getFirmwareKBytes,
         isFirmwareValid,
         isValidFavoritesArray,
@@ -262,6 +283,7 @@ export const useSettingsStore = defineStore('settings', () => {
         reapplyFavoriteSorting,
         closeLock,
         openLock,
-        resetLock
+        resetLock,
+        toggleScreen
     };
 });

@@ -22,10 +22,6 @@
 <script setup>
 import SettingCard from '@/components/settings/SettingCard.vue';
 import ToggleSwitch from '@/components/ToggleSwitch.vue';
-
-import { ref } from 'vue';
 import { useUIStore } from '@/stores/ui';
-
 const uiStore = useUIStore();
-const toggle = ref(true);
 </script>

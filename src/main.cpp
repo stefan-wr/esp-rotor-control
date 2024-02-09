@@ -18,7 +18,7 @@
 #include <Firmware.h>
 #include <BlinkingLED.h>
 
-#define USE_SCREEN true
+#define HAS_SCREEN true
 #define COUNT_LOOP_CYCLE_TIME false
 
 // Software version
@@ -39,7 +39,8 @@ bool multi_btn_pressed = false;     // Set true by pressing interrupt button
 bool multi_btn_hold = false;        // True if button is being held
 int clients_connected = 0;          // Number of connected socket clients
 bool authenticate = true;           // Authenticate HTTP connections
-bool use_screen = USE_SCREEN;       // Use an SSD1306 screen
+bool has_screen = HAS_SCREEN;       // Device has an SSD1306 screen
+bool use_screen = HAS_SCREEN;       // Use the SSD1306 screen
 uint8_t authentications = 0;        // Number of authentications in /authenticate URL
 
 // Buffer storing lock message, default message resets lock on ESP restart
@@ -80,7 +81,7 @@ void initMultiButton() {
 void fatalError(String err) {
   Serial.print("[FATAL ERROR] ");
   Serial.println(err);
-  if (use_screen) {
+  if (has_screen) {
     screen.setAlertImmediatly("ERROR:\n" + err);
   }
   delay(2000);
@@ -199,6 +200,37 @@ void socketReceive(char* msg, const size_t &len) {
     }
   }
 
+  // ----- SETTINGS -----
+  // --------------------
+  if (identifier == "SETTINGS") {
+    // Deserialize JSON
+    StaticJsonDocument<48> doc;
+    DeserializationError err = deserializeJson(doc, msg + sep_idx + 1);
+
+    // Test wether deserialization succeeded
+    if (err) {
+      Serial.print("[Websocket] Error: JSON parse failed: ");
+      Serial.println(err.f_str());
+      return;
+    }
+
+    // \/\/ Unpack message \/\/
+    // Screen
+    JsonVariant val;
+    val = doc["useScreen"];
+    if (!val.isNull()) {
+      if (!val.as<const bool>()) {
+        use_screen = false;
+        screen.disable();
+      } else {
+        use_screen = true;
+        screen.enable();
+      }
+      // Distribute received screen status to clients
+      Settings::sendScreen();
+    }
+  }
+
   // ----- FAVORITES -----
   // ---------------------
   if(identifier == "FAVORITES") {
@@ -214,13 +246,6 @@ void socketReceive(char* msg, const size_t &len) {
     msg[sep_idx] = '|';
     lock_msg = (String) msg;
     websocket.textAll(msg);
-  }
-
-  // ----- SETTINGS -----
-  // --------------------
-  if (identifier == "SETTINGS") {
-    Serial.print("[Websocket] Received SETTINGS message: ");
-    Serial.println(msg);
   }
 }
 
@@ -306,9 +331,10 @@ void setup() {
   Serial.println("  ##########");
 
   // Initialise screen
-  if (use_screen) {
+  if (has_screen) {
     use_screen = screen.init();
     if (!use_screen) {
+      has_screen = false;
       Serial.println("[SCREEN] Failed to initialise the screen.");
     }
   }
@@ -580,7 +606,7 @@ void loop() {
   if (in_station_mode && !clients_connected && clients_connected_prev) {
     rotor_ctrl.stop();
     Serial.println("[Websocket] ALL clients disconnected.");
-    if (use_screen) {
+    if (has_screen) {
       screen.setAlert("Alle Verbind. getr.");
     }
     clients_connected_prev = 0;
@@ -634,7 +660,7 @@ void loop() {
   // ******************************
 
   // Update screen
-  if (use_screen && timers.updateScreen->passed()) {
+  if (has_screen && timers.updateScreen->passed()) {
     screen.update();
   }
 

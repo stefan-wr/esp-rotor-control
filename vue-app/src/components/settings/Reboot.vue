@@ -7,7 +7,7 @@
     <template #action>
       <button
         class="btn-std-resp bold flex-cc"
-        title="Startet den Rotor Controller neu."
+        title="Startet den RotorControl neu."
         ref="rebootBtn"
         @click="reboot($event)"
       >
@@ -18,7 +18,7 @@
 
     <template #content>
       <p class="txt-dark">
-        Startet den Rotor Controller neu. Die Netzwerkeinstellungen bleiben erhalten.
+        Startet den RotorControl neu. Die Netzwerkeinstellungen bleiben erhalten.
       </p>
     </template>
   </SettingCard>

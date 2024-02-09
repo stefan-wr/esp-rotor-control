@@ -259,6 +259,10 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         sendLockMsg(settingsStore.getLockMsg);
     }
 
+    function sendScreen() {
+        sendSettingsMsg(settingsStore.getScreenMsg);
+    }
+
     // *************
     return {
         hasLostConnection,
@@ -268,6 +272,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         sendCalibration,
         sendFavorites,
         resetFavorites,
-        sendLock
+        sendLock,
+        sendScreen
     };
 });

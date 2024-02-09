@@ -10,6 +10,8 @@ extern AsyncWebSocket websocket;
 extern String wifi_ssid;
 extern String esp_id;
 extern String version;
+extern bool has_screen;
+extern bool use_screen;
 
 namespace Settings {
     // Path to save favorites at in SPIFFS
@@ -58,16 +60,30 @@ namespace Settings {
 
     // Send settings
     void sendSettings() {
-        settings_buffer.reserve(110);
+        settings_buffer.reserve(200);
         settings_buffer = "SETTINGS|";
 
-        StaticJsonDocument<200> doc;
+        StaticJsonDocument<192> doc;
         doc["version"] = version;
-        doc["esp_id"] = esp_id;
+        doc["espID"] = esp_id;
         doc["ssid"] = wifi_ssid;
         doc["rssi"] = (String)WiFi.RSSI();
+        doc["hasScreen"] = has_screen;
+        doc["useScreen"] = use_screen;
 
         serializeJson(doc, settings_buffer);
         websocket.textAll(settings_buffer);
+    }
+
+    // Send screen
+    void sendScreen() {
+        settings_buffer.reserve(30);
+        settings_buffer = "SETTINGS|";
+
+        StaticJsonDocument<16> doc;
+        doc["useScreen"] = use_screen;
+
+        serializeJson(doc, settings_buffer);
+        websocket.textAll(settings_buffer); 
     }
 }

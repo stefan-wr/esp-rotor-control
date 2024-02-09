@@ -130,9 +130,9 @@ import SettingCard from '@/components/settings/SettingCard.vue';
 import ShakeOnToggle from '@/components/ShakeOnToggle.vue';
 import TransitionSlideIn from '@/components/TransitionSlideIn.vue';
 import SmoothHeightWrap from '@/components/SmoothHeightWrap.vue';
-import { compareVersions } from 'compare-versions';
 
 import { useSettingsStore } from '@/stores/settings';
+import { compareVersions } from 'compare-versions';
 import { ref, shallowRef } from 'vue';
 
 const settingsStore = useSettingsStore();
@@ -202,14 +202,15 @@ async function searchForUpdate() {
     firmwares.value = responseJson.firmwares;
   } catch (error) {
     firmwares.value = [];
-    console.error(error);
 
-    // Shake error box if it is already shown
+    // Mnanually shake error box if it is already shown
     if (errorTxt.value) {
       errorBox.value.shake();
     }
 
+    // Set error
     errorTxt.value = 'Die Suche nach verfügbaren Firmwares ist fehlgeschagen.';
+    console.error(error);
   } finally {
     isSearching.value = false;
   }

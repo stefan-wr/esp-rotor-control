@@ -49,6 +49,7 @@ import {
     faSpinner,
     faExternalLink,
     faDownload,
+    faDisplay
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -89,7 +90,8 @@ library.add(
     faCircleExclamation,
     faSpinner,
     faExternalLink,
-    faDownload
+    faDownload,
+    faDisplay,
 );
 
 // Setup app

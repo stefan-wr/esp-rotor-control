@@ -6,7 +6,6 @@
 #include <ESPAsyncWebServer.h>
 #include <Timer.h>
 
-
 // Get websocket object from main.cpp
 extern AsyncWebSocket websocket;
 
@@ -48,7 +47,7 @@ namespace Rotor {
         struct {
             float u1, u2, a1, a2;
             float d_grad, u_0;
-            const float volt_div_factor = 1.5;
+            const float volt_div_factor = 1.5f;
             float offset;
         } calibration;
 

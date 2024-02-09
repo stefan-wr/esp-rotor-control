@@ -22,6 +22,7 @@ namespace Settings {
     // Other Settings
     // **************
     void sendSettings();
+    void sendScreen();
 }
 
 #endif //SETTINGS_H

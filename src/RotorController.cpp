@@ -32,9 +32,9 @@ namespace Rotor {
         dacWrite(speed_pin, 0);
 
         // Init ADS1115
-        // 16bit = 32768 Werte
+        // 16bit = 32768 values
         // GAIN_ONE: +/- 4.096V
-        // -> 0.125 mV pro ADC Wert
+        // -> 0.125 mV per ADC value
         adc.setGain(GAIN_ONE);
         if (!adc.begin(0x48)) {
             Serial.println("[ROTOR] Failed to initialize ADS1115!");

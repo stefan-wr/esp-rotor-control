@@ -9,7 +9,8 @@
 #define SCREEN_HALF_WIDTH 64
 #define SCREEN_HEIGHT 64
 #define SCREEN_HALF_HEIGHT 32
-
+#define CHAR_W 5
+#define CHAR_H 7
 
 namespace Screen {
      
@@ -21,6 +22,7 @@ namespace Screen {
         Timer *alert_timer;
         String alert_txt;
         bool on_alert = false;
+        bool disabled = false;
 
         // Variables for drawing compass
         struct {
@@ -36,6 +38,9 @@ namespace Screen {
         // => Move cursor coordinates by (nx, ny)
         void moveCursor(const int16_t &nx, const int16_t &ny);
 
+        // => Print degree char
+        void printDegree();
+
         // => Get width and height of given text on screen
         void getTextDimensions(const String &txt, uint16_t *txt_w, uint16_t  *txt_h);
 
@@ -45,6 +50,9 @@ namespace Screen {
 
         // => Draw compass with radius r, centered at (cx, cy)
         void drawCompass(const uint16_t &cx, const uint16_t &cy, const float &r, uint16_t color);
+
+        // => Draw sidebar with additional information
+        void drawSidebar();
 
         // => Set a fullscreen text to screen RAM
         void setFullscreenText(const String &txt);
@@ -72,6 +80,16 @@ namespace Screen {
         
         // => Initialise screen
         bool init();
+
+        // => Disable screen
+        void disable() {
+            disabled = true;
+        }
+
+        // => Enable screen
+        void enable() {
+            disabled = false;
+        }
 
         // => Main draw function, to be called from main loop
         void update();

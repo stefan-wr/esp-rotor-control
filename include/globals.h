@@ -32,6 +32,7 @@ extern bool multi_btn_pressed;
 extern bool scan_now;
 extern bool in_station_mode;
 extern int  clients_connected;
+extern bool has_screen;
 extern bool use_screen;
 
 // External ESP ID & software version
