@@ -1,25 +1,25 @@
 <template>
-  <SettingCard :title="$t('settings.colorThemes.title')">
+  <SettingCard :title="$t('settings.language.title')">
     <template #icon>
-      <Icon icon="fa-solid fa-palette"></Icon>
+      <Icon icon="fa-solid fa-font"></Icon>
     </template>
 
     <template #content>
       <p class="txt-dark">
-        {{ $t('settings.colorThemes.dscr') }}
+        {{ $t('settings.language.dscr') }}
       </p>
       <div class="flex-cst gap-half color-themes">
         <button
-          v-for="(theme, key) in uiStore.colorThemes"
+          v-for="locale in $i18n.availableLocales"
           class="flex-cst gap-half btn-std-resp theme"
-          :class="{ 'theme-active': uiStore.isActiveColorTheme(key) }"
-          @click="uiStore.setColorTheme(key)"
-          :disabled="uiStore.isActiveColorTheme(key)"
+          :class="{ 'theme-active': uiStore.isActiveLocale(locale) }"
+          @click="uiStore.setLocale(locale)"
+          :disabled="uiStore.isActiveLocale(locale)"
         >
-          <span class="no-wrap-ellip">{{ $t('settings.colorThemes.themes.' + theme.name) }}</span>
+          <span class="no-wrap-ellip">{{ $t('locales.' + locale) }}</span>
           <Transition name="icon-trans">
             <Icon
-              v-if="uiStore.isActiveColorTheme(key)"
+              v-if="uiStore.isActiveLocale(locale)"
               icon="fa-solid fa-check"
               class="active-icon"
             ></Icon>

@@ -16,10 +16,10 @@
       @keydown.space.prevent=""
     ></span>
     <span class="switch-on small">
-      <slot name="on">AN</slot>
+      <slot name="on">{{ $t('commons.on') }}</slot>
     </span>
     <span class="switch-off small">
-      <slot name="off">AUS</slot>
+      <slot name="off">{{ $t('commons.off') }}</slot>
     </span>
   </div>
 </template>
@@ -42,18 +42,6 @@ const props = defineProps({
 $slider-trans: 0.2s;
 
 .switch {
-  /*
-  --switch-height: 32px;
-  --switch-width: calc(var(--switch-height) * 2);
-  --switch-padding: 4px;
-  --switch-bradius: 6px;
-  --switch-thumb-size: calc(var(--switch-height) - 2 * var(--switch-padding));
-  --switch-thumb-bradius: 4px;
-  --switch-thumb-translateX: calc(
-    var(--switch-width) - 2 * var(--switch-padding) - var(--switch-thumb-size)
-  );
-  */
-
   --switch-height: 2.3em;
   --switch-width: calc(var(--switch-height) * 2);
   --switch-padding: 0.3em;

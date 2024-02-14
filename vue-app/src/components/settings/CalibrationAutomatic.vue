@@ -2,16 +2,11 @@
   <!-- Steps -->
   <div class="flex-vst gap-one">
     <ol class="steps flex-vl gap" type="1">
-      <li>Drehe den Rotor über das Original-Steuergerät auf eine Position zwischen 20° und 40°.</li>
-      <li>
-        Trage den genauen Winkel, möglichst exakt am Steuergerät abgelesen, bei Position 1 ein und
-        drücke den Haken darunter.
-      </li>
-      <li>Drehe den Rotor nun auf eine zweite Position zwischen 430° und 450°.</li>
-      <li>
-        Trage den genauen Winkel diesmal bei Position 2 ein und drücke auf den Haken darunter.
-      </li>
-      <li>Danach drücke auf "Bestätigen".</li>
+      <li>{{ $t('calibration.guided.step1') }}</li>
+      <li>{{ $t('calibration.guided.step2') }}</li>
+      <li>{{ $t('calibration.guided.step3') }}</li>
+      <li>{{ $t('calibration.guided.step4') }}</li>
+      <li>{{ $t('calibration.guided.step5') }}</li>
     </ol>
 
     <hr />
@@ -42,7 +37,7 @@
 
         <button
           class="btn-std-resp bold"
-          title="Position 1 bestätigen."
+          :title="$t('calibration.guided.confirmPosBtnDscr', {'pos': 1})"
           @click="confirmPos1($event)"
           :disabled="newPos1Angle === null || isNewPos1AngleWrong"
         >
@@ -75,7 +70,7 @@
 
         <button
           class="btn-std-resp bold"
-          title="Position 2 bestätigen."
+          :title="$t('calibration.guided.confirmPosBtnDscr', {'pos': 2})"
           @click="confirmPos2($event)"
           :disabled="newPos2Angle === null || isNewPos2AngleWrong"
         >
@@ -112,12 +107,12 @@
       <!-- Confirm Button -->
       <button
         class="btn-std-resp bold no-wrap-ellip"
-        title="Kalibrations-Parameter bestätigen und anwenden."
+        :title="$t('calibration.guided.confirmBtnDscr')"
         ref="calConfirmBtn"
         :disabled="!isAutoConfirmEnabled"
         @click="confirmCalibration()"
       >
-        <Icon icon="fa-solid fa-check"></Icon>&nbsp;Bestätigen
+        <Icon icon="fa-solid fa-check"></Icon>&nbsp;{{ $t('commons.accept') }}
       </button>
     </div>
   </div>
@@ -153,7 +148,7 @@ function dashedInitial(value) {
 // Test wether value of an input is a number
 // Used for alert-colored outlines, indicating wrong values.
 function testInputForNumber(value) {
-  return typeof value === 'number'
+  return typeof value === 'number';
 }
 
 // Test wether a given number value is in a range [min, max]
@@ -279,7 +274,9 @@ function shakePos2Form() {
 // -------------------
 function testNewParams() {
   if (pos2Adc.value <= pos1Adc.value) {
-    alert('Position 2 Spannung darf nicht kleiner oder gleich Position 1 Spannung sein.\n\nDer Rotor muss VOR der Eingabe der Winkel auf die entsprechenden Positionsbereiche gedreht werden.');
+    alert(
+      'Position 2 Spannung darf nicht kleiner oder gleich Position 1 Spannung sein.\n\nDer Rotor muss VOR der Eingabe der Winkel auf die entsprechenden Positionsbereiche gedreht werden.'
+    );
     return false;
   } else {
     return true;
@@ -288,12 +285,7 @@ function testNewParams() {
 
 function confirmCalibration() {
   if (testNewParams()) {
-    umbrellaStore.sendCalibration(
-      pos1Angle.value,
-      pos1Adc.value,
-      pos2Angle.value,
-      pos2Adc.value
-    );
+    umbrellaStore.sendCalibration(pos1Angle.value, pos1Adc.value, pos2Angle.value, pos2Adc.value);
   } else {
     shakePos1Form();
     shakePos2Form();
@@ -313,8 +305,8 @@ function reset() {
 }
 
 // Expose reset function to parent components
-defineExpose( {
-  reset,
+defineExpose({
+  reset
 });
 </script>
 

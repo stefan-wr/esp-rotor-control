@@ -1,5 +1,5 @@
 <template>
-  <CardCollapsable title="Geschwindigkeit">
+  <CardCollapsable :title="$t('speed.title')">
     <template #icon><Icon icon="fa-solid fa-gauge-high"></Icon></template>
     <div class="range-wrap">
       <input

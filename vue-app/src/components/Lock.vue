@@ -1,19 +1,18 @@
 <template>
-  <CardCollapsable id="lock" title="Rotorsperre">
+  <CardCollapsable id="lock" :title="$t('lock.title')">
     <template #icon>
       <Icon v-if="settingsStore.lock.isLocked" icon="fa-solid fa-lock"></Icon>
       <Icon v-else icon="fa-solid fa-lock-open"></Icon>
     </template>
     <div class="flex-vst gap-one">
       <p>
-        Sperre den Rotor für andere Benutzer. Gebe dazu im Feld unten deinen Name ein und betätige
-        den Schalter rechts daneben.
+        {{ $t('lock.dscr') }}
       </p>
       <div class="flex-cst gap-one">
         <input
           class="input-std-resp flex-grow"
           type="text"
-          placeholder="Dein Name"
+          :placeholder="$t('lock.namePlaceholder')"
           v-model="settingsStore.lock.name"
           :disabled="settingsStore.lock.isLocked"
           @keypress="restrictInput($event)"
@@ -29,7 +28,7 @@
 
         <ToggleSwitch
           :toggle="settingsStore.lock.isLocked"
-          :disabled="settingsStore.isLockedByElse" 
+          :disabled="settingsStore.isLockedByElse"
           @toggle="toggleLock"
         >
           <template #on>
@@ -49,7 +48,12 @@
             <div class="border-box flex-cl gap-half">
               <Icon icon="fa-solid fa-lock"></Icon>
               <span>
-                Rotor <b>gesperrt</b> von <b>{{ settingsStore.lock.by }}</b>
+                <i18n-t keypath="lock.lockedInfo" scope="global">
+                  <template #locked>
+                    <b>{{ $t('lock.locked') }}</b>
+                  </template>
+                </i18n-t>
+                <b>{{ settingsStore.lock.by }}</b>
               </span>
             </div>
           </div>

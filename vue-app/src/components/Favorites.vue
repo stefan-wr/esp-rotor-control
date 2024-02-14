@@ -1,5 +1,5 @@
 <template>
-  <CardCollapsable id="favorites" title="Favoriten">
+  <CardCollapsable id="favorites" :title="$t('favorites.title')">
     <template #icon>
       <Icon icon="fa-solid fa-bookmark"></Icon>
     </template>
@@ -10,11 +10,11 @@
       <template #childA>
         <div class="flex-cc gap" ref="favDscr">
           <p>
-            Lege bis zu 10 Favoriten an, die per Tastendruck automatisch angefahren werden können.
+            {{ $t('favorites.dscr') }}
           </p>
           <button
             class="btn-std-resp"
-            title="Neuen Favoriten anlegen."
+            :title="$t('favorites.addBtnDscr')"
             @click="toggleForm"
             :disabled="settingsStore.hasMaxFavorites"
           >
@@ -28,8 +28,10 @@
       <template #childB>
         <div id="fav-form" ref="favForm" :class="{ 'form-shake': formFailed }">
           <!-- Input Labels -->
-          <label for="fav-name" class="small txt-dark">Favoriten-Bezeichner</label>
-          <label for="fav-angle" class="small txt-dark">Azimuth (0° - 450°)</label>
+          <label for="fav-name" class="small txt-dark">{{ $t('favorites.nameLabel') }}</label>
+          <label for="fav-angle" class="small txt-dark"
+            >{{ $t('commons.azimut') }} (0° - 450°)</label
+          >
 
           <!-- Name -->
           <input
@@ -37,7 +39,7 @@
             class="input-std-resp"
             type="text"
             name="fav-name"
-            placeholder="Bezeichner"
+            :placeholder="$t('favorites.namePlaceholder')"
             ref="nameInput"
             v-model="newName"
             @keypress="restrictNameInput($event)"
@@ -54,7 +56,7 @@
             min="0"
             :max="maxAngle"
             pattern="\d*"
-            placeholder="Winkel"
+            :placeholder="$t('commons.angle')"
             ref="angleInput"
             v-model="newAngle"
             @keyup.enter="addFavorite"
@@ -64,17 +66,21 @@
 
           <!-- Buttons -->
           <!-- Cancel Button -->
-          <button class="btn-std-resp bold no-wrap-ellip" title="Abbrechen" @click="toggleForm">
-            <Icon icon="fa-solid btn-std-resp fa-xmark" />&nbsp;Abbrechen
+          <button
+            class="btn-std-resp bold no-wrap-ellip"
+            :title="$t('commons.cancel')"
+            @click="toggleForm"
+          >
+            <Icon icon="fa-solid fa-xmark" style="vertical-align:; font-size: 1em" />&nbsp;{{ $t('commons.cancel') }}
           </button>
           <!-- Add Button -->
           <button
             class="btn-std-resp bold no-wrap-ellip"
-            title="Favoriten anlegen."
+            :title="$t('favorites.createBtnDscr')"
             @click="addFavorite"
             :disabled="settingsStore.hasMaxFavorites"
           >
-            <Icon icon="fa-solid fa-check"></Icon>&nbsp;Anlegen
+            <Icon icon="fa-solid fa-check"></Icon>&nbsp;{{ $t('favorites.createBtn') }}
           </button>
         </div>
       </template>
@@ -87,7 +93,7 @@
           class="fav-index fav-head-sort-btn"
           @click="settingsStore.sortFavoritesBy.id"
           @keyup.enter="settingsStore.sortFavoritesBy.id"
-          title="Favoriten nach ID sortieren."
+          :title="$t('favorites.sortByID')"
           tabindex="0"
           >#</span
         >
@@ -95,7 +101,8 @@
           class="fav-name fav-head-sort-btn"
           @click="settingsStore.sortFavoritesBy.name"
           @keyup.enter="settingsStore.sortFavoritesBy.name"
-          title="Favoriten nach Namen sortieren."
+          :title="$t('favorites.sortByName')"
+
           tabindex="0"
           >Name</span
         >
@@ -103,13 +110,14 @@
           class="fav-angle fav-head-sort-btn"
           @click="settingsStore.sortFavoritesBy.angle"
           @keyup.enter="settingsStore.sortFavoritesBy.angle"
-          title="Favoriten nach Winkel sortieren."
+          :title="$t('favorites.sortByAngle')"
+
           tabindex="0"
         >
-          Azimuth
+          {{ $t('commons.azimut') }}
         </span>
-        <span class="fav-rot">Anfahr.</span>
-        <span class="fav-del">Lösch.</span>
+        <span class="fav-rot">{{ $t('favorites.moveTo') }}</span>
+        <span class="fav-del">{{ $t('favorites.delete') }}</span>
         <hr />
       </li>
 
@@ -120,7 +128,7 @@
         <span class="fav-angle">{{ fav.angle }}°</span>
         <button
           class="fav-rot btn-std-resp flex-cc"
-          title="Favoriten anfahren."
+          :title="$t('favorites.moveToBtn')"
           :disabled="settingsStore.isLockedByElse"
           @click="requestAngle(fav.angle)"
         >
@@ -129,7 +137,7 @@
         <button
           class="fav-del btn-std-resp flex-cc"
           @click="settingsStore.remFavorite(index)"
-          title="Favoriten löschen."
+          :title="$t('favorites.deleteBtn')"
         >
           <Icon icon="fa-solid fa-xmark" />
         </button>

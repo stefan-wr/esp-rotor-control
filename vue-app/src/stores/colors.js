@@ -1,7 +1,7 @@
 export default function useColors() {
     return {
         default: {
-            name: 'Ostsee ',
+            name: 'Ostsee',
             vars: {
                 'body-background-color': 'white',
                 'app-shadow-color': '#9e9e9e',

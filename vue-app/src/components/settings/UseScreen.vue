@@ -1,5 +1,5 @@
 <template>
-  <SettingCard title="Bildschirm">
+  <SettingCard :title="$t('settings.screen.title')">
     <template #icon>
       <Icon icon="fa-solid fa-display"></Icon>
     </template>
@@ -13,7 +13,7 @@
 
     <template #content>
       <p class="txt-dark" style="">
-        Aktiviere / Deaktiviere die Mini-Anzeige am Gerät.
+        {{ $t('settings.screen.dscr') }}
       </p>
     </template>
   </SettingCard>

@@ -6,19 +6,20 @@
       <Reboot></Reboot>
       <FirmwareVersion></FirmwareVersion>
       <FirmwareUpdate></FirmwareUpdate>
-      <h2 class="medium">Benutzeroberfläche</h2>
+      <h2 class="medium">{{ $t('settings.interface') }}</h2>
+      <LanguageSelector></LanguageSelector>
       <FontSize></FontSize>
       <ColorTheme></ColorTheme>
       <CompassSettings></CompassSettings>
     </div>
 
     <div id="settings-right" class="flex-vst gap-one">
-      <h2 class="medium">Funktionen</h2>
+      <h2 class="medium">{{ $t('settings.functions') }}</h2>
       <KeyboardShortcuts></KeyboardShortcuts>
       <UseOverlap></UseOverlap>
       <UseScreen v-if="settingsStore.settings.hasScreen"></UseScreen>
       <ResetLock></ResetLock>
-      <h2 class="medium">Kalibrierung</h2>
+      <h2 class="medium">{{ $t('settings.calibration') }}</h2>
       <ADC></ADC>
       <CalibrationCurrent></CalibrationCurrent>
       <Calibration></Calibration>
@@ -36,6 +37,7 @@ import Disconnect from '@/components/settings/Disconnect.vue';
 import Reboot from '@/components/settings/Reboot.vue';
 import FirmwareVersion from '@/components/settings/FirmwareVersion.vue';
 import FirmwareUpdate from '@/components/settings/FirmwareUpdate.vue';
+import LanguageSelector from '@/components/settings/LanguageSelector.vue';
 import FontSize from '@/components/settings/FontSize.vue';
 import ColorTheme from '@/components/settings/ColorTheme.vue';
 import ResetLock from '@/components/settings/ResetLock.vue';
@@ -45,8 +47,16 @@ import ADC from '@/components/settings/ADC.vue';
 import Calibration from '@/components/settings/Calibration.vue';
 import Footer from '@/components/Footer.vue';
 
+import { onBeforeMount } from 'vue';
 import { useSettingsStore } from '@/stores/settings';
+import { useUIStore } from '@/stores/ui';
+
 const settingsStore = useSettingsStore();
+const uiStore = useUIStore();
+
+onBeforeMount( () => {
+  uiStore.enableHeaderLinks();
+})
 </script>
 
 <style lang="scss" scoped>

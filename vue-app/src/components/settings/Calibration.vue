@@ -1,5 +1,5 @@
 <template>
-  <SettingCard title="Rotor-Kalibrierung" class="l-align">
+  <SettingCard :title="$t('calibration.title')" class="l-align">
     <template #icon>
       <Icon icon="fa-solid fa-wrench"></Icon>
     </template>
@@ -7,8 +7,7 @@
     <template #content>
       <!-- Description -->
       <p class="txt-dark">
-        Damit der Rotor-Controller die richtige Position anzeigt, muss er kalibiert werden. Wähle
-        entweder die geführte Kalibrierung, oder gebe die Parameter manuell ein.
+        {{ $t('calibration.dscr') }}
       </p>
 
       <!-- Tabs Navigation -->
@@ -19,14 +18,14 @@
             :class="{ 'cal-tab-active': !isManualTabActive }"
             @click="setTabActive(0)"
           >
-            <span class="txt-dark">Geführt</span>
+            <span class="txt-dark">{{ $t('calibration.guidedTab') }}</span>
           </button>
           <button
             class="cal-tab normal"
             :class="{ 'cal-tab-active': isManualTabActive }"
             @click="setTabActive(1)"
           >
-            <span class="txt-dark">Manuell</span>
+            <span class="txt-dark">{{ $t('calibration.manualTab') }}</span>
           </button>
         </nav>
 
@@ -78,7 +77,6 @@ function setTabActive(tab) {
 </script>
 
 <style lang="scss" scoped>
-
 #calibration {
   width: 100%;
   align-self: center;
@@ -94,14 +92,18 @@ function setTabActive(tab) {
   color: var(--text-color);
   border: none;
   border-radius: calc($border-box-bradius / 2) calc($border-box-bradius / 2) 0 0;
-  transition: background-color 0.1s, opacity 0.1s;
+  transition:
+    background-color 0.1s,
+    opacity 0.1s;
   min-height: $button-height;
   padding: 0.5em 1em;
 
   span {
     display: inline-block;
     transform: scale(85%);
-    transition: transform 0.1s, opacity 0.1s;
+    transition:
+      transform 0.1s,
+      opacity 0.1s;
   }
 
   &:hover {

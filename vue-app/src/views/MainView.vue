@@ -17,13 +17,14 @@ import ManualRotation from '@/components/ManualRotation.vue';
 import Favorites from '@/components/Favorites.vue';
 import Lock from '@/components/Lock.vue';
 
-import { ref, computed } from 'vue';
+import { onBeforeMount } from 'vue';
+import { useUIStore } from '@/stores/ui';
 
-import { useRotorStore } from '@/stores/rotor';
-import { useUmbrellaStore } from '@/stores/umbrella';
+const uiStore = useUIStore();
 
-const rotorStore = useRotorStore();
-const umbrellaStore = useUmbrellaStore();
+onBeforeMount( () => {
+  uiStore.enableHeaderLinks();
+})
 </script>
 
 <style lang="scss" scoped>

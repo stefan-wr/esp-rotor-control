@@ -1,5 +1,5 @@
 <template>
-  <SettingCard title="Tastatursteuerung">
+  <SettingCard :title="$t('settings.keyboard.title')">
     <template #icon>
       <Icon icon="fa-solid fa-keyboard"></Icon>
     </template>
@@ -13,7 +13,7 @@
 
     <template #content>
       <p class="txt-dark" style="">
-        Erlaubt im Controller-Tab die manuelle Steuerung des Rotors über die Pfeiltasten.
+        {{ $t('settings.keyboard.dscr') }}
       </p>
     </template>
   </SettingCard>

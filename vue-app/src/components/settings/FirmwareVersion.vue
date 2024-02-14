@@ -1,5 +1,5 @@
 <template>
-  <SettingCard title="Firmware Version">
+  <SettingCard :title="$t('settings.firmware.title')">
     <template #icon>
       <Icon icon="fa-solid fa-microchip"></Icon>
     </template>
@@ -7,11 +7,11 @@
     <template #action>
       <button
         class="btn-std-resp bold flex-cc"
-        title="Suche nach verfügbaren Firmware Version."
+        :title="$t('settings.firmware.dscr')"
         ref="searchBtn"
         @click="searchForUpdate()"
       >
-        <span v-if="!isSearching">Suchen</span>
+        <span v-if="!isSearching">{{ $t('settings.firmware.btn') }}</span>
         <Icon icon="fa-solid fa-spinner" class="spin" v-else></Icon>
       </button>
     </template>
@@ -19,11 +19,11 @@
     <template #content>
       <SmoothHeightWrap ref="contentWrap">
         <div class="flex-vst gap-one">
-          <p class="txt-dark">Suche nach vefügbaren Firmware Versionen.</p>
+          <p class="txt-dark">{{ $t('settings.firmware.dscr') }}</p>
 
           <!-- Current Firmware -->
           <div class="border-box flex-csp gap-one">
-            <span class="txt-dark">Installierte Version:</span>
+            <span class="txt-dark">{{ $t('settings.firmware.installedVersion') }}</span>
             <span class="version c-align">{{ settingsStore.settings.version }}</span>
           </div>
 
@@ -38,14 +38,14 @@
               <div class="flex-vst gap-one border-box">
                 <!-- Header - More info -->
                 <div class="flex-csp gap-one">
-                  <p class="">Verfügbare Firmware:</p>
+                  <p class="">{{ $t('settings.firmware.availableFirmware') }}</p>
                   <a
                     class="flex-cc gap-half link-with-icon txt-dark"
                     href="https://www.wraase.de/rotorcontrol/#firmware"
-                    title="Besucht die RotorCotrol Webseite, um mehr Informationen über verfübare Firmware Versionen zu erhalten."
+                    :title="$t('settings.firmware.moreInfoDscr')"
                     target="_blank"
                   >
-                    <span>Mehr Info</span>
+                    <span>{{ $t('settings.firmware.moreInfo') }}</span>
                     <Icon icon="fa-solid fa-external-link"></Icon>
                   </a>
                 </div>
@@ -60,21 +60,30 @@
 
                       <span
                         class="version c-align"
-                        v-if="compareVersionWithCurrent(fw.version, settingsStore.settings.version) === 0"
-                        >Installiert&nbsp;
+                        v-if="
+                          compareVersionWithCurrent(fw.version, settingsStore.settings.version) ===
+                          0
+                        "
+                        >{{ $t('settings.firmware.installed') }}&nbsp;
                         <Icon icon="fa fa-solid fa-check"></Icon>
                       </span>
 
                       <span
                         class="version c-align"
-                        v-if="compareVersionWithCurrent(fw.version, settingsStore.settings.version) === -1"
-                        >Alt
+                        v-if="
+                          compareVersionWithCurrent(fw.version, settingsStore.settings.version) ===
+                          -1
+                        "
+                        >{{ $t('settings.firmware.old') }}
                       </span>
 
                       <span
                         class="version c-align"
-                        v-if="compareVersionWithCurrent(fw.version, settingsStore.settings.version) === 1"
-                        >Neu&nbsp;
+                        v-if="
+                          compareVersionWithCurrent(fw.version, settingsStore.settings.version) ===
+                          1
+                        "
+                        >{{ $t('settings.firmware.new') }}&nbsp;
                         <Icon icon="fa fa-solid fa-exclamation"></Icon>
                       </span>
                     </div>
@@ -84,11 +93,11 @@
 
                   <!-- File -->
                   <div class="flex-csp gap-one">
-                    <span class="txt-dark" style="align-self: start">Datei:</span>
+                    <span class="txt-dark" style="align-self: start">{{ $t('commons.file') }}:</span>
                     <div class="firmware-name gap-half">
                       <a
                         class="no-wrap-ellip link-with-icon r-align"
-                        title="Firmware-Datei herunterladen."
+                        :title="$t('settings.firmware.downloadDscr')"
                         :href="fw.url"
                         style="width: 100%"
                         download
@@ -110,12 +119,12 @@
             @after-leave="contentWrap.applyHeight()"
             @enter="contentWrap.applyHeight()"
             @after-enter="errorBox.shake()"
-            :toggle="!!errorTxt"
+            :toggle="hasError"
           >
             <ShakeOnToggle ref="errorBox">
               <div class="border-box flex-hc gap-one">
                 <Icon icon="fa-solid fa-circle-exclamation" class="large" />
-                <span>{{ errorTxt }}</span>
+                <span>{{ getErrorTxt() }}</span>
               </div>
             </ShakeOnToggle>
           </TransitionSlideIn>
@@ -135,6 +144,9 @@ import { useSettingsStore } from '@/stores/settings';
 import { compareVersions } from 'compare-versions';
 import { ref, shallowRef } from 'vue';
 
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
+
 const settingsStore = useSettingsStore();
 
 const searchBtn = ref(null);
@@ -143,13 +155,13 @@ const errorBox = ref(null);
 
 const isSearching = ref(false);
 const firmwares = shallowRef([]);
-const errorTxt = ref('');
+const hasError = ref(false);
 
 // Compare semver with current vesion if available.
 // Return -2 if current version not available.
 function compareVersionWithCurrent(version) {
   if (settingsStore.settings.version === '--') {
-    return -2
+    return -2;
   } else {
     return compareVersions(version, settingsStore.settings.version);
   }
@@ -198,21 +210,30 @@ async function searchForUpdate() {
     }
 
     // At this point, all checks OK
-    errorTxt.value = '';
+    hasError.value = false;
     firmwares.value = responseJson.firmwares;
   } catch (error) {
     firmwares.value = [];
 
-    // Mnanually shake error box if it is already shown
-    if (errorTxt.value) {
+    // Manually shake error box if it is already shown
+    if (hasError.value) {
       errorBox.value.shake();
     }
 
     // Set error
-    errorTxt.value = 'Die Suche nach verfügbaren Firmwares ist fehlgeschagen.';
+    hasError.value = true;
     console.error(error);
   } finally {
     isSearching.value = false;
+  }
+}
+
+// Get translated error message
+function getErrorTxt() {
+  if (hasError.value) {
+    return t('settings.firmware.error');
+  } else {
+    return '';
   }
 }
 </script>

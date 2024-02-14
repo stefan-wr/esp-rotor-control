@@ -2,7 +2,7 @@
   <footer id="footer" class="border-box flex-cc">
     <span class="small">
       Hardware-ID: {{ settingsStore.settings.espID }} -
-      RotorControl UI v0.9.0 - made by
+      RotorControl UI v{{ version }} - made by
       <a href="https://github.com/stefan-wr">Stefan Wraase</a>
     </span>
   </footer>
@@ -10,6 +10,8 @@
 
 <script setup>
 import { useSettingsStore } from '../stores/settings';
+import { version } from "@root/package.json"
+
 const settingsStore = useSettingsStore();
 </script>
 

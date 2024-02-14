@@ -1,15 +1,16 @@
 <template>
   <div class="flex-vst gap-one">
-    <p>
-      Hier können die Kalibrations-Parameter manuell eingegeben werden. Dabei muss
-      <span class="no-wrap">Pos. 1 &lt; Pos. 2</span> gelten. Die Parameter werden auf 4
-      Dezimalstellen gerundet.
-    </p>
+
+    <i18n-t keypath="calibration.manual.dscr" tag="p" scope="global">
+      <template #comparison>
+        <span class="no-wrap">Pos. 1 &lt; Pos. 2</span>
+      </template>
+    </i18n-t>
 
     <div class="man-cal-inputs border-box" :class="{ 'form-shake': manualFormFailed }">
       <span></span>
-      <label for="azimuth-1" class="small txt-dark">Azimuth in °</label>
-      <label for="adc-1" class="small txt-dark">Spannung in V</label>
+      <label for="azimuth-1" class="small txt-dark">{{ $t('commons.azimut') }} in °</label>
+      <label for="adc-1" class="small txt-dark">{{ $t('commons.voltage') }} in V</label>
 
       <!-- Position 1 -->
       <span>Pos.&nbsp;1</span>
@@ -19,7 +20,7 @@
         :class="{ 'red-outline': isNewPos1AngleWrong }"
         type="number"
         name="azimuth-1"
-        placeholder="Azimuth"
+        :placeholder="$t('commons.azimut')"
         v-model="newPos1Angle"
       />
 
@@ -29,14 +30,14 @@
         type="number"
         step="0.001"
         name="adc-1"
-        placeholder="Spannung"
+        :placeholder="$t('commons.voltage')"
         v-model="newPos1Adc"
       />
 
       <!-- Position 2 -->
       <span></span>
-      <label for="azimuth-2" class="small txt-dark">Azimuth in °</label>
-      <label for="adc-2" class="small txt-dark">Spannung in V</label>
+      <label for="azimuth-2" class="small txt-dark">{{ $t('commons.azimut') }} in °</label>
+      <label for="adc-2" class="small txt-dark">{{ $t('commons.voltage') }} in V</label>
 
       <span>Pos.&nbsp;2</span>
       <input
@@ -44,7 +45,7 @@
         :class="{ 'red-outline': isNewPos2AngleWrong }"
         type="number"
         name="azimuth-2"
-        placeholder="Azimuth"
+        :placeholder="$t('commons.azimut')"
         v-model="newPos2Angle"
       />
 
@@ -54,7 +55,7 @@
         type="number"
         step="0.001"
         name="adc-2"
-        placeholder="Spannung"
+        :placeholder="$t('commons.voltage')"
         v-model="newPos2Adc"
       />
 
@@ -62,12 +63,12 @@
 
       <button
         class="btn-std-resp bold no-wrap-ellip"
-        title="Kalibrations-Parameter bestätigen und anwenden."
+        :title="$t('calibration.manual.btnDscr')"
         ref="confirmBtn"
         :disabled="!isManualConfirmEnabled"
         @click="confirmManualCal"
       >
-        <Icon icon="fa-solid fa-check"></Icon>&nbsp;Bestätigen
+        <Icon icon="fa-solid fa-check"></Icon>&nbsp;{{ $t('commons.accept') }}
       </button>
     </div>
   </div>
@@ -75,10 +76,11 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-
 import { useUmbrellaStore } from '@/stores/umbrella';
-
 const umbrellaStore = useUmbrellaStore();
+
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 // Utilitiy functions
 // ------------------
@@ -152,10 +154,10 @@ function shakeManualForm() {
 // -------------------
 function testNewParams() {
   if (newPos2Angle.value <= newPos1Angle.value) {
-    alert('Position 2 Azimuth darf nicht kleiner oder gleich Position 1 Azimuth sein.');
+    alert(t('calibration.manual.errorAngle'));
     return false;
   } else if (newPos2Adc.value <= newPos1Adc.value) {
-    alert('Position 2 Spannung darf nicht kleiner oder gleich Position 1 Spannung sein.');
+    alert(t('calibration.manual.errorVoltage'));
     return false;
   } else {
     return true;

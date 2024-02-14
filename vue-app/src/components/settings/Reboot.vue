@@ -1,5 +1,5 @@
 <template>
-  <SettingCard title="Neustart">
+  <SettingCard :title="$t('settings.reboot.title')">
     <template #icon>
       <Icon icon="fa-solid fa-power-off"></Icon>
     </template>
@@ -7,18 +7,18 @@
     <template #action>
       <button
         class="btn-std-resp bold flex-cc"
-        title="Startet den RotorControl neu."
+        :title="$t('settings.reboot.btnDscr')"
         ref="rebootBtn"
         @click="reboot($event)"
       >
-       <span v-if="!waitingForReboot">Neu starten</span>
-       <Icon icon="fa-solid fa-spinner" class="spin" v-else></Icon>
+        <span v-if="!waitingForReboot">{{ $t('settings.reboot.btn') }}</span>
+        <Icon icon="fa-solid fa-spinner" class="spin" v-else></Icon>
       </button>
     </template>
 
     <template #content>
       <p class="txt-dark">
-        Startet den RotorControl neu. Die Netzwerkeinstellungen bleiben erhalten.
+        {{ $t('settings.reboot.dscr') }}
       </p>
     </template>
   </SettingCard>

@@ -1,0 +1,222 @@
+{
+  "locales": {
+    "de": "Deutsch",
+    "en": "English"
+  },
+  "commons": {
+    "accept": "Confirm",
+    "cancel": "Cancel",
+    "reset": "Reset",
+    "back": "Back",
+    "on": "ON",
+    "off": "OFF",
+    "azimut": "Azimuth",
+    "angle": "Angle",
+    "settings": "Settings",
+    "file": "File",
+    "size": "Size",
+    "voltage": "Voltage",
+    "toggleDscr": "Expand/collapse area '{title}'."
+  },
+  "header": {
+    "no": "No",
+    "connection": "Connection",
+    "connectedLedDscr": "Connected to RotorControl.",
+    "notConnectedLedDscr": "Not connected to RotorControl."
+  },
+  "messages": {
+    "autoReload": "This page will automatically reload in",
+    "seconds": "1 second. | {n} seconds.",
+    "reboot": "RotorControl will now perform a reboot.",
+    "rebootFailed": "ERROR: RotorControl does not respond to reboot request.",
+    "disconnect": "RotorControl will now disconnect from the network and perform a reboot. Therefore, RotorControl is inactive until a new network connection has been set up. You can close this window.",
+    "disconnectFailed": "ERROR: RotorControl does not respond to the request to disconnect from the network."
+  },
+  "compass": {
+    "cardinals": {
+      "N": "N",
+      "NNE": "NNE",
+      "NE": "NE",
+      "ENE": "ENE",
+      "E": "E",
+      "ESE": "ESE",
+      "SE": "SE",
+      "SSE": "SSE",
+      "S": "S",
+      "SSW": "SSW",
+      "SW": "SW",
+      "WSW": "WSW",
+      "W": "W",
+      "WNW": "WNW",
+      "NW": "NW",
+      "NNW": "NNW"
+    },
+    "position": "Position",
+    "target": "Target Position",
+    "time": "Time",
+    "timeDscr": "Current system time"
+  },
+  "manualRotation": {
+    "title": "Manual Rotation",
+    "ccwDscr": "Turn the rotor counterclockwise.",
+    "stopDscr": "Stop the rotor.",
+    "cwDscr": "Turn the rotor clockwise."
+  },
+  "speed": {
+    "title": "Speed"
+  },
+  "lock": {
+    "title": "Lock",
+    "dscr": "Lock the rotor for other users. To do this, enter your name in the field below and press the switch to the right.",
+    "lockedInfo": "Rotor {locked} by ",
+    "locked": "locked",
+    "namePlaceholder": "Your name"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "dscr": "Create up to 10 favorites that can be accessed automatically at the touch of a button.",
+    "addBtnDscr": "Create new favorite.",
+    "nameLabel": "Favorite Name",
+    "namePlaceholder": "Name",
+    "createBtn": "Create",
+    "createBtnDscr": "Create favorite.",
+    "sortByID": "Sort favorites by ID.",
+    "sortByName": "Sort favorites by name.",
+    "sortByAngle": "Sort favorites by angle.",
+    "moveTo": "Rot.",
+    "delete": "Del.",
+    "moveToBtn": "Rotate to favorite.",
+    "deleteBtn": "Delete favorite."
+  },
+  "settings": {
+    "interface": "User Interface",
+    "functions": "Features",
+    "calibration": "Calibration",
+    "network": {
+      "title": "Network",
+      "dscr": "If disconnected, remote access is no longer possible! Saved WiFi credentials will be deleted.",
+      "attention": "ATTENTION",
+      "disconnect": "Disconnect",
+      "disconnectDscr": "Disconnects and resets the Rotor Controller's network connection.",
+      "alert": "ATTENTION!\nReally disconnect from WiFi network?\n\nThis will delete saved WiFi credentials from the device.\nRemote access won't be possible after disconnect!\nRotorControl has to be set up locally again!"
+    },
+    "firmware": {
+      "title": "Firmware Version",
+      "dscr": "Search for available firmware versions.",
+      "installedVersion": "Installed version:",
+      "btn": "Search",
+      "availableFirmware": "Available firmware:",
+      "moreInfo": "More info",
+      "moreInfoDscr": "Visit the RotorCotrol website for more information about available firmware versions.",
+      "old": "Old",
+      "new": "New",
+      "installed": "Installed",
+      "downloadDscr": "Download firmware file.",
+      "error": "Searching for available firmware failed."
+    },
+    "reboot": {
+      "title": "Reboot",
+      "dscr": "Reboots the RotorControl device. Network settings will be retained.",
+      "btn": "Reboot",
+      "btnDscr": "Reboots the RotorControl device."
+    },
+    "update": {
+      "title": "Firmware Update",
+      "dscr": "Update the firmware by uploading a new firmware file.",
+      "dropzone": "Drop file here or press to browse files.",
+      "updateBtn": "Update",
+      "updateBtnDscr": "Start update.",
+      "error1": "Only one file can be selected!",
+      "error2": "This firmware file is not a .bin file.",
+      "error3": "This firmware file is empty.",
+      "error4": "This firmware file is too large (> 1.280 KB).",
+      "error5": "The MD5 hash of this file could not be determined."
+    },
+    "fontSize": {
+      "title": "Font Size",
+      "minusBtnDscr": "Reduce font size.",
+      "plusBtnDscr": "Increase font size."
+    },
+    "colorThemes": {
+      "title": "Color Theme",
+      "dscr": "Choose one of several pre-made UI color themes.",
+      "themes": {
+        "Ostsee": "Baltic Sea",
+        "Nordlicht": "Northern Lights",
+        "Krolock": "Krolock",
+        "Kitzsteinhorn": "Glacier"
+      }
+    },
+    "compass": {
+      "title": "Azimuth Indicator",
+      "dscr": "Enable / Disable individual elements on the azimuth indicator.",
+      "degrees": "Degree labels",
+      "cardinals": "Cardinal directions",
+      "favorites": "Favorites"
+    },
+    "keyboard": {
+      "title": "Keyboard Shortcuts",
+      "dscr": "Enables option to manually control the rotor using the arrow keys of your keybaord when in the controller tab."
+    },
+    "overlap": {
+      "dscr": "Allow the rotor to use the overlap area between 360° and 450° for automatic rotation."
+    },
+    "lock": {
+      "dscr": "Reset the lock status and release the rotor for all users.",
+      "btnDscr": "Resets the rotor lock.",
+      "alert": "The rotor lock has been reset."
+    },
+    "screen": {
+      "title": "Display",
+      "dscr": "Enable / Disable the mini-display on the device."
+    },
+    "language": {
+      "title": "Language",
+      "dscr": "Choose the language of the user interface."
+    }
+  },
+  "calibration": {
+    "voltage": {
+      "title": "Positional Voltage",
+      "dscr": "The currently measured position voltage of the rotor. The rotor position is calculated from this voltage with the use of the calibration parameters."
+    },
+    "current": {
+      "title": "Current Calibration",
+      "dscr": "The currently used calibration parameters.",
+      "btnDscr": "Restores default calibration.",
+      "confirmMessage": "Reset calibration to factory settings?\n\nTo display an accurate rotor position, an individual calibration is mandatory!"
+    },
+    "title": "Rotor Calibration",
+    "dscr": "In order for the rotor controller to display the correct position, it must be calibrated. Either choose the guided calibration process or enter the parameters manually.",
+    "guidedTab": "Guided",
+    "manualTab": "Manual",
+    "manual": {
+      "dscr": "Here, the calibration parameters can be entered manually, where {comparison} must apply. The parameters will be rounded to 4 decimal places.",
+      "btnDscr": "Confirm and apply calibration parameters.",
+      "errorAngle": "Position 2 azimuth must not be less than or equal to position 1 azimuth.",
+      "errorVoltage": "Position 2 voltage must not be less than or equal to position 1 voltage."
+    },
+    "guided": {
+      "step1": "Rotate the rotor to a position between 20° and 40° using the original control unit.",
+      "step2": "Enter the exact angle, read as accurately as possible on the control unit, in position 1 and confirm by pressing the check button.",
+      "step3": "Now, turn the rotor to a second position between 430° and 450°.",
+      "step4": "This time, enter the exact angle at position 2 and confirm it.",
+      "step5": "Then press “Confirm”.",
+      "confirmPosBtnDscr": "Confirm position {pos}.",
+      "confirmBtnDscr": "Confirm and apply calibration parameters."
+    }
+  },
+  "update": {
+    "dscr1": "Please wait while the firmware update is being uploaded.",
+    "dscr2": "After a successful update, RotorControl will reboot.",
+    "waitingForReboot": "Waiting for reboot",
+    "completeUpdate": "Complete update",
+    "successInfo": "Update successful. RotorControl will reboot.",
+    "updateFailed": "Update failed!",
+    "preUpdateError1": "@:update.updateFailed (Connection error during update request)",
+    "preUpdateError2": "@:update.updateFailed (Update request rejected by RotorControl.)",
+    "preUpdateError3": "@:update.updateFailed (Received empty token from RotorControl.)",
+    "updateError1": "@:update.updateFailed The firmware file was not accepted. ({response})",
+    "updateError2": "@:update.updateFailed The firmware file could not be uploaded."
+  }
+}

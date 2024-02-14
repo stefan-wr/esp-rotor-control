@@ -19,5 +19,15 @@
         "initializer_list": "cpp",
         "regex": "cpp"
     },
-    "cmake.configureOnOpen": true
+    "cmake.configureOnOpen": true,
+    "i18n-ally.enabledFrameworks": [
+        "vue"
+    ],
+    "i18n-ally.localesPaths": [
+        "vue-app/src/locales"
+    ],
+    "i18n-ally.translate.deepl.useFreeApiEntry": true,
+    "i18n-ally.keystyle": "nested",
+    "i18n-ally.displayLanguage": "de",
+    "i18n-ally.sourceLanguage": "de"
 }

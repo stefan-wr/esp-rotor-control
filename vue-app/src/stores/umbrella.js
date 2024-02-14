@@ -1,4 +1,4 @@
-import { ref, computed, reactive } from 'vue';
+import { ref } from 'vue';
 import { defineStore } from 'pinia';
 
 import { useRotorStore } from './rotor.js';
@@ -103,41 +103,30 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         lock: 'LOCK'
     };
 
+    // Receivers collection
+    const receivers = {
+        [identifiers.rotor]: receiveRotorMsg,
+        [identifiers.settings]: receiveSettingsMsg,
+        [identifiers.ui]: () => {},
+        [identifiers.calibration]: receiveCalibrationMsg,
+        [identifiers.favorites]: receiveFavoritesMsg,
+        [identifiers.lock]: receiveLockMsg
+    };
+
+    // Receive websocket message
     function receiveData(event) {
         hasLostConnection.value = false;
         updateTimeOfLastMsg();
 
-        // Split type-identifier from JSON data
+        // Split msg-type-identifier from JSON data
         var [identifier, msg] = event.data.split('|');
 
-        // ROTOR MESSAGE
-        if (identifier === identifiers.rotor) {
-            console.log('[' + event.origin + '] ' + event.data);
-            receiveRotorMsg(msg);
-        }
-
-        // CALIBRATION MESSAGE
-        if (identifier === identifiers.calibration) {
-            console.log('[' + event.origin + '] ' + event.data);
-            receiveCalibrationMsg(msg);
-        }
-
-        // FAVORITES MESSAGE
-        if (identifier === identifiers.favorites) {
-            console.log('[' + event.origin + '] ' + event.data);
-            receiveFavoritesMsg(msg);
-        }
-
-        // SETTINGS MESSAGE
-        if (identifier === identifiers.settings) {
-            console.log('[' + event.origin + '] ' + event.data);
-            receiveSettingsMsg(msg);
-        }
-
-        // LOCK MESSAGE
-        if (identifier === identifiers.lock) {
-            console.log('[' + event.origin + '] ' + event.data);
-            receiveLockMsg(msg);
+        // Receive JSON message
+        if (receivers.hasOwnProperty(identifier)) {
+            receivers[identifier](msg);
+            //console.log('[' + event.origin + '] ' + event.data);
+        } else {
+            console.warn(`ERROR: unknown message identifier '${identifier}'`);
         }
     }
 
@@ -207,60 +196,44 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     //    Senders
     // *************
 
-    // General message senders
-    // -----------------------
-    function sendRotorMsg(msg) {
-        sendData(`${identifiers.rotor}|${msg}`);
-    }
-
-    function sendCalibrationMsg(msg) {
-        sendData(`${identifiers.calibration}|${msg}`);
-    }
-
-    function sendFavoritesMsg(msg) {
-        sendData(`${identifiers.favorites}|${msg}`);
-    }
-
-    function sendSettingsMsg(msg) {
-        sendData(`${identifiers.settings}|${msg}`);
-    }
-
-    function sendLockMsg(msg) {
-        sendData(`${identifiers.lock}|${msg}`);
+    // General message sender
+    // ----------------------
+    function sendMsg(identifier, msg) {
+        sendData(`${identifier}|${msg}`);
     }
 
     // Specific senders
     // ----------------
     function sendRotation(dir) {
-        sendRotorMsg(rotorStore.getRotationMsg(dir));
+        sendMsg(identifiers.rotor, rotorStore.getRotationMsg(dir));
     }
 
     function sendSpeed() {
-        sendRotorMsg(rotorStore.getSpeedMsg);
+        sendMsg(identifiers.rotor, rotorStore.getSpeedMsg);
     }
 
     function sendTarget(angle) {
-        sendRotorMsg(rotorStore.getTargetMessage(angle, uiStore.ui.useOverlap));
+        sendMsg(identifiers.rotor, rotorStore.getTargetMessage(angle, uiStore.ui.useOverlap));
     }
 
     function sendCalibration(a1, u1, a2, u2) {
-        sendCalibrationMsg(settingsStore.getCalibrationMsg(a1, u1, a2, u2));
+        sendMsg(identifiers.calibration, settingsStore.getCalibrationMsg(a1, u1, a2, u2));
     }
 
     function sendFavorites() {
-        sendFavoritesMsg(settingsStore.getFavoritesMsg);
+        sendMsg(identifiers.favorites, settingsStore.getFavoritesMsg);
     }
 
     function resetFavorites() {
-        sendFavoritesMsg('[]');
+        sendMsg(identifiers.favorites, '[]');
     }
 
     function sendLock() {
-        sendLockMsg(settingsStore.getLockMsg);
+        sendMsg(identifiers.lock, settingsStore.getLockMsg);
     }
 
     function sendScreen() {
-        sendSettingsMsg(settingsStore.getScreenMsg);
+        sendMsg(identifiers.settings, settingsStore.getScreenMsg);
     }
 
     // *************

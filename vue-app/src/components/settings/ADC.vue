@@ -1,5 +1,5 @@
 <template>
-  <SettingCard title="Positions-Spannung">
+  <SettingCard :title="$t('calibration.voltage.title')">
     <template #icon>
       <Icon icon="fa-solid fa-bolt"></Icon>
     </template>
@@ -10,8 +10,7 @@
 
     <template #content>
       <p class="txt-dark">
-        Die aktuell gemessene Positions-Spannung des Rotors. Mithilfe der Kalibrierung wird aus
-        dieser Spannung die Rotor-Position berechnet.
+        {{ $t('calibration.voltage.dscr') }}
       </p>
     </template>
   </SettingCard>
@@ -19,8 +18,6 @@
 
 <script setup>
 import SettingCard from '@/components/settings/SettingCard.vue';
-
 import { useRotorStore } from '@/stores/rotor';
-
 const rotorStore = useRotorStore();
 </script>

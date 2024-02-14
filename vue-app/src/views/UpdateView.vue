@@ -2,8 +2,8 @@
   <main class="flex-vst gap-one">
     <h2 class="medium">Firmware Udpate</h2>
     <p>
-      Bitte warte, während das Firmware Update hochgeladen wird.<br />Nach erfolgreichem Update wird
-      RotorControl neugestartet.
+      {{ $t('update.dscr1') }}<br />
+      {{ $t('update.dscr2') }}
     </p>
 
     <!-- Upload Icon -->
@@ -13,16 +13,16 @@
 
     <!-- Success Box-->
     <!---------------->
-    <TransitionSlideIn :toggle="!!successTxt">
+    <TransitionSlideIn :toggle="hasSuccess">
       <div class="flex-vc gap-one">
-        <div class="border-box flex-hc l-align gap-one error">
+        <div class="border-box flex-hc l-align gap-one info">
           <Icon icon="fa-solid fa-circle-check" class="large" />
-          <span>{{ successTxt }}</span>
+          <span>{{ $t('update.successInfo') }}</span>
         </div>
         <!-- Button-->
         <button class="btn-std-resp bold" @click="returnToSettings()" :disabled="rebootPending">
-          <span v-if="rebootPending">Warte auf Neustart</span>
-          <span v-else>Update abschließen</span>
+          <span v-if="rebootPending">{{ $t('update.waitingForReboot') }}</span>
+          <span v-else>{{ $t('update.completeUpdate') }}</span>
           &nbsp;
           <Icon icon="fa-solid fa-spinner" class="spin" v-if="rebootPending"></Icon>
           <Icon icon="fa-solid fa-arrow-right" v-else></Icon>
@@ -34,13 +34,13 @@
     <!--------------->
     <TransitionSlideIn :toggle="!!errorTxt" @after-enter="errorBox.shake()">
       <div class="flex-vc gap-one">
-        <ShakeOnToggle ref="errorBox" class="border-box flex-hc l-align gap-one error">
+        <ShakeOnToggle ref="errorBox" class="border-box flex-hc l-align gap-one info">
           <Icon icon="fa-solid fa-circle-exclamation" class="large" />
-          <span>{{ errorTxt }}</span>
+          <span>{{ $t('update.' + errorTxt, {response: updateResponse}) }}</span>
         </ShakeOnToggle>
         <!-- Button -->
         <button class="btn-std-resp bold no-wrap-ellip" @click="returnToSettings()">
-          <Icon icon="fa-solid fa-arrow-left" />&nbsp;Zurück
+          <Icon icon="fa-solid fa-arrow-left" />&nbsp;{{ $t('commons.back') }}
         </button>
       </div>
     </TransitionSlideIn>
@@ -55,6 +55,9 @@
   </main>
 </template>
 
+<!-- ********************* -->
+<!-- ********************* -->
+
 <script setup>
 import TransitionSlideIn from '@/components/TransitionSlideIn.vue';
 import ShakeOnToggle from '@/components/ShakeOnToggle.vue';
@@ -65,10 +68,15 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSettingsStore } from '@/stores/settings';
 import { useUmbrellaStore } from '@/stores/umbrella';
+import { useUIStore } from '@/stores/ui';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const settingsStore = useSettingsStore();
 const umbrellaStore = useUmbrellaStore();
+const uiStore = useUIStore();
+
+const { t } = useI18n();
 
 const errorBox = ref(null);
 
@@ -76,8 +84,9 @@ const uploadProgress = ref(1);
 const uploadFinished = ref(false);
 const rebootTimerActive = ref(false);
 
+const hasSuccess = ref(false);
 const errorTxt = ref('');
-const successTxt = ref('');
+const updateResponse = ref('');
 
 // Is reboot pending after update
 const rebootPending = computed(() => {
@@ -111,15 +120,15 @@ async function requestUpdateApproval() {
   try {
     var response = await axios.post('/request-update', formData, config);
   } catch (err) {
-    throw new Error('Verbindungsfehler bei der Update-Anfrage', { cause: err });
+    throw new Error('preUpdateError1');
   }
 
   if (response.data === 'denied') {
-    throw new Error('Update-Anfrage von RotorControl abgelehnt');
+    throw new Error('preUpdateError2');
   }
 
   if (response.data === '') {
-    throw new Error('Leeren Token von RotorControl erhalten');
+    throw new Error('preUpdateError3');
   }
 
   return response.data;
@@ -136,7 +145,7 @@ async function uploadFirmware() {
     console.log('Token: ' + token);
   } catch (err) {
     uploadFinished.value = true;
-    errorTxt.value = 'Update fehlgeschlagen! (' + err + ')';
+    errorTxt.value = err.message;
     return;
   }
 
@@ -157,6 +166,7 @@ async function uploadFirmware() {
 
   // --------------------
   try {
+    updateResponse.value = '';
     const response = await axios.post('/update', formData, config);
     uploadFinished.value = true;
 
@@ -164,20 +174,20 @@ async function uploadFirmware() {
       // Update succesful
       uploadProgress.value = 100;
       rebootTimerActive.value = true;
-      successTxt.value = 'Update erfolgreich durchgeführt. RotorControl wird neu gestartet.';
+      hasSuccess.value = true;
       setTimeout(() => {
         rebootTimerActive.value = false;
       }, 10000);
     } else {
       // Update failed on ESP
-      errorTxt.value =
-        'Update fehlgeschlagen! Die Firmware-Datei wurde nicht akzeptiert. (' + response.data + ')';
+      updateResponse.value = response.data;
+      errorTxt.value = 'updateError1';
       console.log(response);
     }
   } catch (err) {
     // Upload failed
     uploadFinished.value = true;
-    errorTxt.value = 'Update fehlgeschlagen! Die Firmware-Datei konnte nicht hochgeladen werden.';
+    errorTxt.value = 'updateError2';
     console.log(err);
   }
 }
@@ -190,9 +200,13 @@ function returnToSettings() {
 
 // Start upload when component mounts
 onMounted(() => {
+  uiStore.disableHeaderLinks();
   uploadFirmware();
 });
 </script>
+
+<!-- ********************* -->
+<!-- ********************* -->
 
 <style lang="scss" scoped>
 main {
@@ -218,8 +232,7 @@ main {
   }
 }
 
-.error,
-.success {
+.info {
   align-self: center;
 }
 </style>

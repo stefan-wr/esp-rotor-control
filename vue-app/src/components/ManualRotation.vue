@@ -1,11 +1,11 @@
 <template>
-  <CardCollapsable title="Manuelle Rotation">
+  <CardCollapsable :title="$t('manualRotation.title')">
     <template #icon><Icon icon="fa-solid fa-arrows-spin"></Icon></template>
     <div class="flex-hc gap-one buttons-wrap">
       <button
         class="medium bold"
         :class="{ 'btn-pressed': isLeftBtnPressed }"
-        title="Dreht den Rotor gegen den Uhrzeigersinn."
+        :title="$t('manualRotation.ccwDscr')"
         @mousedown.prevent="rotateLeft()"
         @touchstart.prevent="rotateLeft()"
         @mouseup.prevent="stopRotation()"
@@ -21,7 +21,7 @@
 
       <button
         class="medium bold"
-        title="Stoppt den Rotor."
+        :title="$t('manualRotation.stopDscr')"
         @click.prevent="stopRotation()"
         @keyup.space.prevent="stopRotation()"
         :disabled="settingsStore.isLockedByElse"
@@ -32,7 +32,7 @@
       <button
         class="medium bold"
         :class="{ 'btn-pressed': isRightBtnPressed }"
-        title="Dreht den Rotor mit dem Uhrzeigersinn."
+        :title="$t('manualRotation.cwDscr')"
         @mousedown.prevent="rotateRight()"
         @touchstart.prevent="rotateRight()"
         @mouseup.prevent="stopRotation()"
@@ -52,7 +52,7 @@
 <script setup>
 import CardCollapsable from '@/components/CardCollapsable.vue';
 
-import { callWithAsyncErrorHandling, ref } from 'vue';
+import { ref } from 'vue';
 import { useEventListener } from '@vueuse/core';
 
 import { useUmbrellaStore } from '@/stores/umbrella';

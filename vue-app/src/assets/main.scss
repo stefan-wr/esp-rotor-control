@@ -74,7 +74,7 @@ html {
     --input-text-color: var(--text-color-accent);
 
     /* Color Variables */
-    --test-color: #12262c;
+    //--test-color: #12262c;
 }
 
 body {
@@ -324,7 +324,6 @@ main {
 }
 
 .border-box .border-box {
-    padding: 1em;
     border-radius: calc($border-box-bradius / 2);
     background: var(--content-color-3);
 
@@ -334,7 +333,6 @@ main {
 }
 
 .border-box .border-box .border-box {
-    padding: 1em;
     border-radius: calc($border-box-bradius / 3);
     background: var(--content-color-2);
 

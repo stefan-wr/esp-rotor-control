@@ -1,11 +1,11 @@
 <template>
-  <SettingCard title="Firmware Update">
+  <SettingCard :title="$t('settings.update.title')">
     <template #icon>
       <Icon icon="fa-solid fa-arrows-rotate"></Icon>
     </template>
 
     <template #content>
-      <p class="txt-dark">Aktualisiere die Firmware durch hochladen einer neuen Firmware Datei.</p>
+      <p class="txt-dark">{{ $t('settings.update.dscr') }}</p>
 
       <div class="">
         <CardToggleContentTransition :toggle="isFileSelected" style="width: 100%" ref="toggleCard">
@@ -24,7 +24,7 @@
                   :class="{ 'drop-hover': isOverDropZone }"
                 >
                   <Icon icon="fa-solid fa-file-import" class="large" />
-                  <span class="c-align">Datei hier ablegen oder drücken zum Durchsuchen.</span>
+                  <span class="c-align">{{ $t('settings.update.dropzone') }}</span>
                 </div>
               </ShakeOnToggle>
 
@@ -33,11 +33,11 @@
                 @after-leave="toggleCard.applyCurrentWrapHeight()"
                 @enter="toggleCard.applyCurrentWrapHeight()"
                 @after-enter="dropZone.shake()"
-                :toggle="!!errorTxt"
+                :toggle="!!hasError"
               >
                 <div class="border-box flex-hc gap-one">
                   <Icon icon="fa-solid fa-circle-exclamation" class="large" />
-                  <span>{{ errorTxt }}</span>
+                  <span>{{ getErrorTxt() }}</span>
                 </div>
               </TransitionSlideIn>
             </div>
@@ -50,12 +50,12 @@
               <div class="flex-vst gap-one border-box">
                 <!-- Name -->
                 <div class="flex-csp gap-one">
-                  <span class="txt-dark" style="align-self: start">Datei:</span>
+                  <span class="txt-dark" style="align-self: start">{{ $t('commons.file') }}:</span>
                   <div class="firmware-name gap-half r-align">
                     <span
                       class="no-wrap-ellip"
                       style="width: 100%"
-                      :title="'Dateiname: ' + settingsStore.firmware.name"
+                      :title="$t('commons.file') + ': ' + settingsStore.firmware.name"
                     >
                       {{ settingsStore.firmware.name }}
                     </span>
@@ -70,7 +70,7 @@
 
                 <!-- Size -->
                 <div class="flex-csp gap-one">
-                  <span class="txt-dark">Größe:</span>
+                  <span class="txt-dark">{{ $t('commons.size') }}:</span>
                   <span>{{ settingsStore.getFirmwareKBytes }} KB</span>
                 </div>
               </div>
@@ -80,18 +80,18 @@
                 <!-- Cancel BTN-->
                 <button
                   class="btn-std-resp bold no-wrap-ellip flex-grow update-btn"
-                  title="Abbrechen"
+                  :title="$t('commons.cancel')"
                   @click="cancelUpdate"
                 >
-                  <Icon icon="fa-solid btn-std-resp fa-xmark" />&nbsp;Abbrechen
+                  <Icon icon="fa-solid btn-std-resp fa-xmark" />&nbsp;{{ $t('commons.cancel') }}
                 </button>
                 <!-- Update BTN-->
                 <button
                   class="btn-std-resp bold no-wrap-ellip flex-grow update-btn"
-                  title="Update starten."
+                  :title="$t('settings.update.updateBtnDscr')"
                   @click="startUpdate"
                 >
-                  <Icon icon="fa-solid fa-check"></Icon>&nbsp;Ausführen
+                  <Icon icon="fa-solid fa-check"></Icon>&nbsp;{{ $t('settings.update.updateBtn') }}
                 </button>
               </div>
             </div>
@@ -105,7 +105,6 @@
           id="firmware-input"
           ref="firmwareInput"
           type="file"
-          placeholder="Datei auswählen"
           name="firmware"
           accept=".bin"
           @change="onFileChange"
@@ -129,6 +128,9 @@ import md5 from 'js-md5';
 import { useRouter } from 'vue-router';
 import { useSettingsStore } from '@/stores/settings';
 
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
+
 const settingsStore = useSettingsStore();
 const router = useRouter();
 
@@ -136,10 +138,9 @@ const router = useRouter();
 const toggleCard = ref(null);
 const firmwareInput = ref(null);
 const dropZone = ref(null);
-const dropZoneShakeWrap = ref(null);
 
 const isFileSelected = ref(false);
-const errorTxt = ref('');
+const hasError = ref(0);
 
 // Drop files area
 function onDrop(files) {
@@ -201,32 +202,25 @@ async function onFileChange(event, files = []) {
     settingsStore.firmware.size = fileList[0].size;
     settingsStore.firmware.md5 = hash;
     // Toggle card
-    errorTxt.value = '';
+    hasError.value = 0;
     isFileSelected.value = true;
   }
 
   // An error occured, set error text, shake form
-  errorTxt.value = '';
+  hasError.value = 0;
   if (error) {
-    switch (error) {
-      case 1:
-        errorTxt.value = 'Es darf nur genau eine Datei ausgewählt werden!';
-        break;
-      case 2:
-        errorTxt.value = 'Diese Firmware-Datei ist keine .bin Datei.';
-        break;
-      case 3:
-        errorTxt.value = 'Diese Firmware-Datei ist leer.';
-        break;
-      case 4:
-        errorTxt.value = 'Diese Firmware-Datei ist zu groß (> 1.280 KB).';
-        break;
-      case 5:
-        errorTxt.value = 'Der MD5-Hash dieser Datei konnte nicht bestimmt werden.';
-        break;
-    }
+    hasError.value = error;
   }
   dropZone.value.shake();
+}
+
+// Get translated error message
+function getErrorTxt() {
+  if (hasError.value) {
+    return t('settings.update.error' + hasError.value);
+  } else {
+    return 'errorTxt.value;'
+  }
 }
 
 // Get MD5 hash from selected file.
@@ -270,7 +264,7 @@ function startUpdate() {
 
 // Reapply height for toggleCard after error changes
 watch(
-  errorTxt,
+  hasError,
   () => {
     toggleCard.value.applyCurrentWrapHeight();
   },

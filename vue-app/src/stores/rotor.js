@@ -1,17 +1,17 @@
-import { ref, computed, reactive, watch } from 'vue';
+import { computed, reactive, watch } from 'vue';
 import { defineStore } from 'pinia';
 
 export const useRotorStore = defineStore('rotor', () => {
     // Cardinal directions
     const cardinals = [
         'N',
-        'NNO',
-        'NO',
-        'ONO',
-        'O',
-        'OSO',
-        'SO',
-        'SSO',
+        'NNE',
+        'NE',
+        'ENE',
+        'E',
+        'ESE',
+        'SE',
+        'SSE',
         'S',
         'SSW',
         'SW',
@@ -70,7 +70,6 @@ export const useRotorStore = defineStore('rotor', () => {
 
     // Get speed JSON message
     const getSpeedMsg = computed(() => {
-        //return `{\"speed\":${rotor.speed}}`;
         return JSON.stringify({ speed: rotor.speed });
     });
 

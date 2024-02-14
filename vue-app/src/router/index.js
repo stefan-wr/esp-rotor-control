@@ -22,10 +22,10 @@ const router = createRouter({
             name: 'reboot',
             component: MessageView,
             props: {
-                message:
-                    'RotorControl startet sich jetzt neu. Diese Seite aktualisiert sich in 5 Sekunden.',
+                message: 'messages.reboot',
                 pushTo: 'settings',
-                pushAfter: 5000
+                pushAfter: 5000,
+                disableHeaderLinks: true
             }
         },
         {
@@ -33,8 +33,7 @@ const router = createRouter({
             name: 'reboot-failed',
             component: MessageView,
             props: {
-                message:
-                    'FEHLER: RotorControl reagiert nicht auf Neustart-Anfrage. Diese Seite aktualisiert sich in 5 Sekunden.',
+                message: 'messages.rebootFailed',
                 pushTo: 'settings',
                 pushAfter: 5000
             }
@@ -44,10 +43,8 @@ const router = createRouter({
             name: 'disconnect',
             component: MessageView,
             props: {
-                message:
-                    'RotorControl trennt sich nun vom Netzwerk und startet sich neu. Die Rotor-Steuerung ist damit inaktiv, bis eine neue Netzwerkverbindung eingerichtet wurde. Sie können dieses Fenster schließen.',
-                pushTo: '',
-                pushAfter: 0
+                message: 'messages.disconnect',
+                disableHeaderLinks: true
             }
         },
         {
@@ -55,8 +52,7 @@ const router = createRouter({
             name: 'disconnect-failed',
             component: MessageView,
             props: {
-                message:
-                    'FEHLER: RotorControl reagiert nicht auf die Anfrage zum Trennen der Netzwerkverbindung. Diese Seite aktualisiert sich in 5 Sekunden.',
+                message: 'disconnectFailed',
                 pushTo: 'settings',
                 pushAfter: 5000
             }
@@ -64,7 +60,7 @@ const router = createRouter({
         {
             path: '/update',
             name: 'update',
-            component: UpdateView,
+            component: UpdateView
         },
 
         // Catch-all route to main page

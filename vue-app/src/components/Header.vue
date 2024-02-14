@@ -17,13 +17,13 @@
       <!--span class="small" style="color:var(--accent-color);">{{ fps }} FPS</span-->
     </h1>
     <h1 v-else class="normal l-align blink-txt no-wrap-ellip" :title="ledTitle">
-      <span class="hide-s">Keine </span>Verbindung&hellip;
+      <span class="hide-s">{{ $t('header.no') }}&nbsp;</span>{{ $t('header.connection') }}&hellip;
     </h1>
-    <nav class="flex-hc gap">
-      <RouterLink to="/" class="view-tab">Controller</RouterLink>
+    <nav class="flex-hc gap" v-if="!uiStore.ui.disableHeaderLinks">
+      <RouterLink to="/" class="view-tab" disabled>Controller</RouterLink>
       <RouterLink to="/settings" class="view-tab">
         <Icon icon="fa-solid fa-gear" class="show-s-only"></Icon>
-        <span class="hide-s">Einstellungen</span>
+        <span class="hide-s">{{ $t('commons.settings') }}</span>
       </RouterLink>
     </nav>
   </header>
@@ -32,8 +32,13 @@
 <script setup>
 import { computed } from 'vue';
 import { useUmbrellaStore } from '@/stores/umbrella';
+import { useUIStore } from '@/stores/ui';
+
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 const umbrellaStore = useUmbrellaStore();
+const uiStore = useUIStore();
 
 /** 
 import { useFps } from '@vueuse/core';
@@ -42,9 +47,9 @@ var fps = useFps();
 
 const ledTitle = computed(() => {
   if (umbrellaStore.hasLostConnection) {
-    return 'Keine Verbindung zum RotorControl.';
+    return t('header.notConnectedLedDscr');
   } else {
-    return 'Verbindung zum RotorControl steht.';
+    return t('header.connectedLedDscr');
   }
 });
 </script>
@@ -55,6 +60,7 @@ const ledTitle = computed(() => {
   color: var(--header-text-color);
   background-color: var(--header-color);
   border-radius: $content-radius $content-radius 0 0;
+  min-height: 3.2em;
 
   @include small {
     border-radius: 0;

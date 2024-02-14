@@ -188,7 +188,7 @@
             style="fill: var(--text-color-darker)"
             dominant-baseline="middle"
           >
-            {{ rotorStore.cardinal }}
+            {{ $t('compass.cardinals.' + rotorStore.cardinal) }}
           </text>
 
           <text
@@ -291,12 +291,12 @@
     <!-- Additional Information -->
     <!-- ====================== -->
     <div class="compass-label border-box">
-      <span class="small txt-dark">Position</span>
-      <span class="small txt-dark">Zielposition</span>
-      <span class="small txt-dark">Uhrzeit</span>
+      <span class="small txt-dark">{{ $t('compass.position') }}</span>
+      <span class="small txt-dark">{{ $t('compass.target') }}</span>
+      <span class="small txt-dark">{{ $t('compass.time') }}</span>
       <span class="large bold">{{ rotorStore.angle1D }}°</span>
       <span class="large bold">{{ target }}</span>
-      <span class="medium bold monospace" title="Die aktuelle Systemzeit">{{ currentTime }}</span>
+      <span class="medium bold monospace" :title="$t('compass.timeDscr')">{{ currentTime }}</span>
     </div>
   </div>
 </template>
@@ -309,6 +309,9 @@ import { useUmbrellaStore } from '@/stores/umbrella';
 import { useRotorStore } from '@/stores/rotor';
 import { useSettingsStore } from '@/stores/settings';
 import { useUIStore } from '@/stores/ui';
+
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 const umbrellaStore = useUmbrellaStore();
 const rotorStore = useRotorStore();
@@ -334,9 +337,9 @@ const degreeLabels = [
 
 const cardinalLabels = [
   { dir: 'N', x: 486, y: 214, rot: 0 },
-  { dir: 'NO', x: 690, y: 265, rot: 45 },
-  { dir: 'O', x: 786, y: 513, rot: 0 },
-  { dir: 'SO', x: 715, y: 757, rot: -45 },
+  { dir: t('compass.cardinals.NE'), x: 690, y: 265, rot: 45 },
+  { dir: t('compass.cardinals.E'), x: 786, y: 513, rot: 0 },
+  { dir: t('compass.cardinals.SE'), x: 715, y: 757, rot: -45 },
   { dir: 'S', x: 487, y: 815, rot: -0 },
   { dir: 'SW', x: 243, y: 712, rot: 45 },
   { dir: 'W', x: 182, y: 513, rot: 0 },

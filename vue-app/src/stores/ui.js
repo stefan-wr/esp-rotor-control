@@ -1,11 +1,13 @@
-import { ref, computed, reactive } from 'vue';
+import { computed, reactive } from 'vue';
 import { defineStore } from 'pinia';
 import { useStorage } from '@vueuse/core';
 import useColors from '@/stores/colors';
+import { useI18n } from 'vue-i18n';
 
 export const useUIStore = defineStore('ui', () => {
     const fontSizeRange = [12, 16];
 
+    const i18n = useI18n();
     const colorThemes = useColors();
 
     // **********************
@@ -14,6 +16,11 @@ export const useUIStore = defineStore('ui', () => {
 
     const ui = reactive({
         // useStorgae saves these properties in localStorage
+        locale: useStorage('locale', i18n.locale.value),
+        localeApplied: false,
+
+        disableHeaderLinks: false,
+
         kbscEnabled: useStorage('kbsc-enabled', true),
         fontSize: useStorage('font-size', 14),
         activeColorTheme: useStorage('active-color-theme', 'default'),
@@ -46,6 +53,11 @@ export const useUIStore = defineStore('ui', () => {
     // Is given color the currently active color?
     function isActiveColorTheme(theme) {
         return theme === ui.activeColorTheme;
+    }
+
+    // Is given locale the currently active locale?
+    function isActiveLocale(locale) {
+        return locale === i18n.locale.value;
     }
 
     // *************
@@ -86,6 +98,28 @@ export const useUIStore = defineStore('ui', () => {
         }
     }
 
+    // Set locale
+    function setLocale(locale) {
+        ui.locale = locale;
+        applyLocale();
+    }
+
+    // Apply locale
+    function applyLocale() {
+        i18n.locale.value = ui.locale;
+        ui.localeApplied = !ui.localeApplied;
+    }
+
+    // Disable router-links in header
+    function disableHeaderLinks() {
+        ui.disableHeaderLinks = true;
+    }
+
+    // Enable router-links in header
+    function enableHeaderLinks() {
+        ui.disableHeaderLinks = false;
+    }
+
     // **********
     return {
         ui,
@@ -97,6 +131,11 @@ export const useUIStore = defineStore('ui', () => {
         colorThemes,
         setColorTheme,
         applyColorTheme,
-        isActiveColorTheme
+        isActiveColorTheme,
+        isActiveLocale,
+        setLocale,
+        applyLocale,
+        disableHeaderLinks,
+        enableHeaderLinks
     };
 });

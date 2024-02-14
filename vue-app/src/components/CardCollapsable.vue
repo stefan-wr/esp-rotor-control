@@ -6,8 +6,8 @@
       <button
         class="card-hide-btn flex-cc"
         @click="toggleCollapse"
-        :title="`Bereich '${title}' ein-/ausklappen`"
-        :aria-label="`Bereich '${title}' ein-/ausklappen`"
+        :title="$t('commons.toggleDscr', {title: title})"
+        :aria-label="$t('commons.toggleDscr', {title: title})"
       >
         <svg viewBox="0 0 300 300">
           <path
