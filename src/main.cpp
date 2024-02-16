@@ -5,11 +5,11 @@
 #include <Update.h>
 #include <AsyncTCP.h>
 #include <DNSServer.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <math.h>
 
 #include <globals.h>
-#include <SimpleSPIFFS.h>
+#include <SimpleFS.h>
 #include <WiFiFunctions.h>
 #include <RotorController.h>
 #include <Settings.h>
@@ -352,8 +352,8 @@ void setup() {
     Serial.println(" MHz");
   }
 
-  // Initialise SPIFFS
-  if (!mountSPIFFS()) {
+  // Initialise FS
+  if (!mountFS()) {
     fatalError("Failed to mount filesystem! ESP may require reflashing.");
     return;
   }
@@ -410,7 +410,7 @@ void setup() {
         // Catch all route, necessary for page reloads in Vue-App
         if (authenticate && !request->authenticate(http_username, http_password))
           return request->requestAuthentication();
-        request->send(SPIFFS, "/index.html");
+        request->send(LittleFS, "/index.html");
         }
     });
 
@@ -418,7 +418,7 @@ void setup() {
     server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (authenticate && !request->authenticate(http_username, http_password))
         return request->requestAuthentication();
-      AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.html");
+      AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/index.html");
       response->addHeader("cache-control", "private, max-age=86400");
       request->send(response);
     });
@@ -426,24 +426,24 @@ void setup() {
     server->on("/index.js", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (authenticate && !request->authenticate(http_username, http_password))
         return request->requestAuthentication();
-      AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.js");
+      AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/index.js");
       response->addHeader("cache-control", "private, max-age=86400");
       request->send(response);
     });
 
     // CSS
-    server->serveStatic("/index.css", SPIFFS, "/index.css").setCacheControl("public, max-age=86400");
+    server->serveStatic("/index.css", LittleFS, "/index.css").setCacheControl("public, max-age=86400");
 
     // Favicons
-    server->serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/inter-700.woff2", SPIFFS, "/inter-700.woff2").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/site.webmanifest", SPIFFS, "/site.webmanifest").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/favicon.ico", SPIFFS, "/favicon.ico").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/favicon-16x16.png", SPIFFS, "/favicon-16x16.png").setCacheControl("public, max-age=31536000");
-    server->serveStatic("/favicon-32x32.png", SPIFFS, "/favicon-32x32.png").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/apple-touch-icon.png", SPIFFS, "/apple-touch-icon.png").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/android-chrome-192x192.png", SPIFFS, "/android-chrome-192x192.png").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/android-chrome-512x512.png", SPIFFS, "/android-chrome-512x512.png").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/inter-regular.woff2", LittleFS, "/inter-regular.woff2").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/inter-700.woff2", LittleFS, "/inter-700.woff2").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/site.webmanifest", LittleFS, "/site.webmanifest").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/favicon.ico", LittleFS, "/favicon.ico").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/favicon-16x16.png", LittleFS, "/favicon-16x16.png").setCacheControl("public, max-age=31536000");
+    server->serveStatic("/favicon-32x32.png", LittleFS, "/favicon-32x32.png").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/apple-touch-icon.png", LittleFS, "/apple-touch-icon.png").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/android-chrome-192x192.png", LittleFS, "/android-chrome-192x192.png").setCacheControl("public,max-age=31536000");
+    server->serveStatic("/android-chrome-512x512.png", LittleFS, "/android-chrome-512x512.png").setCacheControl("public,max-age=31536000");
 
     // Disconnect ESP from network
     server->on("/disconnect", HTTP_GET, [](AsyncWebServerRequest* request) {

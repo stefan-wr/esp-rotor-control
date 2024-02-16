@@ -4,7 +4,7 @@
 #include <ESPmDNS.h>
 #include <WiFi.h>
 #include <Preferences.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 
 #include <globals.h>
 #include <WiFiFunctions.h>
@@ -394,7 +394,7 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
   // --------
   server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
     alert = "";
-    request->send(SPIFFS, "/ap-index-esp.html", String(), false, processor);
+    request->send(LittleFS, "/ap-index-esp.html", String(), false, processor);
   });
 
   // Set WiFi credentials
@@ -422,7 +422,7 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
     // Could not receive/save credentials
     if (!success) {
       alert += "Fehler: Die Netzwerkauswahl konnte nicht übernommen werden!<br>";
-      request->send(SPIFFS, "/ap-index-esp.html", String(), false, processor);
+      request->send(LittleFS, "/ap-index-esp.html", String(), false, processor);
     }
   });
 
@@ -444,7 +444,7 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
     } else {
       alert += "Fehler: Die Serverkonfiguration konnte nicht übernommen werden!<br>";
     }
-    request->send(SPIFFS, "/ap-index-esp.html", String(), false, processor);
+    request->send(LittleFS, "/ap-index-esp.html", String(), false, processor);
   });
 
   // Reset server config
@@ -459,7 +459,7 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
       Serial.println("Received request to reset server config | Error: Could not reset server configuration.");
       alert += "Die Serverkonfiguration konnte nicht zurückgesetzt.<br>";
     }
-    request->send(SPIFFS, "/ap-index-esp.html", String(), false, processor);
+    request->send(LittleFS, "/ap-index-esp.html", String(), false, processor);
   });
 
   // Trigger a rescan for networks
@@ -477,9 +477,9 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
 
   // Static files (CSS, fonts)
   // -------------------------
-  server->serveStatic("/ap-styles.css", SPIFFS, "/ap-styles.css");
-  server->serveStatic("/inter-regular.woff2", SPIFFS, "/inter-regular.woff2");
-  server->serveStatic("/inter-700.woff2", SPIFFS, "/inter-700.woff2");
+  server->serveStatic("/ap-styles.css", LittleFS, "/ap-styles.css");
+  server->serveStatic("/inter-regular.woff2", LittleFS, "/inter-regular.woff2");
+  server->serveStatic("/inter-700.woff2", LittleFS, "/inter-700.woff2");
   server->on("/favicon.ico",[](AsyncWebServerRequest *request){request->send(404);});
 
   // Captive Portal responses

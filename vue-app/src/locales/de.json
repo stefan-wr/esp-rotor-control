@@ -164,7 +164,7 @@
         },
 
         "compass": {
-            "title": "Positionsanzeie",
+            "title": "Positionsanzeige",
             "dscr": "Aktiviere / Deaktiviere einzelne Elemente der Positionsanzeige.",
             "degrees": "Gradzahlen",
             "cardinals": "Himmelsrichtungen",

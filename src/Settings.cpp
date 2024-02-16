@@ -3,7 +3,7 @@
 #include <ArduinoJson.h>
 
 #include <Settings.h>
-#include <SimpleSPIFFS.h>
+#include <SimpleFS.h>
 
 
 extern AsyncWebSocket websocket;
@@ -14,7 +14,7 @@ extern bool has_screen;
 extern bool use_screen;
 
 namespace Settings {
-    // Path to save favorites at in SPIFFS
+    // Path to save favorites at in FS
     const char* favs_path = "/favorites.json";
 
 
@@ -30,14 +30,14 @@ namespace Settings {
         load();
     }
 
-    // Load favorites from SPIFFFs
+    // Load favorites from FS
     void Favorites::load() {
-        favs_buffer = readFromSPIFFS(favs_path);
+        favs_buffer = readFromFS(favs_path);
     }
 
-    // Save favorites to SPIFFs
+    // Save favorites to FS
     void Favorites::save() {
-        writeToSPIFFS(favs_path, favs_buffer);
+        writeToFS(favs_path, favs_buffer);
     }
 
     // Set, save and send favorites from message
