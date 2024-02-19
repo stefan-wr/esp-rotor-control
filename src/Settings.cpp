@@ -4,19 +4,14 @@
 
 #include <Settings.h>
 #include <SimpleFS.h>
-
+#include <globals.h>
+#include <WiFiFunctions.h>
 
 extern AsyncWebSocket websocket;
-extern String wifi_ssid;
-extern String esp_id;
-extern String version;
-extern bool has_screen;
-extern bool use_screen;
 
 namespace Settings {
     // Path to save favorites at in FS
     const char* favs_path = "/favorites.json";
-
 
     // ******************************
     // Define Favorites class members

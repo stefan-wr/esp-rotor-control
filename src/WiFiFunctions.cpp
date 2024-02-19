@@ -8,8 +8,11 @@
 
 #include <globals.h>
 #include <WiFiFunctions.h>
+#include <BlinkingLED.h>
 #include <Timer.h>
 #include <BlinkingLED.h>
+
+extern BlinkingLED wifi_led;
 
 
 // PREFS instances
@@ -83,7 +86,7 @@ bool saveCredentials() {
 
 // => Load WiFi credentials from PREFS
 void loadCredentials() {
-  if (!wifi_prefs.begin("wifiPrefs", true && verbose)) {
+  if (!wifi_prefs.begin("wifiPrefs", true) && verbose) {
     Serial.println("[WiFi] Could not load WiFi credentials!");
     return;
   }
@@ -141,6 +144,9 @@ bool initMDNS() {
       Serial.println("[WiFi] Error: Could not start mDNS");
       return false;
   }
+  Serial.print("[Server] Local URL: http://");
+  Serial.print(local_url);
+  Serial.println(".local");
   return true;
 }
 

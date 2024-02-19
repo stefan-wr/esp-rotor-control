@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <Preferences.h>
 #include <ArduinoJson.h>
 #include <math.h>
 
@@ -9,12 +8,11 @@
 #include <Timer.h>
 #include <ESPAsyncWebServer.h>
 
+// Get websocket object from main.cpp
+extern AsyncWebSocket websocket;
 
 namespace Rotor {
     const String directions[2] = {"CCW", "CW"};
-
-    // PREFS instances
-    Preferences cal_prefs;
 
     // *****************************
     // Define Rotation class members
@@ -37,7 +35,7 @@ namespace Rotor {
         // -> 0.125 mV per ADC value
         adc.setGain(GAIN_ONE);
         if (!adc.begin(0x48)) {
-            Serial.println("[ROTOR] Failed to initialize ADS1115!");
+            Serial.println("[Rotor] Failed to initialize ADS1115!");
             ads_failed = true;
         }
 
@@ -270,12 +268,12 @@ namespace Rotor {
             rotor.startRotation(direction);
             messenger.sendLastRotation(false);
             if (verbose) {
-                Serial.print("[ROTOR] Started rotation (");
+                Serial.print("[Rotor] Started rotation (");
                 Serial.print(directions[dir]);
                 Serial.println(").");
             }
         } else {
-            if (verbose) { Serial.println("[ROTOR] Can't start rotation, already rotating."); }
+            if (verbose) { Serial.println("[Rotor] Can't start rotation, already rotating."); }
         }
     }
 
@@ -286,9 +284,9 @@ namespace Rotor {
             is_rotating = false;
             is_auto_rotating = false;
             messenger.sendLastRotation(false);
-            if (verbose) { Serial.println("[ROTOR] Stopped rotation."); }
+            if (verbose) { Serial.println("[Rotor] Stopped rotation."); }
         } else {
-            if (verbose) { Serial.println("[ROTOR] Is already stationary."); }
+            if (verbose) { Serial.println("[Rotor] Is already stationary."); }
         }
     }
 
@@ -298,7 +296,7 @@ namespace Rotor {
         rotor.setSpeedDAC(speed);
         messenger.sendSpeed();
         if (verbose) { 
-            Serial.print("[ROTOR] Set speed (");
+            Serial.print("[Rotor] Set speed (");
             Serial.print(speed);
             Serial.println(" %)."); 
         }
@@ -310,7 +308,7 @@ namespace Rotor {
         rotor.calibrate(u1, u2, a1, a2);
         messenger.sendCalibration();
         if (verbose) {
-            Serial.print("[ROTOR] Set calibration: ");
+            Serial.print("[Rotor] Set calibration: ");
             Serial.print(u1, 4); Serial.print(" V | ");
             Serial.print(u2, 4); Serial.print(" V | ");
             Serial.print(a1, 2); Serial.print("° | ");
@@ -323,7 +321,7 @@ namespace Rotor {
         rotor.setAngleOffset(offset);
         messenger.sendCalibration();
         if (verbose) {
-            Serial.print("[ROTOR] Set angle offset: ");
+            Serial.print("[Rotor] Set angle offset: ");
             Serial.print(offset);
             Serial.println("°.");
         }
@@ -351,7 +349,7 @@ namespace Rotor {
         // Do nothing if distance to target is too small
         if (abs(distance) < auto_rot.min_distance) {
             if (verbose) {
-                Serial.print("[ROTOR] Auto-rotation request denied. Target too close to current position.");
+                Serial.print("[Rotor] Auto-rotation request denied. Target too close to current position.");
             }
             return;
         }
@@ -361,7 +359,7 @@ namespace Rotor {
 
         // Serial output
         if (verbose) {
-            Serial.print("[ROTOR] Auto-rotation request: Target: ");
+            Serial.print("[Rotor] Auto-rotation request: Target: ");
             Serial.print(target_angle, 1);
             Serial.print("° | Computed target: " );
             Serial.print(current_angle + distance);
@@ -387,7 +385,7 @@ namespace Rotor {
             (direction == 1 && rotor.last_angle >= auto_rotation_target - auto_rot.tolerance)) {
             stop();
             if (verbose) {
-                Serial.print("[ROTOR] Auto-rotation target (");
+                Serial.print("[Rotor] Auto-rotation target (");
                 Serial.print(auto_rotation_target);
                 Serial.print("°) reached with: ");
                 Serial.print(rotor.getAngle());
@@ -400,7 +398,7 @@ namespace Rotor {
             if (auto_rot.timer->n_passed >= 2) {
                 stop();
                 if (verbose) {
-                    Serial.println("[ROTOR] Auto-rotation aborted. Rotor stopped before reaching target.");
+                    Serial.println("[Rotor] Auto-rotation aborted. Rotor stopped before reaching target.");
                 }
             }
         }
@@ -428,3 +426,5 @@ namespace Rotor {
         }
     }
 }
+
+Rotor::RotorController rotor_ctrl;

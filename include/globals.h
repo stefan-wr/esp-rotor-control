@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include <math.h>
-#include <BlinkingLED.h>
 
 // Serial monitor baud rate
 const int serial_speed = 115200;
@@ -27,22 +26,22 @@ const int sta_default_port = 80;
 const String sta_default_user = "rotor";
 const String sta_default_pw = "password";
 
-// External state variables
+// Constants
+const float deg_to_rad_factor = M_PI / 180.0f;
+
+// *********
+// Externals
+// *********
 extern bool multi_btn_pressed;
 extern bool scan_now;
 extern bool in_station_mode;
 extern int  clients_connected;
+extern bool authenticate;
+extern const char* http_username;
+extern const char* http_password;
 extern bool has_screen;
 extern bool use_screen;
-
-// External ESP ID & software version
 extern String esp_id;
 extern const String version;
-
-// Constants
-const float deg_to_rad_factor = M_PI / 180.0f;
-
-// WiFi LED
-extern BlinkingLED wifi_led;
 
 #endif //GLOBALS_H

@@ -5,9 +5,8 @@
 #include <Adafruit_ADS1X15.h>
 #include <ESPAsyncWebServer.h>
 #include <Timer.h>
+#include <Preferences.h>
 
-// Get websocket object from main.cpp
-extern AsyncWebSocket websocket;
 
 namespace Rotor {
 
@@ -24,6 +23,7 @@ namespace Rotor {
         Adafruit_ADS1115 adc;
         const int adc_channel = 0;
         bool ads_failed = false;
+        Preferences cal_prefs;  // PREFS for calibration parameters
 
         // => Calculate gradient and offset from calibration factors
         void applyCalibration();
@@ -190,5 +190,7 @@ namespace Rotor {
         void update(bool with_angular_speed = false);
     };
 }
+
+extern Rotor::RotorController rotor_ctrl;
 
 #endif //ROTORCONTROLLER_H

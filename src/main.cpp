@@ -11,12 +11,13 @@
 #include <globals.h>
 #include <SimpleFS.h>
 #include <WiFiFunctions.h>
-#include <RotorController.h>
+#include <RotorController.h>  // Exposes Global: rotor_ctrl
 #include <Settings.h>
 #include <Timer.h>
-#include <Screen.h>
-#include <Firmware.h>
+#include <Screen.h>           // Exposes Global: screen
+#include <Firmware.h>         // Exposes Global: firmware
 #include <BlinkingLED.h>
+#include <Stats.h>
 
 #define HAS_SCREEN true
 #define COUNT_LOOP_CYCLE_TIME false
@@ -28,7 +29,6 @@ const String version = "0.9.1";
 String esp_id = "";
 
 // Create instances
-Rotor::RotorController rotor_ctrl;
 Settings::Favorites favorites;
 BlinkingLED wifi_led(wifi_led_pin, LOW, 250);
 
@@ -330,12 +330,18 @@ void setup() {
   Serial.print(version);
   Serial.println("  ##########");
 
+  // Boot cycle counter
+  Stats::Counter boot_counter = Stats::Counter("boot");
+  boot_counter.add(1);
+  Serial.print("[Stats] Boot #: ");
+  boot_counter.printlnToSerial();
+
   // Initialise screen
   if (has_screen) {
     use_screen = screen.init();
     if (!use_screen) {
       has_screen = false;
-      Serial.println("[SCREEN] Failed to initialise the screen.");
+      Serial.println("[Screen] Failed to initialise the screen.");
     }
   }
 
@@ -354,7 +360,7 @@ void setup() {
 
   // Initialise FS
   if (!mountFS()) {
-    fatalError("Failed to mount filesystem! ESP may require reflashing.");
+    fatalError("[!!!] Failed to mount filesystem! ESP may require reflashing.");
     return;
   }
 
@@ -369,7 +375,7 @@ void setup() {
     // WiFi connection failed -> launch ESP in AccessPoint WiFi mode
     wifi_led.invert();
     if (!startAPServer(server, dns_server)) {
-      fatalError("Failed to start WiFi in AP mode! Try resetting WiFi with button, or reflash firmware.");
+      fatalError("[!!!] Failed to start WiFi in AP mode! Try resetting WiFi with button, or reflash firmware.");
     }
   } else {
     // WiFi connection established
@@ -392,8 +398,8 @@ void setup() {
     // Redeclare server to set port
     server = new AsyncWebServer(sta_port);
 
-    // Add headers for CORS preflight request when uploading firmware from VUE dev environment
     /*
+    // Add headers for CORS preflight request when uploading firmware from VUE dev environment
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "http://localhost:5173");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "Content-Type, Token");
@@ -522,10 +528,10 @@ struct {                                      // Intervals
   Timer *updateChecker = new Timer(50);       // 50 ms, 20 Hz
 } timers;
 
-bool reconnecting = false;            // Is WiFi trying to reconnect
-float adc_volts_prev = -1;            // Previous loop ADC-Volts
-bool is_rotating_prev = false;        // Was rotor rotating in previous loop cycle
-int clients_connected_prev;           // N of clients connected in previous loop cycle
+bool reconnecting = false;      // Is WiFi trying to reconnect
+float adc_volts_prev = -1;      // Previous loop ADC-Volts
+bool is_rotating_prev = false;  // Was rotor rotating in previous loop cycle
+int clients_connected_prev;     // N of clients connected in previous loop cycle
 bool is_updating_prev = false;  // Was firmware updating in previous loop cycle
 
 unsigned long loopCounter = 0;
@@ -607,7 +613,7 @@ void loop() {
     rotor_ctrl.stop();
     Serial.println("[Websocket] ALL clients disconnected.");
     if (has_screen) {
-      screen.setAlert("Alle Verbind. getr.");
+      screen.setAlert("All clients disc.");
     }
     clients_connected_prev = 0;
   } else {
@@ -659,12 +665,12 @@ void loop() {
   // ******** Housekeeping ********
   // ******************************
 
-  // Update screen
+  // Update the screen
   if (has_screen && timers.updateScreen->passed()) {
     screen.update();
   }
 
-  // Blinking LED ticks 
+  // Blinking-LED tick
   wifi_led.tick();
 
 
@@ -681,7 +687,7 @@ void loop() {
 
 
 
-  // ********** Updating **********
+  // ***** Updating  Firmware *****
   // ******************************
 
   if (in_station_mode && timers.updateChecker->passed()) {

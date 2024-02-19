@@ -6,12 +6,10 @@
 
 #include <globals.h>
 #include <Screen.h>
-#include <RotorController.h>
+#include <RotorController.h>    // Exposes Global: rotor_ctrl
 #include <WiFiFunctions.h>
 #include <Timer.h>
 #include <Firmware.h>
-
-extern Rotor::RotorController rotor_ctrl;
 
 namespace Screen {
 
@@ -19,7 +17,7 @@ namespace Screen {
     bool Screen::init() {
         screen = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
         if (!screen->begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-            Serial.println("[SCREEN] Failed to allocate RAM for the screen.");
+            Serial.println("[Screen] Failed to allocate RAM for the screen.");
             disabled = true;
             return false;
         }
@@ -180,14 +178,14 @@ namespace Screen {
     // -------------------------
     void Screen::showAPModeScreen() {
         screen->setCursor(0, 0);
-        screen->print("WiFi nicht verbunden.");
+        screen->print("WiFi not connected.");
         screen->drawFastHLine(0, 11, 128, WHITE);
         screen->setCursor(0, 15);
         screen->println("URL:");
         moveCursor(0, 3);
         screen->println(get_ip_url());
         moveCursor(0, 3);
-        screen->println("oder");
+        screen->println("or");
         moveCursor(0, 4);
         screen->print("http://");
         screen->print(local_url);

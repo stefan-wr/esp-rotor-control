@@ -4,11 +4,10 @@
 
 #include <Firmware.h>
 #include <globals.h>
+#include <BlinkingLED.h>
 #include <Timer.h>
 
-extern const char* http_username;
-extern const char* http_password;
-extern bool authenticate;
+extern BlinkingLED wifi_led;
 
 
 // => Init firmware
