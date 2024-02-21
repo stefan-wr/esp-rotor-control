@@ -79,10 +79,11 @@ export const useRotorStore = defineStore('rotor', () => {
     }
 
     // Get auto-rotation request JSON message
-    function getTargetMessage(angle, useOverlap) {
+    function getTargetMessage(angle, useOverlap, useSmoothSpeed) {
         return JSON.stringify({
             target: angle,
-            useOverlap: useOverlap
+            useOverlap: useOverlap,
+            useSmoothSpeed: useSmoothSpeed
         });
     }
 

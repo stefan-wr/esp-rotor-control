@@ -180,6 +180,11 @@
             "dscr": "Erlaube dem Rotor den Overlap-Bereich zwischen 360° und 450° für die automatische Rotation zu benutzen."
         },
 
+        "smoothSpeed": {
+            "title": "Sanftes Anfahren",
+            "dscr": "Wenn aktiviert, fährt der Rotor langsam an und beschleunigt sanft auf die eingestellte Geschwindigkeit."
+        },
+
         "screen": {
             "title": "Bildschirm",
             "dscr": "Aktiviere / Deaktiviere die Mini-Anzeige am Gerät."

@@ -17,6 +17,7 @@
       <h2 class="medium">{{ $t('settings.functions') }}</h2>
       <KeyboardShortcuts></KeyboardShortcuts>
       <UseOverlap></UseOverlap>
+      <UseSmoothSpeed></UseSmoothSpeed>
       <UseScreen v-if="settingsStore.settings.hasScreen"></UseScreen>
       <ResetLock></ResetLock>
       <h2 class="medium">{{ $t('settings.calibration') }}</h2>
@@ -32,6 +33,7 @@
 <script setup>
 import KeyboardShortcuts from '@/components/settings/KeyboardShortcuts.vue';
 import UseOverlap from '@/components/settings/UseOverlap.vue';
+import UseSmoothSpeed from '@/components/settings/UseSmoothSpeed.vue';
 import UseScreen from '@/components/settings/UseScreen.vue';
 import Disconnect from '@/components/settings/Disconnect.vue';
 import Reboot from '@/components/settings/Reboot.vue';

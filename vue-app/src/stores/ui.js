@@ -33,6 +33,7 @@ export const useUIStore = defineStore('ui', () => {
         requestAngle: 0,
         targetAngle: 0,
         useOverlap: useStorage('use-overlap', true),
+        useSmoothSpeed: useStorage('use-smooth-speed', true),
         isMouseInCompass: false
     });
 

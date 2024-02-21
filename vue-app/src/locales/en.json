@@ -161,6 +161,10 @@
     "overlap": {
       "dscr": "Allow the rotor to use the overlap area between 360° and 450° for automatic rotation."
     },
+    "smoothSpeed": {
+      "title": "Smooth Acceleration",
+      "dscr": "When activated, the rotor starts rotating slowly and accelerates smoothly to the set speed."
+    },
     "lock": {
       "dscr": "Reset the lock status and release the rotor for all users.",
       "btnDscr": "Resets the rotor lock.",

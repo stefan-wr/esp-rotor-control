@@ -213,7 +213,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
     }
 
     function sendTarget(angle) {
-        sendMsg(identifiers.rotor, rotorStore.getTargetMessage(angle, uiStore.ui.useOverlap));
+        sendMsg(identifiers.rotor, rotorStore.getTargetMessage(angle, uiStore.ui.useOverlap, uiStore.ui.useSmoothSpeed));
     }
 
     function sendCalibration(a1, u1, a2, u2) {
@@ -236,6 +236,10 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         sendMsg(identifiers.settings, settingsStore.getScreenMsg);
     }
 
+    function sendRotorSettings() {
+        sendMsg(identifiers.settings, settingsStore.getRotorSettingsMsg);
+    }
+
     // *************
     return {
         hasLostConnection,
@@ -246,6 +250,7 @@ export const useUmbrellaStore = defineStore('umbrella', () => {
         sendFavorites,
         resetFavorites,
         sendLock,
-        sendScreen
+        sendScreen,
+        sendRotorSettings
     };
 });

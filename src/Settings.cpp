@@ -3,57 +3,15 @@
 #include <ArduinoJson.h>
 
 #include <Settings.h>
-#include <SimpleFS.h>
 #include <globals.h>
 #include <WiFiFunctions.h>
 
-extern AsyncWebSocket websocket;
+extern AsyncWebSocket websocket;    // Websocket instance from main.cpp
 
 namespace Settings {
-    // Path to save favorites at in FS
-    const char* favs_path = "/favorites.json";
-
-    // ******************************
-    // Define Favorites class members
-    // ******************************
-    Favorites::Favorites() {
-        favs_buffer.reserve(600);
-    }
-
-    // Init buffer
-    void Favorites::init() {
-        load();
-    }
-
-    // Load favorites from FS
-    void Favorites::load() {
-        favs_buffer = readFromFS(favs_path);
-    }
-
-    // Save favorites to FS
-    void Favorites::save() {
-        writeToFS(favs_path, favs_buffer);
-    }
-
-    // Set, save and send favorites from message
-    void Favorites::set(char* msg) {
-        favs_buffer = (String) msg;
-        save();
-        send();
-    }
-
-    // Send favorites to clients
-    void Favorites::send() {
-        websocket.textAll(favs_buffer);
-    }
-
-
-    // **************
-    // Other Settings
-    // **************
     String settings_buffer;
 
-    // Send settings
+    // => Send general settings to clients
     void sendSettings() {
         settings_buffer.reserve(200);
         settings_buffer = "SETTINGS|";
@@ -70,7 +28,7 @@ namespace Settings {
         websocket.textAll(settings_buffer);
     }
 
-    // Send screen
+    // => Send screen setting to clients
     void sendScreen() {
         settings_buffer.reserve(30);
         settings_buffer = "SETTINGS|";

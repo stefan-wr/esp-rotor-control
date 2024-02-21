@@ -244,10 +244,10 @@ namespace Screen {
         // Speed
         ly += 1 + gap;
         screen->setCursor(0, ly);
-        if (rotor_ctrl.speed) {
-            screen->printf("S %3d%%", rotor_ctrl.speed);
+        if (rotor_ctrl.max_speed) {
+            screen->printf("S %3d%%", rotor_ctrl.max_speed);
         } else {
-            screen->printf("S %3d%%", rotor_ctrl.speed + 1);
+            screen->printf("S %3d%%", rotor_ctrl.max_speed + 1);
         }
 
         // Angular speed label

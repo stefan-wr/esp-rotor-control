@@ -13,6 +13,7 @@
 #include <WiFiFunctions.h>
 #include <RotorController.h>  // Exposes Global: rotor_ctrl
 #include <Settings.h>
+#include <Favorites.h>
 #include <Timer.h>
 #include <Screen.h>           // Exposes Global: screen
 #include <Firmware.h>         // Exposes Global: firmware
@@ -23,13 +24,13 @@
 #define COUNT_LOOP_CYCLE_TIME false
 
 // Software version
-const String version = "0.9.1";
+const String version = "0.9.2";
 
 // ESP ID
 String esp_id = "";
 
 // Create instances
-Settings::Favorites favorites;
+Favorites favorites;
 BlinkingLED wifi_led(wifi_led_pin, LOW, 250);
 
 // State variables
@@ -43,7 +44,7 @@ bool has_screen = HAS_SCREEN;       // Device has an SSD1306 screen
 bool use_screen = HAS_SCREEN;       // Use the SSD1306 screen
 uint8_t authentications = 0;        // Number of authentications in /authenticate URL
 
-// Buffer storing lock message, default message resets lock on ESP restart
+// Buffer storing lock message. This default message resets lock on ESP restart
 String lock_msg = "LOCK|{\"isLocked\":false,\"by\":\"\"}";
 
 // Create AsyncWebServer object
@@ -78,16 +79,18 @@ void initMultiButton() {
 
 // => Show a fatal error message and restart ESP
 // *********************************************
-void fatalError(String err) {
+void fatalError(String err, bool restart = true) {
   Serial.print("[FATAL ERROR] ");
   Serial.println(err);
   if (has_screen) {
     screen.setAlertImmediatly("ERROR:\n" + err);
   }
-  delay(2000);
-  Serial.println("[ESP] Restart in 10 seconds.");
-  delay(10000);
-  ESP.restart();
+  if (restart) {
+    delay(2000);
+    Serial.println("[ESP] Restart in 10 seconds.");
+    delay(10000);
+    ESP.restart();
+  }
 }
 
 
@@ -147,22 +150,24 @@ void socketReceive(char* msg, const size_t &len) {
     val = doc["speed"];
     if (!val.isNull()) {
       if (val < 0) {
-        rotor_ctrl.setSpeed(0);
+        rotor_ctrl.setMaxSpeed(0);
       } else if (val > 100) {
-        rotor_ctrl.setSpeed(100);
+        rotor_ctrl.setMaxSpeed(100);
       } else {
-        rotor_ctrl.setSpeed(val.as<const int>());
+        rotor_ctrl.setMaxSpeed(val.as<const int>());
       }
     }
 
     // Auto-rotation request
     val = doc["target"];
     if (!val.isNull()) {
-      JsonVariant val2 = doc["useOverlap"];
-      if (!val2.isNull()) {
-        rotor_ctrl.rotateTo(val.as<const float>(), val2.as<const bool>());
-      } else {
-        rotor_ctrl.rotateTo(val.as<const float>(), true);
+      JsonVariant use_overlap = doc["useOverlap"];
+      JsonVariant use_smooth_speed = doc["useSmoothSpeed"];
+
+      if (!use_overlap.isNull() && !use_smooth_speed.isNull()) {
+        rotor_ctrl.rotateTo(val.as<const float>(),
+                            use_overlap.as<const bool>(),
+                            use_smooth_speed.as<const bool>());
       }
     }
   }
@@ -226,7 +231,7 @@ void socketReceive(char* msg, const size_t &len) {
         use_screen = true;
         screen.enable();
       }
-      // Distribute received screen status to clients
+      // Distribute to clients
       Settings::sendScreen();
     }
   }
@@ -336,15 +341,6 @@ void setup() {
   Serial.print("[Stats] Boot #: ");
   boot_counter.printlnToSerial();
 
-  // Initialise screen
-  if (has_screen) {
-    use_screen = screen.init();
-    if (!use_screen) {
-      has_screen = false;
-      Serial.println("[Screen] Failed to initialise the screen.");
-    }
-  }
-
   // ESP ID derived from MAC address
   esp_id = WiFi.macAddress();
   esp_id.replace(":", "");
@@ -358,16 +354,34 @@ void setup() {
     Serial.println(" MHz");
   }
 
-  // Initialise FS
+  // Initialisations
+  // ---------------
+
+  // Initialise screen
+  if (has_screen) {
+    use_screen = screen.init();
+    if (!use_screen) {
+      has_screen = false;
+      Serial.println("[Screen] Failed to initialise the screen.");
+    }
+  }
+
+  // Initialise multi purpose button
+  initMultiButton();          
+
+  // Initialise rotor controller instance
+  if(!rotor_ctrl.init()) {    
+    fatalError("Failed to properly initialise rotor controller instance.", false);
+  }
+
+  // Initialise filesystem
   if (!mountFS()) {
-    fatalError("[!!!] Failed to mount filesystem! ESP may require reflashing.");
+    fatalError("Failed to mount filesystem! ESP may require reflashing.");
     return;
   }
 
-  // Initialise I/O and classes
-  initMultiButton();                // Initialise multi purpose button
-  rotor_ctrl.init();                // Initialise rotor
-  favorites.init();                 // Initialise favorites
+  // Initialise favorites
+  favorites.init();                 
 
   // Start WiFi connection
   // ---------------------
@@ -375,7 +389,7 @@ void setup() {
     // WiFi connection failed -> launch ESP in AccessPoint WiFi mode
     wifi_led.invert();
     if (!startAPServer(server, dns_server)) {
-      fatalError("[!!!] Failed to start WiFi in AP mode! Try resetting WiFi with button, or reflash firmware.");
+      fatalError("Failed to start WiFi in AP mode! Try resetting WiFi with button, or reflash firmware.");
     }
   } else {
     // WiFi connection established

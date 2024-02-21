@@ -31,8 +31,7 @@ namespace Rotor {
         // => Save calibration factors to PREFS
         void saveCalibration();
 
-        // =>Load calibration factors from PREFS and apply.
-        // Create storage if it doesnt already exist.
+        // => Load calibration factors from PREFS and apply
         void loadCalibration();
 
     public:
@@ -43,7 +42,7 @@ namespace Rotor {
         float last_angle = 0.0;
         float last_angle_rad = 0.0;
         
-        // Calibration factors
+        // Calibration parameters
         struct {
             float u1, u2, a1, a2;
             float d_grad, u_0;
@@ -51,11 +50,11 @@ namespace Rotor {
             float offset;
         } calibration;
 
-        // Construcutor
+        // Default construcutor
         Rotation() {};
 
         // => Initialistion, call from setup()
-        void init();
+        bool init();
 
         // => Set calibration factors and apply and save
         void calibrate(const float &u1, const float &u2,
@@ -63,9 +62,6 @@ namespace Rotor {
 
         // => Set constant angle-offset and save calibration
         void setAngleOffset(const float &offset);
-
-        // => Read ADC and update rotor position values (ADC value -> ADC volts -> angle)
-        void update();
 
         // => Get current raw ADC value
         int getADCValue();
@@ -84,6 +80,9 @@ namespace Rotor {
 
         // => Set DAC voltage on speed pin
         void setSpeedDAC(const int &speed);
+
+        // => Read ADC and update last rotor position values
+        void update();        
     };
 
 
@@ -103,19 +102,19 @@ namespace Rotor {
         // Constructor
         Messenger();
 
-        // => Send last rotation values over web socket
+        // => Send last rotation valueset
         void sendLastRotation(const bool &with_angle);
 
-        // => Send new rotation values over web socket, always with angle
+        // => Send new rotation values from ADC, always includes angle
         void sendNewRotation();
 
-        // => Send speed of rotation over web socket
+        // => Send max speed
         void sendSpeed();
 
-        // => Send current calibration parameters over web socket
+        // => Send current calibration parameters
         void sendCalibration();
 
-        // => Send auto rotation target over web socket
+        // => Send auto rotation target
         void sendTarget();
     };
     
@@ -129,7 +128,7 @@ namespace Rotor {
         struct {
             const int max_angle = 449;
             const int min_distance = 2;
-            const float tolerance = 0.7;
+            const float tolerance = 0.7f;
             const unsigned long timeout = 4000;
             Timer* timer;
         } auto_rot;
@@ -137,21 +136,45 @@ namespace Rotor {
         // Variables from previous rotor update
         struct {
             unsigned long last_ms = 0;
-            float last_angle = 0;
-            float angular_speed = 0;
+            float last_angle = 0.0f;
+            float angular_speed = 0.0f;
             unsigned long interval = 200;
             Timer* timer;
         } previous;
+
+        // Speed ramp variables
+        struct {
+            const float gradient = 1.0f;
+            const float min_distance = 20.0f;
+            float ramp_distance = 10.0f;
+            float start_angle = 0.0f;
+            float speed_distance_factor = 1.0f; 
+        } speed_ramp;
+
+        // => Get current speed when ramping up / down speed during auto-rotation
+        int getSmoothSpeed();
+
+        // => Set current rotor speed (DAC), doesn't distribute to clients
+        void setCurrentSpeed(const int spd);
+
 
     public:
         // Rotor state
         bool is_rotating = false;
         bool is_auto_rotating = false;
-        float auto_rotation_target;
-        float auto_rotation_target_rad;
-        int direction = 0;          // 0: CCW, 1: CW
-        int speed = 0;              // 0% to 100%
-        float angular_speed = 0;    // in °/s
+        float auto_rotation_target;         // Target angle in degrees
+        float auto_rotation_target_rad;     // Target angle in radians
+        bool smooth_speed_active = false;
+        int direction = 0;                  // 0: CCW, 1: CW
+        int max_speed = 0;                  // 0% to 100%
+        int current_speed = 0;              // 0% to max_speed
+        float angular_speed = 0.0f;         // in °/s
+
+        // Settings
+        struct {
+            bool use_overlap = true;
+            bool use_smooth_speed = true;
+        } settings;
 
         // Messenger and rotor instances
         Messenger messenger;
@@ -159,8 +182,8 @@ namespace Rotor {
 
         RotorController() {};
 
-        // => Initialisation, called from setup()
-        void init();
+        // => Initialisation, to be called from setup()
+        bool init();
 
         // => Start rotating in given direction, distribute new state to clients
         void startRotation(const int dir);
@@ -168,18 +191,21 @@ namespace Rotor {
         // => Stop rotor, distribute new state to clients
         void stop();
 
-        // => Set rotor speed, distribute new state to clients
-        void setSpeed(const int spd);
+        // => Set max rotor speed, distribute new state to clients.
+        // Is applied to DAC only if speed is not ramping up / down.
+        void setMaxSpeed(const int spd);
 
-        // => Set calibration, distribute new state to clients
+        // => Set calibration parameters, distribute new state to clients
         void setCalibration(const float u1, const float u2,
                             const float a1, const float a2);
 
         // => Set angle-offset, distribute new state to clients
         void setAngleOffset(const int offset);
 
-        // => Auto-rotate to to given angle, if use-overlap is true choose shortest path to angle
-        void rotateTo(const float angle, const bool use_overlap);
+        // => Auto-rotate to to given angle.
+        // If use_overlap is true -> choose shortest path to angle, include overlap region.
+        // If use_smooth_speed is true -> ramp up/down speed when starting/stopping auto-rotating
+        void rotateTo(const float angle, const bool use_overlap = true, const bool use_smooth_speed = false);
 
         // => Stop auto rotation if target has been reached.
         // To be called continously from main loop during auto rotation.

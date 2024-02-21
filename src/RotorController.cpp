@@ -8,8 +8,8 @@
 #include <Timer.h>
 #include <ESPAsyncWebServer.h>
 
-// Get websocket object from main.cpp
-extern AsyncWebSocket websocket;
+
+extern AsyncWebSocket websocket;    // Websocket instance from main.cpp
 
 namespace Rotor {
     const String directions[2] = {"CCW", "CW"};
@@ -18,13 +18,12 @@ namespace Rotor {
     // Define Rotation class members
     // *****************************
 
-    // => Initialisation, called from setup()
-    void Rotation::init() {
+    // => Initialisation
+    bool Rotation::init() {
         // Init rotation pins
         pinMode(rot_pins[0], OUTPUT);
         pinMode(rot_pins[1], OUTPUT);
-        digitalWrite(rot_pins[0], HIGH);
-        digitalWrite(rot_pins[1], HIGH);
+        stopRotor();
 
         // Init speed pin
         dacWrite(speed_pin, 0);
@@ -35,12 +34,14 @@ namespace Rotor {
         // -> 0.125 mV per ADC value
         adc.setGain(GAIN_ONE);
         if (!adc.begin(0x48)) {
-            Serial.println("[Rotor] Failed to initialize ADS1115!");
+            Serial.println("[Rotor] Failed to initialise ADS1115!");
             ads_failed = true;
         }
 
-        // Init calibration factors
+        // Load calibration factors
         loadCalibration();
+
+        return !ads_failed;
     }
 
     // => Set calibration factors and apply and save
@@ -56,7 +57,6 @@ namespace Rotor {
 
     // => Calculate gradient and offset from calibration factors
     void Rotation::applyCalibration() {
-        // Gradient, Y-Offset u_0
         calibration.d_grad = (calibration.a2 - calibration.a1) / (calibration.u2 - calibration.u1);
         calibration.u_0 = calibration.a1 - ((calibration.a2 - calibration.a1) / (calibration.u2 - calibration.u1) * calibration.u1);
     }
@@ -73,7 +73,7 @@ namespace Rotor {
         cal_prefs.end();
     }
 
-    // => Load calibration factors from PREFS and apply, create storage if it doesnt already exist.
+    // => Load calibration factors from PREFS and apply, create storage if it doesn't already exist.
     void Rotation::loadCalibration() {
         bool prefs_exists = cal_prefs.begin("calPrefs", true);
         calibration.u1 = cal_prefs.getFloat("u1", 0.317f);
@@ -126,13 +126,13 @@ namespace Rotor {
         return last_adc_volts;
     }
 
-    // => Get current rotor's azimuth angle
+    // => Get rotor's current azimuth angle
     float Rotation::getAngle() {
         update();
         return last_angle;
     }
 
-    // => Read ADC and update rotor position values (ADC value -> ADC volts -> angle)
+    // => Read ADC and update last rotor position values
     void Rotation::update() {
         if (!ads_failed) {
             // Read ADC and compute volts
@@ -140,7 +140,7 @@ namespace Rotor {
             last_ms = millis();
             last_adc_volts = adc.computeVolts(last_adc_value);
 
-            // Calculate angle with calibration
+            // Calculate angle using calibration
             last_angle = calibration.d_grad * last_adc_volts * calibration.volt_div_factor
                        + calibration.u_0 + calibration.offset;
             last_angle_rad = last_angle * deg_to_rad_factor;
@@ -155,6 +155,7 @@ namespace Rotor {
     // ************************
     // Define Messenger members
     // ************************
+
     Messenger::Messenger() {
         // Set message buffer size on the heap
         msg_buffer.reserve(100);
@@ -176,12 +177,12 @@ namespace Rotor {
                 doc["rotation"] = -1;
             }
 
-            // Target | only included in msg if angle is not included and rotor is on auto-rotation
+            // Target | only included in msg if angle is not included and rotor is on auto-rotating
             if (!with_angle && rotor_ptr->is_auto_rotating) {
                 doc["target"] = round(rotor_ptr->auto_rotation_target * 100.0) / 100.0;
             }
 
-            // Angle | only included in msg if needed (specified with argument)
+            // Angle | only included in msg if specified
             if (with_angle) {
                 doc["adc_v"] = round(rotor_ptr->rotor.last_adc_volts
                                      * rotor_ptr->rotor.calibration.volt_div_factor
@@ -194,31 +195,31 @@ namespace Rotor {
         }
     }
 
-    // => Send last rotation values over web socket
+    // => Send last rotation values
     void Messenger::sendLastRotation(const bool &with_angle) {
         setLastRotationMsg(with_angle);
         websocket.textAll(msg_buffer);
     }
 
-    // => Send new rotation values over web socket, always with angle
+    // => Send new rotation values from ADC, always includes angle
     void Messenger::sendNewRotation() {
         rotor_ptr->rotor.update();
         sendLastRotation(true);
     }
 
-    // => Send speed of rotation over web socket
+    // => Send max speed
     void Messenger::sendSpeed() {
         msg_buffer = "ROTOR|";
-        StaticJsonDocument<20> doc;
-        doc["speed"] = rotor_ptr->speed;
+        StaticJsonDocument<16> doc;
+        doc["speed"] = rotor_ptr->max_speed;
         serializeJson(doc, msg_buffer);
         websocket.textAll(msg_buffer);
     }
 
-    // => Send current calibration parameters over web socket
+    // => Send current calibration parameters
     void Messenger::sendCalibration() {
         msg_buffer = "CALIBRATION|";
-        StaticJsonDocument<100> doc;
+        StaticJsonDocument<96> doc;
         doc["a1"] = round(rotor_ptr->rotor.calibration.a1 * 10000.0) / 10000.0;
         doc["u1"] = round(rotor_ptr->rotor.calibration.u1 * 10000.0) / 10000.0;
         doc["a2"] = round(rotor_ptr->rotor.calibration.a2 * 10000.0) / 10000.0;
@@ -228,15 +229,15 @@ namespace Rotor {
         websocket.textAll(msg_buffer);
     }
 
-    // => Send auto rotation target over web socket
+    // => Send auto rotation target
     void Messenger::sendTarget() {
         msg_buffer = "ROTOR|";
-        StaticJsonDocument<40> doc;
+        StaticJsonDocument<32> doc;
         doc["target"] = round(rotor_ptr->auto_rotation_target * 100.0) / 100.0;
         serializeJson(doc, msg_buffer);
         websocket.textAll(msg_buffer);
-    }
-    
+    }    
+
 
 
 
@@ -247,18 +248,23 @@ namespace Rotor {
     // ******************************
 
     // => Initialisation, called from setup()
-    void RotorController::init() {
-        // Init Rotor instance
-        rotor.init();
+    bool RotorController::init() {
+        bool rotorInitSuccess = rotor.init();
         rotor.update();
+
+        // Init variables for calculating angular speed
         previous.last_angle = rotor.last_angle;
         previous.last_ms = rotor.last_ms;
         auto_rot.timer = new Timer(auto_rot.timeout);
         previous.timer = new Timer(previous.interval);
 
-        // Messenger instance gets ptr to this Controller instance
-        messenger.rotor_ptr = this;
+        messenger.rotor_ptr = this;     // Messenger gets pointer to this instance
+        return rotorInitSuccess;
     }
+
+    // --------
+    // Commands
+    // --------
 
     // => Start rotating in given direction, distribute new state to clients
     void RotorController::startRotation(const int dir) {
@@ -283,6 +289,13 @@ namespace Rotor {
         if (is_rotating) {
             is_rotating = false;
             is_auto_rotating = false;
+
+            // If active, disable speed ramp and reset speed DAC
+            if (smooth_speed_active) {
+                smooth_speed_active = false;
+                setCurrentSpeed(max_speed);
+            }
+
             messenger.sendLastRotation(false);
             if (verbose) { Serial.println("[Rotor] Stopped rotation."); }
         } else {
@@ -290,16 +303,27 @@ namespace Rotor {
         }
     }
 
-    // => Set rotor speed, distribute new state to clients
-    void RotorController::setSpeed(const int spd) {
-        speed = spd;
-        rotor.setSpeedDAC(speed);
+    // => Set max rotor speed, distribute new state to clients
+    void RotorController::setMaxSpeed(const int spd) {
+        max_speed = spd;
         messenger.sendSpeed();
+
+        // Only set DAC if smooth speed is currently not active
+        if (!smooth_speed_active) {
+            rotor.setSpeedDAC(max_speed);
+        }
+
         if (verbose) { 
-            Serial.print("[Rotor] Set speed (");
-            Serial.print(speed);
+            Serial.print("[Rotor] Set max speed (");
+            Serial.print(max_speed);
             Serial.println(" %)."); 
         }
+    }
+
+    // => Set current rotor speed, do not distribute
+    void RotorController::setCurrentSpeed(const int spd) {
+        current_speed = spd;
+        rotor.setSpeedDAC(current_speed);
     }
 
     // => Set calibration, distribute new state to clients
@@ -327,8 +351,13 @@ namespace Rotor {
         }
     }
 
-    // => Auto-rotate to to given angle, if use-overlap is true choose shortest path to angle
-    void RotorController::rotateTo(const float target_angle, const bool use_overlap) {
+    // => Auto-rotate to to given angle.
+    // If use_overlap is true -> choose shortest path to angle, include overlap region.
+    // If use_smooth_speed is true -> ramp up/down speed when starting/stopping auto-rotating
+    // **************************************************************************************
+    void RotorController::rotateTo(const float target_angle,
+                                   const bool use_overlap,
+                                   const bool use_smooth_speed) {
         // Stop previous rotation
         stop();
 
@@ -340,22 +369,43 @@ namespace Rotor {
         // Target angle is in overlap region (from 0° to overlapBorder)
         // -> this means it's possible to reach it with +360°, too.
         if (use_overlap && target_angle <= overlap_border) {
-            // If distance is less than -180° -> flip it.
+            // If distance is less than -180° (absolut distance > 180) -> flip it.
             if (distance < -180.0f) {
                 distance += 360.0f;
             }
         }
 
+        // Absolute distance
+        float abs_distance = abs(distance);
+
         // Do nothing if distance to target is too small
-        if (abs(distance) < auto_rot.min_distance) {
+        if (abs_distance < auto_rot.min_distance) {
             if (verbose) {
                 Serial.print("[Rotor] Auto-rotation request denied. Target too close to current position.");
             }
             return;
         }
     	
-        // Direction
+        // Choose rotation direction
         int target_dir = (distance > 0) ? +1 : 0;
+
+        // Set up speed ramp if enabled
+        if (use_smooth_speed) {
+            smooth_speed_active = true;
+            speed_ramp.start_angle = current_angle;
+
+            if (abs_distance < speed_ramp.min_distance) {
+                // Scale down max speed for shorter distances using a sin-function
+                speed_ramp.speed_distance_factor = sin(abs_distance / speed_ramp.min_distance * M_PI_2);
+                speed_ramp.ramp_distance = abs_distance / 2.0f;
+            } else {
+                // Use max speed
+                speed_ramp.speed_distance_factor = 1.0f;
+                speed_ramp.ramp_distance = speed_ramp.min_distance / 2.0f;
+            }
+        } else {
+            smooth_speed_active = false;
+        }
 
         // Serial output
         if (verbose) {
@@ -364,12 +414,21 @@ namespace Rotor {
             Serial.print("° | Computed target: " );
             Serial.print(current_angle + distance);
             Serial.print("° | Direction: ");
-            Serial.println(directions[target_dir]);
+            Serial.print(directions[target_dir]);
+            Serial.print(" | Use OL: ");
+            Serial.print(use_overlap);
+            Serial.print(" | Smooth speed: ");
+            Serial.print(use_smooth_speed);
+            if (use_smooth_speed) {
+                Serial.print(" | Max speed: ");
+                Serial.print(speed_ramp.speed_distance_factor);
+            }
+            Serial.println();
         }
 
         // Start auto rotation
         auto_rotation_target = current_angle + distance;
-        auto_rotation_target_rad = auto_rotation_target * M_PI / 180.0f;
+        auto_rotation_target_rad = auto_rotation_target * deg_to_rad_factor;
         auto_rot.timer->reset();
         auto_rot.timer->start();
         is_auto_rotating = true;
@@ -379,6 +438,7 @@ namespace Rotor {
     // => Stop auto rotation if target has been reached.
     // To be called continously from main loop during auto rotation.
     // If angular-speed is zero 3s into auto-rotation, start 3s timeout.
+    // *****************************************************************
     void RotorController::watchAutoRotation() {
         // Target reached
         if ((direction == 0 && rotor.last_angle <= auto_rotation_target + auto_rot.tolerance) ||
@@ -401,12 +461,62 @@ namespace Rotor {
                     Serial.println("[Rotor] Auto-rotation aborted. Rotor stopped before reaching target.");
                 }
             }
+
+        // Set smooth speed
+        } else if (smooth_speed_active) {
+            int new_speed = getSmoothSpeed();
+
+            if (new_speed != current_speed) {
+                setCurrentSpeed(new_speed);
+
+                // Serial output
+                if (verbose) {
+                    Serial.print("[Rotor] Speed (");
+                    Serial.printf("%3d", new_speed);
+                    Serial.print("%) | Distances: ");
+                    Serial.printf("%5.2f", abs(rotor.last_angle - speed_ramp.start_angle));
+                    Serial.print(" <-+-> ");
+                    Serial.printf("%5.2f\n", abs(rotor.last_angle - auto_rotation_target));
+                }
+            }
         }
     }
 
+    // => Get current speed when ramping up/down speed
+    // ***********************************************
+    // https://math.stackexchange.com/questions/846743/example-of-a-smooth-step-function-that-is-constant-below-0-and-constant-above/846747#846747
+    int RotorController::getSmoothSpeed() {
+        // Max speed is already 0
+        if (max_speed == 0) { return max_speed; }
+
+        // Distances
+        float distance_to_start = abs(rotor.last_angle - speed_ramp.start_angle);
+        float distance_to_target = abs(rotor.last_angle - auto_rotation_target);
+
+        // Set speed multiplication factor
+        float speed_ramp_factor;
+        if (distance_to_start == 0.0f || distance_to_target == 0.0f) {
+            // If any distance = 0 => speed = 0
+            speed_ramp_factor = 0.0f;
+        } else if (distance_to_start < speed_ramp.ramp_distance) {
+            // Ramping up
+            float x = distance_to_start / speed_ramp.ramp_distance;
+            speed_ramp_factor = (0.5f * (1.0f + tanh(((2 * x - 1.0f) * speed_ramp.gradient) / (sqrt((1.0f - x) * x)))));
+        } else if (distance_to_target < speed_ramp.ramp_distance) {
+            // Ramping down
+            float x = distance_to_target / speed_ramp.ramp_distance;
+            speed_ramp_factor = (0.5f * (1.0f + tanh(((2 * x - 1.0f) * speed_ramp.gradient) / (sqrt((1.0f - x) * x)))));
+        } else {
+            // Constant speed
+            speed_ramp_factor = 1.0f;
+        }
+
+        return (int) (max_speed * speed_ramp_factor * speed_ramp.speed_distance_factor);
+    }
+
     // => Update rotor values from ADC and calculate angular speed
+    // ***********************************************************
     void RotorController::update(bool with_angular_speed) {
-        // Update rotor values
         rotor.update();
 
         // Calculate angular speed
@@ -420,7 +530,7 @@ namespace Rotor {
                 angular_speed = new_angular_speed;
             }
 
-            // Set previous values
+            // Set previous values for next calculation
             previous.last_angle = rotor.last_angle;
             previous.last_ms = rotor.last_ms;
         }

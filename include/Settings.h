@@ -1,27 +1,11 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include <Arduino.h>
-
 namespace Settings {
-
-    // Favorites Class
-    // ***************
-    class Favorites {
-    private:
-        String favs_buffer;
-        void load();
-        void save();
-    public:
-        Favorites();
-        void init();
-        void set(char* msg);
-        void send();
-    };
-
-    // Other Settings
-    // **************
+    // => Send general settings to clients
     void sendSettings();
+
+    // => Send screen setting to clients
     void sendScreen();
 }
 
