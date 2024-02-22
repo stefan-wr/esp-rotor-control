@@ -256,7 +256,6 @@ namespace Rotor {
         previous.last_angle = rotor.last_angle;
         previous.last_ms = rotor.last_ms;
         auto_rot.timer = new Timer(auto_rot.timeout);
-        previous.timer = new Timer(previous.interval);
 
         messenger.rotor_ptr = this;     // Messenger gets pointer to this instance
         return rotorInitSuccess;
@@ -421,7 +420,8 @@ namespace Rotor {
             Serial.print(use_smooth_speed);
             if (use_smooth_speed) {
                 Serial.print(" | Max speed: ");
-                Serial.print(speed_ramp.speed_distance_factor);
+                Serial.print(speed_ramp.speed_distance_factor * 100);
+                Serial.print("%");
             }
             Serial.println();
         }
@@ -461,30 +461,32 @@ namespace Rotor {
                     Serial.println("[Rotor] Auto-rotation aborted. Rotor stopped before reaching target.");
                 }
             }
-
-        // Set smooth speed
-        } else if (smooth_speed_active) {
-            int new_speed = getSmoothSpeed();
-
-            if (new_speed != current_speed) {
-                setCurrentSpeed(new_speed);
-
-                // Serial output
-                if (verbose) {
-                    Serial.print("[Rotor] Speed (");
-                    Serial.printf("%3d", new_speed);
-                    Serial.print("%) | Distances: ");
-                    Serial.printf("%5.2f", abs(rotor.last_angle - speed_ramp.start_angle));
-                    Serial.print(" <-+-> ");
-                    Serial.printf("%5.2f\n", abs(rotor.last_angle - auto_rotation_target));
-                }
-            }
         }
+    }
+
+    // => Set smooth speed to DAC.
+    // To be called continously from main loop if speed ramp is active
+    // ***************************************************************
+    void RotorController::watchSmoothSpeedRamp() {
+        int new_speed = getSmoothSpeed();
+
+        if (new_speed != current_speed) {
+            setCurrentSpeed(new_speed);
+
+            // Serial output
+            if (verbose) {
+                Serial.print("[Rotor] Speed (");
+                Serial.printf("%3d", new_speed);
+                Serial.print("%) | Distances: ");
+                Serial.printf("%5.1f", abs(rotor.last_angle - speed_ramp.start_angle));
+                Serial.print(" <-+-> ");
+                Serial.printf("%5.1f\n\r", abs(rotor.last_angle - auto_rotation_target));
+            }
+        }    
     }
 
     // => Get current speed when ramping up/down speed
     // ***********************************************
-    // https://math.stackexchange.com/questions/846743/example-of-a-smooth-step-function-that-is-constant-below-0-and-constant-above/846747#846747
     int RotorController::getSmoothSpeed() {
         // Max speed is already 0
         if (max_speed == 0) { return max_speed; }
@@ -501,17 +503,22 @@ namespace Rotor {
         } else if (distance_to_start < speed_ramp.ramp_distance) {
             // Ramping up
             float x = distance_to_start / speed_ramp.ramp_distance;
-            speed_ramp_factor = (0.5f * (1.0f + tanh(((2 * x - 1.0f) * speed_ramp.gradient) / (sqrt((1.0f - x) * x)))));
+            speed_ramp_factor = getSpeedRampFactor(x, speed_ramp.gradient);
         } else if (distance_to_target < speed_ramp.ramp_distance) {
             // Ramping down
             float x = distance_to_target / speed_ramp.ramp_distance;
-            speed_ramp_factor = (0.5f * (1.0f + tanh(((2 * x - 1.0f) * speed_ramp.gradient) / (sqrt((1.0f - x) * x)))));
+            speed_ramp_factor = getSpeedRampFactor(x, speed_ramp.gradient);
         } else {
             // Constant speed
             speed_ramp_factor = 1.0f;
         }
-
         return (int) (max_speed * speed_ramp_factor * speed_ramp.speed_distance_factor);
+    }
+
+    // => Get smooth speed scaling factor, using tanh
+    // https://math.stackexchange.com/questions/846743/example-of-a-smooth-step-function-that-is-constant-below-0-and-constant-above/846747#846747
+    float RotorController::getSpeedRampFactor(const float x, const float gradient) {
+        return (0.5f * (1.0f + std::tanh(((2 * x - 1.0f) * gradient) / (std::sqrt((1.0f - x) * x)))));
     }
 
     // => Update rotor values from ADC and calculate angular speed

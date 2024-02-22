@@ -331,7 +331,7 @@ void setup() {
   Serial.begin(serial_speed);
 
   // Software version
-  Serial.print("\n##########  RotorControl v");
+  Serial.print("\n\r##########  RotorControl v");
   Serial.print(version);
   Serial.println("  ##########");
 
@@ -535,11 +535,10 @@ struct {                                      // Intervals
   Timer *cleanSockets = new Timer(1000);      // 1 s
   Timer *rotorUpdate = new Timer(40);         // 40 ms, 25 Hz
   Timer *rotorMessage = new Timer(1000);      // 1 s
+  Timer *speedRamp = new Timer(40);           // 40 ms, 25 Hz
   Timer *updateScreen = new Timer(40);        // 40 ms, 25 Hz
   Timer *loopTimer = new Timer(1000);         // 1 s
-  Timer *updateLedBlinker = new Timer(500);   // 500 ms, 2 Hz
-  Timer *stationLedBlinker = new Timer(2);    // 250 ms, 4 Hz
-  Timer *updateChecker = new Timer(50);       // 50 ms, 20 Hz
+  Timer *fwUpdateChecker = new Timer(50);     // 50 ms, 20 Hz
 } timers;
 
 bool reconnecting = false;      // Is WiFi trying to reconnect
@@ -615,12 +614,15 @@ void loop() {
     }
   }
 
-
   // Watch active auto rotation
   if (in_station_mode && rotor_ctrl.is_auto_rotating) {
     rotor_ctrl.watchAutoRotation();
   }
 
+  // Watch active speed ramp
+  if (in_station_mode && rotor_ctrl.smooth_speed_active && timers.speedRamp->passed()) {
+    rotor_ctrl.watchSmoothSpeedRamp();
+  }
 
   // Stop rotor if all clients disconnected
   if (in_station_mode && !clients_connected && clients_connected_prev) {
@@ -704,7 +706,7 @@ void loop() {
   // ***** Updating  Firmware *****
   // ******************************
 
-  if (in_station_mode && timers.updateChecker->passed()) {
+  if (in_station_mode && timers.fwUpdateChecker->passed()) {
  
     // When update starts 
     if (!is_updating_prev && firmware.is_updating) {

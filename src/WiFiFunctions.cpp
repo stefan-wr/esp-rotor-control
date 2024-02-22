@@ -503,7 +503,7 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
 
   // Start server
   server->begin();
-  Serial.println("[Server] started in AP mode.\n");
+  Serial.println("[Server] started in AP mode.\n\r");
 
   // Start first network scan
   scan_now = true;

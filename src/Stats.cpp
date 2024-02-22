@@ -78,6 +78,6 @@ namespace Stats {
 
     void Counter::printlnToSerial() {
         printToSerial();
-        Serial.print("\n");
+        Serial.print("\n\r");
     }
 }

@@ -133,13 +133,10 @@ namespace Rotor {
             Timer* timer;
         } auto_rot;
 
-        // Variables from previous rotor update
+        // Rotor angle from previous angular speed calculation
         struct {
             unsigned long last_ms = 0;
             float last_angle = 0.0f;
-            float angular_speed = 0.0f;
-            unsigned long interval = 200;
-            Timer* timer;
         } previous;
 
         // Speed ramp variables
@@ -153,6 +150,9 @@ namespace Rotor {
 
         // => Get current speed when ramping up / down speed during auto-rotation
         int getSmoothSpeed();
+
+        // => Get smooth speed scaling factor, using tanh
+        float getSpeedRampFactor(const float x, const float gradient);
 
         // => Set current rotor speed (DAC), doesn't distribute to clients
         void setCurrentSpeed(const int spd);
@@ -211,6 +211,10 @@ namespace Rotor {
         // To be called continously from main loop during auto rotation.
         // If angular-speed is zero 3s into auto-rotation, start 3s timeout.
         void watchAutoRotation();
+
+        // => Set smooth speed to DAC.
+        // To be called continously from main loop if speed ramp is active
+        void watchSmoothSpeedRamp();
 
         // => Update rotor values from ADC and calculate angular speed
         void update(bool with_angular_speed = false);
