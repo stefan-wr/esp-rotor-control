@@ -11,6 +11,7 @@
 #define SCREEN_HALF_HEIGHT 32
 #define CHAR_W 5
 #define CHAR_H 7
+#define N_PAGES 3
 
 namespace Screen {
      
@@ -21,8 +22,9 @@ namespace Screen {
 
         Timer *alert_timer;
         String alert_txt;
-        bool on_alert = false;
         bool disabled = false;
+
+        int page = 0;
 
         // Variables for drawing compass
         struct {
@@ -47,6 +49,16 @@ namespace Screen {
         // => Set cursor so that text to be printed next is centered on full screen.
         // Needs the width and height of the text on screen from getTextDimenions().
         void setCenteredTextCursor(const uint16_t &txt_w, const uint16_t &txt_h);
+        void setCenteredTextCursor(const String &txt);
+
+        // => Set a horizontally centered text
+        void setHorizontallyCenteredText(const uint16_t cy, const String &txt, const uint16_t cx_offset = 0);
+
+        // => Set a fullscreen text
+        void setFullscreenText(const String &txt);
+        
+        // => Set a title bar on screen
+        void setTitleBar(const int &gap, const int icon, const String &title);
 
         // => Draw compass with radius r, centered at (cx, cy)
         void drawCompass(const uint16_t &cx, const uint16_t &cy, const float &r, uint16_t color);
@@ -54,17 +66,23 @@ namespace Screen {
         // => Draw sidebar with additional information
         void drawSidebar();
 
-        // => Set a fullscreen text to screen RAM
-        void setFullscreenText(const String &txt);
-
         // => Show a fullscreen centered message for a few seconds
         void showFullscreenAlert();
 
-        // => Set splash-screen to screen RAM
+        // => Set splash-screen
         void showSplashScreen();
 
-        // => Set screen for AP-mode to screen RAM
+        // => Set screen for AP-mode
         void showAPModeScreen();
+
+        // => Set network info screen
+        void showNetworkScreen();
+
+        // => Set system info screen
+        void showSystemScreen();
+
+        // => Set screen for when WiFi is reconnecting
+        void showReconnectingScreen();
 
         // => Set the default screen when in STATION mode.
         void showDefaultScreen();
@@ -98,7 +116,10 @@ namespace Screen {
         void setAlert(const String &txt);
 
         // => Set an alert message and show it on  the screen immediatly
-        void setAlertImmediatly(const String &txt);        
+        void setAlertImmediatly(const String &txt);
+
+        // => Toggle through available screens
+        void toggleScreens();
     };
 }
 

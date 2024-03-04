@@ -34,7 +34,7 @@ namespace Screen {
         screen->display();
 
         // Setup alert messages
-        alert_txt.reserve(32);
+        alert_txt.reserve(96);
         alert_timer = new Timer(4000);
 
         return true;
@@ -49,6 +49,15 @@ namespace Screen {
         screen->setCursor(0, 0);
     }
 
+    // => Toggle through available screens
+    void Screen::toggleScreens() {
+        if (page >= N_PAGES - 1) {
+            page = 0;
+        } else {
+            page++;
+        }
+    }
+
     // => Move cursor coordinates by (nx, ny)
     void Screen::moveCursor(const int16_t &nx, const int16_t &ny) {
         screen->setCursor(screen->getCursorX() + nx, screen->getCursorY() + ny);
@@ -60,6 +69,9 @@ namespace Screen {
     }
 
     // => Get width and height of given text on screen
+    // @param txt: some String
+    // @param txt_w: pointer to store text width at
+    // @param txt_w: pointer to store text height at
     void Screen::getTextDimensions(const String &txt, uint16_t *txt_w, uint16_t  *txt_h) {
         int16_t cx, cy;
         screen->getTextBounds(txt, 0, 0, &cx, &cy, txt_w, txt_h);  
@@ -67,15 +79,33 @@ namespace Screen {
 
     // => Set cursor so that text to be printed next is centered on full screen.
     // Needs the width and height of the text on screen from getTextDimenions().
+    // @param txt_w: width of text
+    // @param txt_h: height of text
     void Screen::setCenteredTextCursor(const uint16_t &txt_w, const uint16_t &txt_h) {
         screen->setCursor((SCREEN_WIDTH - txt_w) / 2, (SCREEN_HEIGHT - txt_h) / 2);
     }
 
-    // => Set a fullscreen text to screen RAM
-    void Screen::setFullscreenText(const String &txt) {
+    // => Set cursor so that text to be printed next is centered on full screen.
+    // @param txt: text to be centered on screen
+    void Screen::setCenteredTextCursor(const String &txt) {
         uint16_t txt_w, txt_h;
         getTextDimensions(txt, &txt_w, &txt_h);
         setCenteredTextCursor(txt_w, txt_h);
+    }
+
+    // => Set a horizontally centered text
+    // @param cy: cursor Y position to set text at
+    // @param txt: text to be centered horizontally
+    void Screen::setHorizontallyCenteredText(const uint16_t cy, const String &txt, const uint16_t cx_offset) {
+        uint16_t txt_w, txt_h;
+        getTextDimensions(txt, &txt_w, &txt_h);
+        screen->setCursor((SCREEN_WIDTH - txt_w) / 2 + cx_offset - 1, cy);
+        screen->println(txt);
+    }
+
+    // => Set a fullscreen text
+    void Screen::setFullscreenText(const String &txt) {
+        setCenteredTextCursor(txt);
         screen->print(txt);    
     }
 
@@ -96,6 +126,24 @@ namespace Screen {
         }
     }
 
+    // => Set a title bar on screen
+    // @param gap: gap in pixels between text and underline
+    // @param icon: number of CP437 symbol to be used as icon, -1 for no icon
+    // @param title: title text
+    void Screen::setTitleBar(const int &gap, const int icon, const String &title) {
+        screen->setCursor(0, 0);
+        int cx_offset = 0;
+
+        if (icon >= 0) {
+            screen->write(icon);
+            cx_offset = 4;
+        }
+
+        setHorizontallyCenteredText(0, title, cx_offset);
+        moveCursor(0, gap);
+        screen->drawFastHLine(0, screen->getCursorY(), 128, WHITE);
+        moveCursor(0, gap + 3);
+    }    
 
     // => Draw compass with radius r, centered at (cx, cy)
     // ---------------------------------------------------
@@ -127,7 +175,6 @@ namespace Screen {
         }        
     }
 
-
     // => Draw sidebar with additional information
     // -------------------------------------------
     void Screen::drawSidebar() {
@@ -137,9 +184,9 @@ namespace Screen {
         // Rotation indicators
         if (rotor_ctrl.is_rotating) {
             if (rotor_ctrl.direction) {
-                screen->fillTriangle(114, 5, 122, 9, 114, 13, BLACK); 
+                screen->fillTriangle(114, 5, 122, 9, 114, 13, BLACK);   // Left
             } else {
-                screen->fillTriangle(114, 9, 122, 5, 122, 13, BLACK);
+                screen->fillTriangle(114, 9, 122, 5, 122, 13, BLACK);   // Right
             }
         } else {
             screen->fillRoundRect(114, 5, 9, 9, 2, BLACK);
@@ -151,6 +198,12 @@ namespace Screen {
             screen->print("OL");
         }
 
+        // Auto rotation indicator
+        if (rotor_ctrl.is_auto_rotating) {
+            screen->setCursor(113, 32);
+            screen->print("AR");
+        }
+
         // N of connected clients
         screen->setCursor(116, 52);
         screen->print(clients_connected);
@@ -160,46 +213,112 @@ namespace Screen {
     // => Set splash-screen
     // --------------------
     void Screen::showSplashScreen() {
-        String txt = "RotorControl";
+        const String txt = "RotorControl";
         uint16_t txt_w, txt_h;
         getTextDimensions(txt, &txt_w, &txt_h);
         setCenteredTextCursor(txt_w, txt_h);
         screen->drawRect(screen->getCursorX() - 5, screen->getCursorY() - 5,
                          txt_w + 8, txt_h + 9, WHITE);
         screen->print(txt);
-        getTextDimensions(version, &txt_w, &txt_h);
-        setCenteredTextCursor(txt_w, txt_h);
         moveCursor(0, 18);
-        screen->print(version);
+        setHorizontallyCenteredText(screen->getCursorY(), version);
     }
 
 
     // => Set screen for AP-mode
     // -------------------------
     void Screen::showAPModeScreen() {
+        const int gap = 3;
         screen->setCursor(0, 0);
-        screen->print("WiFi not connected.");
-        screen->drawFastHLine(0, 11, 128, WHITE);
-        screen->setCursor(0, 15);
+        setCenteredTextCursor("WiFi not connected.");
+        moveCursor(0, screen->getCursorY() * -1);
+        screen->println("WiFi not connected.");
+
+        moveCursor(0, gap);
+        screen->drawFastHLine(screen->getCursorX(), screen->getCursorY(), 128, WHITE);
+
+        moveCursor(0, gap + 2);
+        screen->println("IP:");
+
+        moveCursor(0, gap);
+        screen->println(WiFi.softAPIP());
+
+        moveCursor(0, gap + 2);
         screen->println("URL:");
-        moveCursor(0, 3);
-        screen->println(get_ip_url());
-        moveCursor(0, 3);
-        screen->println("or");
+
         moveCursor(0, 4);
         screen->print("http://");
         screen->print(local_url);
         screen->println(".local");
-    }    
+    }
 
+    // => Set screen for when WiFi is reconnecting
+    // -------------------------------------------
+    void Screen::showReconnectingScreen() {
+        const int gap = 2;
+        setTitleBar(gap, 0x21, "WiFi Disconnected");
+        setCenteredTextCursor("Reconnecting...");
+        moveCursor(0, gap * 2 + 1);
+        screen->println("Reconnecting...");
+    }
+
+    // => Set network info screen
+    // --------------------------
+    void Screen::showNetworkScreen() {
+        const int gap = 2;
+        setTitleBar(gap, 0xF0, "Network & Server");
+
+        if (WiFi.isConnected()) {
+            screen->printf("IP: %s\n", WiFi.localIP().toString().c_str());
+
+            moveCursor(0, gap);
+            screen->printf("URL: %s.local\n", local_url);
+
+            moveCursor(0, gap);
+            screen->printf("Port: %d\n", sta_port);
+
+            moveCursor(0, gap);
+            screen->setTextWrap(false);
+            screen->printf("SSID: %s\n", wifi_ssid.c_str());
+            screen->setTextWrap(true);
+
+            moveCursor(0, gap);
+            screen->printf("RSSI: %d dBm\n", WiFi.RSSI());
+        } else {
+            screen->println("WiFi not connected.");
+        }
+    }
+
+    // => Set system info screen
+    // -------------------------
+    void Screen::showSystemScreen() {
+        const int gap = 2;
+        setTitleBar(gap, 0xF0, "System");
+        
+        screen->printf("ID: %s\n", esp_id);
+
+        moveCursor(0, gap);
+        screen->print("ADC Status: ");
+        if (rotor_ctrl.rotor.getADCStatus()) {
+            screen->println("OK");
+        } else {
+            screen->println("N/A");
+        }
+
+        moveCursor(0, gap);
+        screen->printf("Free RAM: %.0f kB\n", ((float) ESP.getFreeHeap()) / 1024.0f);
+
+        moveCursor(0, gap);
+        screen->printf("Firmware: %s\n", version.c_str());
+
+        moveCursor(0, gap);
+        screen->printf("UI Version: %s\n", "0.9.0" );
+    }
 
     // => Set the default screen when in STATION mode.
     // -----------------------------------------------
     void Screen::showDefaultScreen() {
-        // Draw compass
         drawCompass(SCREEN_HALF_WIDTH + 8, SCREEN_HALF_HEIGHT, 30, WHITE);
-
-        // Sidebar
         drawSidebar();
 
         // Draw labels
@@ -244,18 +363,25 @@ namespace Screen {
         // Speed
         ly += 1 + gap;
         screen->setCursor(0, ly);
-        if (rotor_ctrl.max_speed) {
-            screen->printf("S %3d%%", rotor_ctrl.max_speed);
+        if (true) {
+            // Current Speed
+            if (rotor_ctrl.smooth_speed_active) {
+                if (rotor_ctrl.current_speed) {
+                    screen->printf("S %3d%%", rotor_ctrl.current_speed);
+                } else {
+                    screen->printf("S %3d%%", 1);
+                }
+            } else {
+                // Max Speed
+                if (rotor_ctrl.max_speed) {
+                    screen->printf("S %3d%%", rotor_ctrl.max_speed);
+                } else {
+                    screen->printf("S %3d%%", 1);
+                }
+            }
         } else {
-            screen->printf("S %3d%%", rotor_ctrl.max_speed + 1);
-        }
-
-        // Angular speed label
-        if (false) {
-            screen->setCursor(0, SCREEN_HEIGHT - CHAR_H);
-            screen->printf("%5.1f", rotor_ctrl.angular_speed);
-            printDegree();
-            screen->print("/s");
+            // Angular Speed
+            screen->printf("R %5.2f/s", rotor_ctrl.angular_speed);
         }
     }
 
@@ -264,12 +390,10 @@ namespace Screen {
     // ------------------------------------
     void Screen::showUpdateScreen() {
         setFullscreenText("Updating Firmware");
-        uint16_t txt_w, txt_h;
-        getTextDimensions("100%", &txt_w, &txt_h);
-        setCenteredTextCursor(txt_w, txt_h);
         moveCursor(0, 16);
-        screen->print(firmware.upload_progress);
-        screen->print("%");
+        char buffer[4];
+        sprintf(buffer, "%d%%", firmware.upload_progress);
+        setHorizontallyCenteredText(screen->getCursorY(), (String) buffer);
     }
 
     // => Show a fullscreen alert
@@ -283,7 +407,7 @@ namespace Screen {
     // => Main draw function, to be called from main loop
     // **************************************************
     void Screen::update() {
-        // Only clear screen if it is disabled
+        // If screen is disabled, only clear the screen
         if (disabled) {
             screen->clearDisplay();
             screen->display();
@@ -316,14 +440,27 @@ namespace Screen {
 
         // ----------
 
-        if (in_station_mode) {
-            if (firmware.is_updating) {
-                showUpdateScreen();
-            } else {
-                showDefaultScreen();
-            }
-        } else {
+        if (!in_station_mode) {
             showAPModeScreen();
+
+        } else if (is_reconnecting) {
+            showReconnectingScreen();
+
+        } else if (firmware.is_updating) {
+            showUpdateScreen();
+
+        } else {
+            switch (page) {
+                case 0:
+                    showDefaultScreen();
+                    break;
+                case 1:
+                    showNetworkScreen();
+                    break;
+                case 2:
+                    showSystemScreen();
+                    break;
+            }
         }
 
         // ----------

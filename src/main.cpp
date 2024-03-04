@@ -42,7 +42,7 @@ int clients_connected = 0;          // Number of connected socket clients
 bool authenticate = true;           // Authenticate HTTP connections
 bool has_screen = HAS_SCREEN;       // Device has an SSD1306 screen
 bool use_screen = HAS_SCREEN;       // Use the SSD1306 screen
-uint8_t authentications = 0;        // Number of authentications in /authenticate URL
+uint8_t authentications = 0;        // Number of authentications, used in /authenticate URL
 
 // Buffer storing lock message. This default message resets lock on ESP restart
 String lock_msg = "LOCK|{\"isLocked\":false,\"by\":\"\"}";
@@ -61,12 +61,12 @@ DNSServer dns_server;
 
 // Setup an interrupt button
 // *************************
-Timer multi_btn_press_debounce_timer(250);
+Timer multi_btn_press_debounce_timer(100);
 
 // => Interrupt for button press
 void IRAM_ATTR multiButtonPressAction() {
   // Debounce 250 ms
-  if (multi_btn_press_debounce_timer.passed()) {
+  if (multi_btn_press_debounce_timer.passed() && !multi_btn_hold) {
     multi_btn_pressed = true;
   }
 }
@@ -248,6 +248,7 @@ void socketReceive(char* msg, const size_t &len) {
   // ----- LOCK -----
   // ----------------
   if (identifier == "LOCK") {
+    // For lock, just distribute message to all clients
     msg[sep_idx] = '|';
     lock_msg = (String) msg;
     websocket.textAll(msg);
@@ -409,7 +410,7 @@ void setup() {
       authenticate = false;
     }
 
-    // Redeclare server to set port
+    // Redeclare server to set corrct port
     server = new AsyncWebServer(sta_port);
 
     /*
@@ -422,19 +423,20 @@ void setup() {
     DefaultHeaders::Instance().addHeader("Access-Control-Expose-Headers", "Token");
     */
     
-  // Catch all route, necessary for page reloads in Vue-App
+  // Catch all route
     server->onNotFound([](AsyncWebServerRequest *request) {
+      // CORS preflight
       if (request->method() == HTTP_OPTIONS) {
         request->send(200);
+      // Redirect to index.html, necessary for page reloads in Vue-App
       } else {
-        // Catch all route, necessary for page reloads in Vue-App
         if (authenticate && !request->authenticate(http_username, http_password))
           return request->requestAuthentication();
         request->send(LittleFS, "/index.html");
         }
     });
 
-    // Root route, Vue-App index files
+    // Root route, Vue-App index file
     server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (authenticate && !request->authenticate(http_username, http_password))
         return request->requestAuthentication();
@@ -443,6 +445,7 @@ void setup() {
       request->send(response);
     });
 
+    /*
     server->on("/index.js", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (authenticate && !request->authenticate(http_username, http_password))
         return request->requestAuthentication();
@@ -450,11 +453,12 @@ void setup() {
       response->addHeader("cache-control", "private, max-age=86400");
       request->send(response);
     });
+    */
 
     // CSS
-    server->serveStatic("/index.css", LittleFS, "/index.css").setCacheControl("public, max-age=86400");
+    //server->serveStatic("/index.css", LittleFS, "/index.css").setCacheControl("public, max-age=86400");
 
-    // Favicons
+    // Fonts & favicons 
     server->serveStatic("/inter-regular.woff2", LittleFS, "/inter-regular.woff2").setCacheControl("public,max-age=31536000");
     server->serveStatic("/inter-700.woff2", LittleFS, "/inter-700.woff2").setCacheControl("public,max-age=31536000");
     server->serveStatic("/site.webmanifest", LittleFS, "/site.webmanifest").setCacheControl("public,max-age=31536000");
@@ -498,10 +502,10 @@ void setup() {
     });
 
     // Request a firmware udate
-    server->on("/request-update", HTTP_POST, handleUpdateRequest);
+    server->on("/request-update", HTTP_POST, Firmware::handleUpdateRequest);
 
     // Update firmware
-    server->on("/update", HTTP_POST, handleFirmwareResponse, handleFirmwareUpload);
+    server->on("/update", HTTP_POST, Firmware::handleFirmwareResponse, Firmware::handleFirmwareUpload);
 
     // Init firmware instace
     firmware.initFirmware();
@@ -531,7 +535,7 @@ struct {                                      // Intervals
   Timer *checkWiFi = new Timer(8000);         // 8 s
   Timer *reconnectTimeout = new Timer(90000); // 90 s
   Timer *reboot = new Timer(86400000 * 3);    // 3 days
-  Timer *multiBtnHold = new Timer(2000);      // 2 s
+  Timer *multiBtnHold = new Timer(500);       // 500 ms, 2Hz
   Timer *cleanSockets = new Timer(1000);      // 1 s
   Timer *rotorUpdate = new Timer(40);         // 40 ms, 25 Hz
   Timer *rotorMessage = new Timer(1000);      // 1 s
@@ -541,7 +545,7 @@ struct {                                      // Intervals
   Timer *fwUpdateChecker = new Timer(50);     // 50 ms, 20 Hz
 } timers;
 
-bool reconnecting = false;      // Is WiFi trying to reconnect
+bool is_reconnecting = false;   // Is WiFi trying to reconnect
 float adc_volts_prev = -1;      // Previous loop ADC-Volts
 bool is_rotating_prev = false;  // Was rotor rotating in previous loop cycle
 int clients_connected_prev;     // N of clients connected in previous loop cycle
@@ -560,30 +564,42 @@ void loop() {
 
   // Check for multi button being pressed down
   if (multi_btn_pressed && !multi_btn_hold && !firmware.is_updating) {
+    Serial.println("[BTN] pressed.");
+
+    // Toggle screen
+    if (has_screen && use_screen) {
+        screen.toggleScreens();
+    }
+
     // Stop rotor
-    Serial.println("[BTN] pressed. Stopping rotor.");
     if (rotor_ctrl.is_rotating) {
       rotor_ctrl.stop();
       wifi_led.blinkBlocking(1, 250ul);
     }
+
     // Enable further checks for wether multi button is being held down
     multi_btn_pressed = false;
     multi_btn_hold = true;
+    timers.multiBtnHold->reset();
     timers.multiBtnHold->start();
   }
 
   // Check wether button is being held down
   if (multi_btn_hold && !firmware.is_updating) {
+    // Button was released
     if (digitalRead(multi_button_pin)) {
-      // Button was released
       multi_btn_hold = false;
+
+    // Button is still being held down
     } else if (timers.multiBtnHold->passed()) {
-      // Button held for 2s -> reset WiFi 
-      rotor_ctrl.stop();
-      wifi_led.blinkBlocking(4, 250ul);
-      Serial.println("[BTN] held for 2s. Resetting WiFi credentials and restart.");
-      resetCredentials();
-      ESP.restart();
+      // Reset WiFi after timer 2 s
+      if (timers.multiBtnHold->n_passed == 4) {
+        rotor_ctrl.stop();
+        wifi_led.blinkBlocking(4, 250ul);
+        Serial.println("[BTN] held for 2s. Resetting WiFi credentials and restart.");
+        resetCredentials();
+        ESP.restart();
+      }
     }
   }
 
@@ -593,11 +609,11 @@ void loop() {
   // *****************************
 
   // Update rotor values and send rotation message to clients every second update.
-  // Update angular speed every 5th update.
+  // Update angular speed every 8th update.
   if (in_station_mode && timers.rotorUpdate->passed() && !firmware.is_updating) {
-    rotor_ctrl.update(!(timers.rotorUpdate->n_passed % 5));
+    rotor_ctrl.update(!(timers.rotorUpdate->n_passed % 8));
 
-    // Send rotation message every second update only if clients are connected
+    // Send rotation message every second update and only if clients are connected
     if (clients_connected > 0 && timers.rotorUpdate->n_passed % 2 == 0) {
       /* Send rotation message if either:
           1. voltage changed significantly compared to last message
@@ -650,9 +666,9 @@ void loop() {
       }
 
       // Start reconnect timeout
-      if (!reconnecting) {
+      if (!is_reconnecting) {
         timers.reconnectTimeout->start();
-        reconnecting = true;
+        is_reconnecting = true;
       }
 
       // Try to reconnect
@@ -664,13 +680,13 @@ void loop() {
   }
 
   // Stop timeout if connection was reestablished
-  if (in_station_mode && reconnecting && WiFi.isConnected()) {
-    reconnecting = false;
+  if (in_station_mode && is_reconnecting && WiFi.isConnected()) {
+    is_reconnecting = false;
     Serial.println("[WiFi] reconnected.");
   }
 
   // Reboot ESP after reconnect timeout
-  if (in_station_mode && reconnecting && timers.reconnectTimeout->passed()) {
+  if (in_station_mode && is_reconnecting && timers.reconnectTimeout->passed()) {
     Serial.println("[WiFi] Reconnecting failed! Restarting ESP.");
     delay(1000);
     ESP.restart();

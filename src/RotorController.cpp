@@ -256,6 +256,7 @@ namespace Rotor {
         previous.last_angle = rotor.last_angle;
         previous.last_ms = rotor.last_ms;
         auto_rot.timer = new Timer(auto_rot.timeout);
+        auto_rot.counterTimer = new Timer(auto_rot.counterInterval);
 
         messenger.rotor_ptr = this;     // Messenger gets pointer to this instance
         return rotorInitSuccess;
@@ -431,6 +432,7 @@ namespace Rotor {
         auto_rotation_target_rad = auto_rotation_target * deg_to_rad_factor;
         auto_rot.timer->reset();
         auto_rot.timer->start();
+        auto_rot.timeoutCounter = 0;
         is_auto_rotating = true;
         startRotation(target_dir);
     }
@@ -452,15 +454,21 @@ namespace Rotor {
                 Serial.println("°.");
             }
 
-        // Wait 3s -> check if rotor stopped before reaching target
-        // -> wait 3s again -> abort auto roation if rotor is still stationary.
-        } else if (auto_rot.timer->passed() && !angular_speed) {
-            if (auto_rot.timer->n_passed >= 2) {
+        // Initially, wait 4s -> then check if rotor stopped before reaching target.
+        } else if (!angular_speed && (auto_rot.timer->passed() || (auto_rot.timeoutCounter && auto_rot.counterTimer->passed()))) {
+            auto_rot.timeoutCounter++;
+
+            // Stop rotation if rotor was checked to be stationary 4-times in a row
+            if (auto_rot.timeoutCounter >= 4) {
                 stop();
                 if (verbose) {
                     Serial.println("[Rotor] Auto-rotation aborted. Rotor stopped before reaching target.");
                 }
             }
+
+        // Reset stationary counter if angular speed is not zero  
+        } else if (angular_speed && auto_rot.timeoutCounter > 0) {
+            auto_rot.timeoutCounter = 0;
         }
     }
 
@@ -527,11 +535,14 @@ namespace Rotor {
         rotor.update();
 
         // Calculate angular speed
-        if (with_angular_speed) {
+        if (with_angular_speed && rotor.getADCStatus()) {
             float new_angular_speed = (rotor.last_angle - previous.last_angle) 
                                     / (rotor.last_ms - previous.last_ms) * 1000.0f;
+            
+            // Exponential moving average
+            new_angular_speed = (0.5f * new_angular_speed) + (0.5f * angular_speed);
 
-            if (abs(new_angular_speed) <= 0.2f) {
+            if (abs(new_angular_speed) <= 0.1f) {
                 angular_speed = 0.0f;
             } else {
                 angular_speed = new_angular_speed;

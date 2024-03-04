@@ -156,7 +156,7 @@
     },
     "keyboard": {
       "title": "Keyboard Shortcuts",
-      "dscr": "Enables option to manually control the rotor using the arrow keys of your keybaord when in the controller tab."
+      "dscr": "Enables option to manually control the rotor using the arrow keys of your keyboard when in the controller tab."
     },
     "overlap": {
       "dscr": "Allow the rotor to use the overlap area between 360° and 450° for automatic rotation."

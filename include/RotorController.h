@@ -63,6 +63,9 @@ namespace Rotor {
         // => Set constant angle-offset and save calibration
         void setAngleOffset(const float &offset);
 
+        // => Return ADC status
+        bool getADCStatus() { return !ads_failed; }
+
         // => Get current raw ADC value
         int getADCValue();
 
@@ -129,7 +132,10 @@ namespace Rotor {
             const int max_angle = 449;
             const int min_distance = 2;
             const float tolerance = 0.7f;
+            int timeoutCounter = 0;
             const unsigned long timeout = 4000;
+            const unsigned long counterInterval = 500;
+            Timer* counterTimer;
             Timer* timer;
         } auto_rot;
 

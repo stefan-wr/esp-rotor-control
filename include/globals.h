@@ -34,6 +34,7 @@ const float deg_to_rad_factor = M_PI / 180.0f;
 // *********
 extern bool multi_btn_pressed;
 extern bool scan_now;
+extern bool is_reconnecting;
 extern bool in_station_mode;
 extern int  clients_connected;
 extern bool authenticate;
