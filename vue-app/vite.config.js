@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
+import { compression } from 'vite-plugin-compression2';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -12,6 +13,11 @@ export default defineConfig({
     viteSingleFile(),
     VueI18nPlugin({
       include: resolve(dirname(fileURLToPath(import.meta.url)), './src/locales/**'),
+    }),
+    compression({
+      threshold: 102400,
+      deleteOriginalAssets: true,
+      filename: 'app/[base].gzip'
     })
   ],
   server: {
@@ -19,12 +25,13 @@ export default defineConfig({
     //open: '/'
   },
   build: {
+    outDir: "dist/",
     assetsDir: "",
     rollupOptions: {
       output: {
         entryFileNames: `[name].js`,
         chunkFileNames: `[name].js`,
-        assetFileNames: `[name].[ext]`
+        assetFileNames: `assets/[name].[ext]`
       }
     }
   },

@@ -2,10 +2,11 @@
 #include <ESPAsyncWebServer.h>
 #include <Update.h>
 
-#include <Firmware.h>
+#include <Firmware.h>       
 #include <globals.h>
 #include <BlinkingLED.h>
 #include <Timer.h>
+#include <RotorServer.h>
 
 extern BlinkingLED wifi_led;
 
@@ -47,8 +48,7 @@ namespace Firmware {
     // => Handler for update request
     // -----------------------------
     void handleUpdateRequest(AsyncWebServerRequest *request) {
-        if (authenticate && !request->authenticate(http_username, http_password))
-            return request->requestAuthentication();
+        RotorServer::authenticateRequest(request);
 
         firmware.md5 = "";
         firmware.size = 0;

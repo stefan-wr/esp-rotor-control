@@ -3,9 +3,8 @@
 
 #include <Favorites.h>
 #include <SimpleFS.h>
+#include <RotorSocket.h>
 
-
-extern AsyncWebSocket websocket; // Websocket instance from main.cpp
 
 // Path to save favorites at in FS
 const char* favs_path = "/favorites.json";

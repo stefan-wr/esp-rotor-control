@@ -11,6 +11,7 @@
 #include <BlinkingLED.h>
 #include <Timer.h>
 #include <BlinkingLED.h>
+#include <RotorServer.h>
 
 extern BlinkingLED wifi_led;
 
@@ -28,46 +29,6 @@ String wifi_ssid;
 String wifi_bssid;
 String wifi_pw;
 uint8_t wifi_bssid_uint8[6];
-
-// STATION server config
-int sta_port;
-String sta_user_str;
-String sta_pw_str;
-
-
-// ----------------------------------- Server Config
-
-// => Save server config in PREFS
-bool saveServerConfig() {
-  if (!server_prefs.begin("serverPrefs", false)) {
-    Serial.println("[Server] Error: Could not save server configuration!");
-    return false;
-  };
-  server_prefs.putInt("port", sta_port);
-  server_prefs.putString("user", sta_user_str);
-  server_prefs.putString("password", sta_pw_str);
-  server_prefs.end();
-  return true;
-}
-
-// => Load server config from PREFS
-void loadServerConfig() {
-  if (!server_prefs.begin("serverPrefs", true) && verbose) {
-    Serial.println("[Server] Could not load server configuration! Use default configuration instead.");
-  }
-  sta_port = server_prefs.getInt("port", sta_default_port);
-  sta_user_str = server_prefs.getString("user", sta_default_user);
-  sta_pw_str = server_prefs.getString("password", sta_default_pw);
-  server_prefs.end();
-}
-
-// => Reset saved server config to default
-bool resetServerConfig() {
-  sta_port = sta_default_port;
-  sta_user_str = sta_default_user;
-  sta_pw_str = sta_default_pw;
-  return saveServerConfig();
-}
 
 // ----------------------------------- WiFi Credentials
 
@@ -157,13 +118,13 @@ String processor(const String &var) {
     return alert;
   }
   if (var == "USER") {
-    return sta_user_str;
+    return RotorServer::server_config.user;
   }
   if (var == "PASSWORD") {
-    return sta_pw_str;
+    return RotorServer::server_config.password;
   }
   if (var == "PORT") {
-    return String(sta_port);
+    return String(RotorServer::server_config.port);
   }
   if (var == "NETWORKS") {
     return networks_html;
@@ -305,7 +266,7 @@ bool initWiFi() {
       WiFi.begin(wifi_ssid.c_str(), wifi_pw.c_str(), 0, wifi_bssid_uint8);
       n_try++;
     }
-    // Reboot 99 tries
+    // Reboot after 99 tries
     if (n_try >= 99) {
       Serial.println("[WiFi] Failed to connect 99 times. Rebooting device.");
       delay(1000);
@@ -320,19 +281,6 @@ bool initWiFi() {
   Serial.println(WiFi.localIP());
   initMDNS();
   return true;
-}
-
-
-// => Load server config
-// *********************
-void initServerConfig() {
-    loadServerConfig();
-    Serial.print("[Server] config from PREFS: (User) ");
-    Serial.print(sta_user_str);
-    Serial.print(" | (PW) ");
-    Serial.print(sta_pw_str);
-    Serial.print(" | (Port) ");
-    Serial.println(sta_port);
 }
 
 
@@ -376,7 +324,7 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
   Serial.print(" | (URL) ");
   Serial.print(get_ip_url());
   Serial.print(":");
-  Serial.println(sta_port);
+  Serial.println(80);
 
   // Start DNS Server for captive portal
   // Redirects all URLs to AP server
@@ -384,13 +332,12 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
   dns_server.setErrorReplyCode(DNSReplyCode::NoError);
   Serial.print("[DNS] Starting DNS server for captive portal...");
   if (dns_server.start(53, "*", WiFi.softAPIP())) {
-    Serial.println("success.");
-  } else {
-    Serial.println("failed.");
+    Serial.println("[DNS] Started DNS server for captive portal.");
   }
 
-  // Load station server settings
-  initServerConfig();
+  // Load rotor server config
+  RotorServer::loadConfig();
+  RotorServer::printConfig();
 
   // -------------------
   // Configure AP server
@@ -400,8 +347,9 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
   // --------
   server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
     alert = "";
-    request->send(LittleFS, "/ap-index-esp.html", String(), false, processor);
+    request->send(LittleFS, "/ap-index.html", String(), false, processor);
   });
+
 
   // Set WiFi credentials
   // --------------------
@@ -412,9 +360,18 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
       wifi_ssid = request->getParam("ssid")->value();
       wifi_bssid = request->getParam("bssid")->value();
       wifi_pw = request->getParam("pw")->value();
-      Serial.println("Received WiFI credentials | " + wifi_ssid + " (" + wifi_bssid + ") PW: " + wifi_pw);
-      bool success = saveCredentials();
 
+      Serial.print("Received WiFI credentials: (SSID) ");
+      Serial.print(wifi_ssid);
+      Serial.print(" (");
+      Serial.print(wifi_bssid);
+      Serial.print(") | (PW) ");
+      Serial.println(wifi_pw);
+
+      success = saveCredentials();
+    }
+
+    if (success) {
       // Send message and reboot ESP
       String msg = "Der Rotor Controller startet sich jetzt neu und versucht sich mit dem Netzwerk ";
       msg += wifi_ssid;
@@ -424,49 +381,66 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
       request->send(200, "text/plain", msg);
       delay(2000);
       ESP.restart();
-    }
-    // Could not receive/save credentials
-    if (!success) {
+    } else {
+      // Could not receive/save credentials
       alert += "Fehler: Die Netzwerkauswahl konnte nicht übernommen werden!<br>";
-      request->send(LittleFS, "/ap-index-esp.html", String(), false, processor);
+      request->send(LittleFS, "/ap-index.html", String(), false, processor);
     }
   });
+
 
   // Set server config
   // -----------------
   server->on("/config", HTTP_GET, [](AsyncWebServerRequest* request) {
     bool success = false;
+
     if (request->hasParam("user") && request->hasParam("pw") && request->hasParam("port")) {
       // Unpack parameters, server config
-      sta_user_str = request->getParam("user")->value();
-      sta_pw_str = request->getParam("pw")->value();
-      sta_port = request->getParam("port")->value().toInt();
-      Serial.println("Received server config | User: " + sta_user_str + " PW: " + sta_pw_str + " | Port: " + String(sta_port));
-      success = saveServerConfig();
-    } 
+      RotorServer::server_config.user = request->getParam("user")->value();
+      RotorServer::server_config.password = request->getParam("pw")->value();
+      RotorServer::server_config.port = request->getParam("port")->value().toInt();
+
+      Serial.print("Received server config: (User) ");
+      Serial.print(RotorServer::server_config.user);
+      Serial.print(" | (PW) ");
+      Serial.print(RotorServer::server_config.password);
+      Serial.print(" | (Port) ");
+      Serial.println(RotorServer::server_config.port);
+
+      success = RotorServer::saveConfig();
+    }
+
     // Could not receive/save server config
     if (success) {
       alert += "Neue Serverkonfiguration wurde übernommen.<br>";
     } else {
       alert += "Fehler: Die Serverkonfiguration konnte nicht übernommen werden!<br>";
     }
-    request->send(LittleFS, "/ap-index-esp.html", String(), false, processor);
+    request->send(LittleFS, "/ap-index.html", String(), false, processor);
   });
+
 
   // Reset server config
   // --------------------
   server->on("/reset", HTTP_GET, [](AsyncWebServerRequest* request) {
     // Reset server config
-    bool success = resetServerConfig();
+    bool success = RotorServer::resetConfig();
+
     if (success) {
-      Serial.println("Received request to reset server config | User: " + sta_user_str + " PW: " + sta_pw_str + " | Port: " + String(sta_port));
+      Serial.print("Reset server config to: (User) ");
+      Serial.print(RotorServer::server_config.user);
+      Serial.print(" | (PW) ");
+      Serial.print(RotorServer::server_config.password);
+      Serial.print(" | (Port) ");
+      Serial.println(RotorServer::server_config.port);
       alert += "Die Serverkonfiguration wurde zurückgesetzt.<br>";
     } else {
       Serial.println("Received request to reset server config | Error: Could not reset server configuration.");
       alert += "Die Serverkonfiguration konnte nicht zurückgesetzt.<br>";
     }
-    request->send(LittleFS, "/ap-index-esp.html", String(), false, processor);
+    request->send(LittleFS, "/ap-index.html", String(), false, processor);
   });
+
 
   // Trigger a rescan for networks
   // -----------------------------
@@ -475,11 +449,13 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
     scan_now = true;
   });
 
+
   // Catch all route
   // ---------------
   server->onNotFound([](AsyncWebServerRequest *request){
     request->redirect(get_ip_url());
   });
+
 
   // Static files (CSS, fonts)
   // -------------------------
@@ -487,6 +463,7 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
   server->serveStatic("/inter-regular.woff2", LittleFS, "/inter-regular.woff2");
   server->serveStatic("/inter-700.woff2", LittleFS, "/inter-700.woff2");
   server->on("/favicon.ico",[](AsyncWebServerRequest *request){request->send(404);});
+
 
   // Captive Portal responses
   // ------------------------

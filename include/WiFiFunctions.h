@@ -12,23 +12,6 @@ extern String wifi_bssid;
 extern String wifi_pw;
 extern uint8_t wifi_bssid_uint8[6];
 
-// STATION server config
-// Defined in WiFiFunctions.cpp
-extern int sta_port;
-extern String sta_user_str;
-extern String sta_pw_str;
-
-// --------------------------------
-
-// => Save server config from PREFS
-bool saveServerConfig();
-
-// => Load server config in PREFS
-void loadServerConfig();
-
-// => Reset saved server config to default
-bool resetServerConfig();
-
 // --------------------------------
 
 // => Save credentials to PREFS

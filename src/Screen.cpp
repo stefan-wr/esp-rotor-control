@@ -5,11 +5,13 @@
 #include <math.h>
 
 #include <globals.h>
-#include <Screen.h>
+#include <Screen.h>             
 #include <RotorController.h>    // Exposes Global: rotor_ctrl
 #include <WiFiFunctions.h>
 #include <Timer.h>
-#include <Firmware.h>
+#include <Firmware.h>           // Exposes Global: firmware
+#include <RotorServer.h>        // Exposes Global: *server
+#include <RotorSocket.h>        // Expose Global: websocket
 
 namespace Screen {
 
@@ -206,7 +208,7 @@ namespace Screen {
 
         // N of connected clients
         screen->setCursor(116, 52);
-        screen->print(clients_connected);
+        screen->print(RotorSocket::clients_connected);
     }
 
 
@@ -275,7 +277,7 @@ namespace Screen {
             screen->printf("URL: %s.local\n", local_url);
 
             moveCursor(0, gap);
-            screen->printf("Port: %d\n", sta_port);
+            screen->printf("Port: %d\n", RotorServer::server_config.port);
 
             moveCursor(0, gap);
             screen->setTextWrap(false);

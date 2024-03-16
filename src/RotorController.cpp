@@ -7,9 +7,8 @@
 #include <Adafruit_ADS1X15.h>
 #include <Timer.h>
 #include <ESPAsyncWebServer.h>
+#include <RotorSocket.h>        // Exposes Global: websocket
 
-
-extern AsyncWebSocket websocket;    // Websocket instance from main.cpp
 
 namespace Rotor {
     const String directions[2] = {"CCW", "CW"};

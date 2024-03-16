@@ -5,8 +5,8 @@
 #include <Settings.h>
 #include <globals.h>
 #include <WiFiFunctions.h>
+#include <RotorSocket.h>
 
-extern AsyncWebSocket websocket;    // Websocket instance from main.cpp
 
 namespace Settings {
     String settings_buffer;
