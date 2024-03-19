@@ -215,15 +215,15 @@ void loop() {
   if (multi_btn_pressed && !multi_btn_hold && !firmware.is_updating) {
     Serial.println("[BTN] pressed.");
 
-    // Toggle screen
-    if (has_screen && use_screen) {
-        screen.toggleScreens();
+    // Toggle screen if rotor is not rotating
+    if (has_screen && use_screen && !rotor_ctrl.is_rotating) {
+      screen.toggleScreens();
     }
 
     // Stop rotor
     if (rotor_ctrl.is_rotating) {
       rotor_ctrl.stop();
-      wifi_led.blinkBlocking(1, 250ul);
+      wifi_led.blink(1, 250ul);
     }
 
     // Enable further checks for wether multi button is being held down

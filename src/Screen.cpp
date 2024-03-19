@@ -150,17 +150,36 @@ namespace Screen {
     // => Draw compass with radius r, centered at (cx, cy)
     // ---------------------------------------------------
     void Screen::drawCompass(const uint16_t &cx, const uint16_t &cy, const float &r, uint16_t color) {
-        // Draw compass outline and center dot
-        screen->drawCircle(cx, cy, r, color);
-        screen->fillCircle(cx, cy, 2, color);
+        // Compass outline
+        screen->fillCircle(cx, cy, r, color);
+        screen->fillCircle(cx, cy, r - 2, !color);
+
+        // Reticle
+        /*
+        screen->drawFastHLine(cx - r + 13, cy, 2 * (r - 13) + 1, color);
+        screen->drawFastVLine(cx, cy - r + 13, 2 * (r - 13) + 1, color);
+        screen->fillCircle(cx, cy, 13, !color);
+        */
+
+        // Ticks
+        for (float a = 0; a < 360; a += 30 ) {
+            compass.tick_sin = sin(a * deg_to_rad_factor);
+            compass.tick_cos = cos(a * deg_to_rad_factor);
+            compass.tick_x1 = round(cx + compass.tick_sin * r);
+            compass.tick_y1 = round(cy - compass.tick_cos * r);
+            compass.tick_x2 = round(cx + compass.tick_sin * (r - 4));
+            compass.tick_y2 = round(cy - compass.tick_cos * (r - 4));
+            screen->drawLine(compass.tick_x2, compass.tick_y2,
+                            compass.tick_x1, compass.tick_y1, color);
+        }
 
         // Draw compass needle
         compass.needle_sin = sin(rotor_ctrl.rotor.last_angle_rad);
         compass.needle_cos = cos(rotor_ctrl.rotor.last_angle_rad);
-        compass.needle_x1 = round(cx + compass.needle_sin * (r - 4));
-        compass.needle_y1 = round(cy - compass.needle_cos * (r - 4));
-        compass.needle_x2 = round(cx - compass.needle_sin * (r / 3));
-        compass.needle_y2 = round(cy + compass.needle_cos * (r / 3));
+        compass.needle_x1 = round(cx + compass.needle_sin * (r - 5));
+        compass.needle_y1 = round(cy - compass.needle_cos * (r - 5));
+        compass.needle_x2 = round(cx - compass.needle_sin * (r * 0.4));
+        compass.needle_y2 = round(cy + compass.needle_cos * (r * 0.4));
         screen->drawLine(compass.needle_x2, compass.needle_y2,
                          compass.needle_x1, compass.needle_y1, color);
 
@@ -170,11 +189,21 @@ namespace Screen {
             compass.target_cos = cos(rotor_ctrl.auto_rotation_target_rad);
             compass.target_x1 = round(cx + compass.target_sin * (r - 4));
             compass.target_y1 = round(cy - compass.target_cos * (r - 4));
-            compass.target_x2 = round(cx + compass.target_sin * (r / 2));
-            compass.target_y2 = round(cy - compass.target_cos * (r / 2));
+            compass.target_x2 = round(cx + compass.target_sin * (r * 0.5));
+            compass.target_y2 = round(cy - compass.target_cos * (r * 0.5));
             screen->drawLine(compass.target_x2, compass.target_y2,
-                             compass.target_x1, compass.target_y1, color); 
-        }        
+                             compass.target_x1, compass.target_y1, color);
+        }
+
+        // Center dot
+        screen->fillCircle(cx, cy, 5, !color);
+        screen->drawCircle(cx, cy, 5, color);
+        screen->fillCircle(cx, cy, 2, color);
+
+        // Overlap Indicator
+        if (rotor_ctrl.rotor.last_angle > 360.0f) {
+            screen->fillCircle(cx + r - 3, cy - r + 3, 2, color);
+        }
     }
 
     // => Draw sidebar with additional information

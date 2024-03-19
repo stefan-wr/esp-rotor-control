@@ -32,6 +32,8 @@ namespace Screen {
             float needle_x1, needle_x2, needle_y1, needle_y2;
             float target_sin, target_cos;
             float target_x1, target_x2, target_y1, target_y2;
+            float tick_sin, tick_cos;
+            float tick_x1, tick_x2, tick_y1, tick_y2;
         } compass;
 
         // => Clear screen and reset text configurations and cursor
