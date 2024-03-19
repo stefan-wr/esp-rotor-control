@@ -18,7 +18,6 @@ extern BlinkingLED wifi_led;
 
 // PREFS instances
 Preferences wifi_prefs;
-Preferences server_prefs;
 
 // AP mode buffers for alert messages and list of networks
 String networks_html = "";
@@ -118,13 +117,13 @@ String processor(const String &var) {
     return alert;
   }
   if (var == "USER") {
-    return RotorServer::server_config.user;
+    return rotor_server.config.user;
   }
   if (var == "PASSWORD") {
-    return RotorServer::server_config.password;
+    return rotor_server.config.password;
   }
   if (var == "PORT") {
-    return String(RotorServer::server_config.port);
+    return String(rotor_server.config.port);
   }
   if (var == "NETWORKS") {
     return networks_html;
@@ -336,8 +335,8 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
   }
 
   // Load rotor server config
-  RotorServer::loadConfig();
-  RotorServer::printConfig();
+  rotor_server.loadConfig();
+  rotor_server.printConfig();
 
   // -------------------
   // Configure AP server
@@ -396,18 +395,18 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
 
     if (request->hasParam("user") && request->hasParam("pw") && request->hasParam("port")) {
       // Unpack parameters, server config
-      RotorServer::server_config.user = request->getParam("user")->value();
-      RotorServer::server_config.password = request->getParam("pw")->value();
-      RotorServer::server_config.port = request->getParam("port")->value().toInt();
+      rotor_server.config.user = request->getParam("user")->value();
+      rotor_server.config.password = request->getParam("pw")->value();
+      rotor_server.config.port = request->getParam("port")->value().toInt();
 
       Serial.print("Received server config: (User) ");
-      Serial.print(RotorServer::server_config.user);
+      Serial.print(rotor_server.config.user);
       Serial.print(" | (PW) ");
-      Serial.print(RotorServer::server_config.password);
+      Serial.print(rotor_server.config.password);
       Serial.print(" | (Port) ");
-      Serial.println(RotorServer::server_config.port);
+      Serial.println(rotor_server.config.port);
 
-      success = RotorServer::saveConfig();
+      success = rotor_server.saveConfig();
     }
 
     // Could not receive/save server config
@@ -424,15 +423,15 @@ bool startAPServer(AsyncWebServer *server, DNSServer &dns_server) {
   // --------------------
   server->on("/reset", HTTP_GET, [](AsyncWebServerRequest* request) {
     // Reset server config
-    bool success = RotorServer::resetConfig();
+    bool success = rotor_server.resetConfig();
 
     if (success) {
       Serial.print("Reset server config to: (User) ");
-      Serial.print(RotorServer::server_config.user);
+      Serial.print(rotor_server.config.user);
       Serial.print(" | (PW) ");
-      Serial.print(RotorServer::server_config.password);
+      Serial.print(rotor_server.config.password);
       Serial.print(" | (Port) ");
-      Serial.println(RotorServer::server_config.port);
+      Serial.println(rotor_server.config.port);
       alert += "Die Serverkonfiguration wurde zurückgesetzt.<br>";
     } else {
       Serial.println("Received request to reset server config | Error: Could not reset server configuration.");

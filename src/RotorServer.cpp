@@ -11,92 +11,100 @@
 
 #define CONFIG_PREFS_KEY "serverPrefs"
 
-AsyncWebServer *server;
-
 namespace RotorServer {
-  
+
+  // => Check an http request for authentication
+  // @param request: Pointer to AsyncWebServerRequest
+  // @return False if not authenticated but required, else true
+  bool authenticateRequest(AsyncWebServerRequest *request) {
+    if (rotor_server.config.authenticate) { 
+      if (!request->authenticate(rotor_server.config.http_username,
+                                rotor_server.config.http_password)) {
+        request->requestAuthentication();
+        return false;
+      }
+    } 
+    return true;
+  }
+
+
   // ==============================
   // Server Config
   // ==============================
 
-  struct serverConfig server_config;
-
-  // => Update login credentials variables
-  void updateHttpCredentials() {
-    server_config.http_username = server_config.user.c_str();
-    server_config.http_password = server_config.password.c_str();
-  }
-
   // => Load server config from Preferences
-  void loadConfig() {
-    if (!server_config.prefs.begin(CONFIG_PREFS_KEY, true) && verbose) {
+  void RotorServer::loadConfig() {
+    if (!config_prefs.begin(CONFIG_PREFS_KEY, true) && verbose) {
       Serial.println("[Server] Could not load server configuration! Use default configuration instead.");
     }
-    server_config.port = server_config.prefs.getInt("port", sta_default_port);
-    server_config.user = server_config.prefs.getString("user", sta_default_user);
-    server_config.password = server_config.prefs.getString("password", sta_default_pw);
+    config.port = config_prefs.getInt("port", sta_default_port);
+    config.user = config_prefs.getString("user", sta_default_user);
+    config.password = config_prefs.getString("password", sta_default_pw);
     updateHttpCredentials();
-    server_config.prefs.end();
+    config_prefs.end();
   }
 
   // => Save server config in Preferences
-  bool saveConfig() {
-    if (!server_config.prefs.begin(CONFIG_PREFS_KEY, false)) {
+  bool RotorServer::saveConfig() {
+    if (!config_prefs.begin(CONFIG_PREFS_KEY, false)) {
       Serial.println("[Server] Error: Could not save server configuration!");
       return false;
     };
-    server_config.prefs.putInt("port", server_config.port);
-    server_config.prefs.putString("user", server_config.user);
-    server_config.prefs.putString("password", server_config.password);
-    server_config.prefs.end();
+    config_prefs.putInt("port", config.port);
+    config_prefs.putString("user", config.user);
+    config_prefs.putString("password", config.password);
+    config_prefs.end();
     return true;
   }
 
   // => Reset server config in Preferences
-  bool resetConfig() {
-    server_config.port = sta_default_port;
-    server_config.user = sta_default_user;
-    server_config.password = sta_default_pw;
+  bool RotorServer::resetConfig() {
+    config.port = sta_default_port;
+    config.user = sta_default_user;
+    config.password = sta_default_pw;
     updateHttpCredentials();
     return saveConfig();
   }
 
   // => Print current server config to Serial
-  void printConfig() {
+  void RotorServer::printConfig() {
     Serial.print("[Server] config from PREFS: (User) ");
-    Serial.print(server_config.user);
+    Serial.print(config.user);
     Serial.print(" | (PW) ");
-    Serial.print(server_config.password);
+    Serial.print(config.password);
     Serial.print(" | (Port) ");
-    Serial.println(server_config.port);
+    Serial.println(config.port);
   }
+
+  // => Update http login variables
+  void RotorServer::updateHttpCredentials() {
+    config.http_username = config.user.c_str();
+    config.http_password = config.password.c_str();
+    if (config.password == "") {
+      config.authenticate = false;
+    }
+  }
+
 
   // ==============================
   // Server
   // ==============================
 
-  // Number of authentications, used in "/authenticate" URL
-  uint8_t authentications = 0;
-
-  // => Check a request for authentication
-  void authenticateRequest(AsyncWebServerRequest * request) {
-    if (server_config.password != "" && !request->authenticate(server_config.http_username, server_config.http_password))
-      return request->requestAuthentication();
-  }
-
-  // => Start server
-  void startServer() {
-    server = new AsyncWebServer(RotorServer::server_config.port);
+  // => Init server
+  void RotorServer::init() {
+    loadConfig();
+    server = new AsyncWebServer(config.port);
     addRoutes();
     RotorSocket::initWebsocket();
     server->addHandler(&websocket);
     server->begin();
   }
 
+
   // ***********************
   // => Add routes to server
   // ***********************
-  void addRoutes() {
+  void RotorServer::addRoutes() {
     /*
     // Add headers for CORS preflight request when uploading firmware from VUE dev environment
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "http://localhost:5173");
@@ -110,11 +118,11 @@ namespace RotorServer {
   // Catch all route
     server->onNotFound([](AsyncWebServerRequest *request) {
       if (request->method() == HTTP_OPTIONS) {
-         // CORS preflight
+          // CORS preflight
         request->send(200);
       } else {
         // Send root, necessary for page reloads in Vue-App (redirect won't work)
-        RotorServer::authenticateRequest(request);
+        if (!authenticateRequest(request)) { return; }
         AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/app/index.html.gzip", "text/html");
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
@@ -124,7 +132,7 @@ namespace RotorServer {
 
     // Root route, Vue-App index file
     server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-      RotorServer::authenticateRequest(request);
+      if (!authenticateRequest(request)) { return; }
       AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/app/index.html.gzip", "text/html");
       response->addHeader("Content-Encoding", "gzip");
       response->addHeader("cache-control", "private, max-age=86400");
@@ -146,7 +154,7 @@ namespace RotorServer {
 
     // Disconnect ESP from network
     server->on("/disconnect", HTTP_GET, [](AsyncWebServerRequest* request) {
-      RotorServer::authenticateRequest(request);
+      if (!authenticateRequest(request)) { return; }
       request->send(200);
       resetCredentials();
       delay(1000);
@@ -156,7 +164,7 @@ namespace RotorServer {
 
     // Reboot ESP
     server->on("/reboot", HTTP_GET, [](AsyncWebServerRequest* request) {
-      RotorServer::authenticateRequest(request);
+      if (!authenticateRequest(request)) { return; }
       request->send(200);
       delay(1000);
       ESP.restart();
@@ -165,13 +173,15 @@ namespace RotorServer {
 
     // Authenticate
     server->on("/authenticate", HTTP_GET, [](AsyncWebServerRequest* request) {
-      if (RotorServer::server_config.password != "") {
-        if (!RotorServer::authentications || !request->authenticate(RotorServer::server_config.http_username, RotorServer::server_config.http_password)) {
-          RotorServer::authentications++;
+      if (rotor_server.config.authenticate) {
+        if (!rotor_server.authentications ||
+            !request->authenticate(rotor_server.config.http_username,
+                                  rotor_server.config.http_password)) {
+          rotor_server.authentications++;
           return request->requestAuthentication();
         }
       }
-      RotorServer::authentications = 0;
+      rotor_server.authentications = 0;
       request->send(200);
     });
 
@@ -183,3 +193,5 @@ namespace RotorServer {
     server->on("/update", HTTP_POST, Firmware::handleFirmwareResponse, Firmware::handleFirmwareUpload);    
   }
 }
+
+RotorServer::RotorServer rotor_server;

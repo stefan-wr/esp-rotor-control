@@ -3,6 +3,9 @@
 
 #include <ESPAsyncWebServer.h>
 
+// Expose global socket instance
+extern AsyncWebSocket websocket;
+
 namespace RotorSocket {
   // Number of connected socket clients
   extern int clients_connected;
@@ -10,8 +13,5 @@ namespace RotorSocket {
   // => Initialise websocket (add event handler)
   void initWebsocket();
 }
-
-// Expose global socket instance
-extern AsyncWebSocket websocket;
 
 #endif //ROTORSOCKET_H

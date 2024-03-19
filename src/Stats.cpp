@@ -3,13 +3,14 @@
 #include <Stats.h>
 #include <stdint.h>
 
+#define STATS_PREFS_KEY "statsPrefs"
+
 namespace Stats {
 
-    Preferences stats_prefs = Preferences();
-    const char* prefs_name = "statsPrefs";
+    Preferences stats_prefs;
 
     // *************
-    // Counter Class 
+    // Counter Class
     // *************
 
     // Constructor
@@ -21,7 +22,7 @@ namespace Stats {
 
     // => Load value from PREFS
     void Counter::_load() {
-        bool prefs_exists = stats_prefs.begin(prefs_name, true);
+        bool prefs_exists = stats_prefs.begin(STATS_PREFS_KEY, true);
         _value = stats_prefs.getULong(_key, 1UL);
         _factor = stats_prefs.getInt(_factor_key.c_str(), 0);
         stats_prefs.end();
@@ -35,7 +36,7 @@ namespace Stats {
 
     // => Save value to PREFS
     bool Counter::_save() {
-        if(stats_prefs.begin(prefs_name, false)) {
+        if(stats_prefs.begin(STATS_PREFS_KEY, false)) {
             stats_prefs.putULong(_key, _value);
             stats_prefs.putInt(_factor_key.c_str(), _factor);
             stats_prefs.end();

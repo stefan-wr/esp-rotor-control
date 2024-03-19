@@ -18,13 +18,13 @@ public:
     // => Start/Restart timer
     void start();
 
-    // => Return wether timer has expired. Restart timer if true.
+    // => Reset counter
     void reset();
 
     // => Change interval of timer and restart
     void changeInterval(unsigned long new_interval);
     
-    // => Reset counter
+    // => Return wether timer has expired. Restart timer if true.
     bool passed(const bool &restart = true);    
 };
 

@@ -10,7 +10,7 @@
 #include <WiFiFunctions.h>
 #include <Timer.h>
 #include <Firmware.h>           // Exposes Global: firmware
-#include <RotorServer.h>        // Exposes Global: *server
+#include <RotorServer.h>        // Exposes Global: server
 #include <RotorSocket.h>        // Expose Global: websocket
 
 namespace Screen {
@@ -277,7 +277,7 @@ namespace Screen {
             screen->printf("URL: %s.local\n", local_url);
 
             moveCursor(0, gap);
-            screen->printf("Port: %d\n", RotorServer::server_config.port);
+            screen->printf("Port: %d\n", rotor_server.config.port);
 
             moveCursor(0, gap);
             screen->setTextWrap(false);

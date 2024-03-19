@@ -20,13 +20,13 @@
 #include <BlinkingLED.h>
 #include <Stats.h>
 #include <RotorSocket.h>      // Exposes Global: websocket 
-#include <RotorServer.h>      // Exposes Global: *server 
+#include <RotorServer.h>      // Exposes Global: rotor_server 
 
 #define HAS_SCREEN true
 #define COUNT_LOOP_CYCLE_TIME false
 
 // Software version
-const String version = "0.9.2";
+const String version = "0.9.3";
 
 // ESP ID
 String esp_id = "";
@@ -144,14 +144,14 @@ void setup() {
 
   // Favorites & firmware
   favorites.init();
-  firmware.initFirmware();             
+  firmware.init();             
 
   // Start WiFi connection
   // ---------------------
   if (!initWiFi()) {
     // WiFi connection failed -> launch ESP in AccessPoint WiFi mode
     wifi_led.invert();
-    if (!startAPServer(server, dns_server)) {
+    if (!startAPServer(rotor_server.server, dns_server)) {
       fatalError("Failed to start WiFi in AP mode! Try resetting WiFi with button, or reflash firmware.");
     }
   } else {
@@ -160,14 +160,13 @@ void setup() {
 
     // Setup & start server
     // --------------------
-    RotorServer::loadConfig();
-    RotorServer::printConfig();
-    RotorServer::startServer();
+    rotor_server.init();
+    rotor_server.printConfig();
 
     Serial.print("[Server] started on http://");
     Serial.print(WiFi.localIP());
     Serial.print(":");
-    Serial.println(RotorServer::server_config.port);
+    Serial.println(rotor_server.config.port);
     Serial.println();
   }
 }
@@ -264,7 +263,7 @@ void loop() {
     rotor_ctrl.update(!(timers.rotorUpdate->n_passed % 8));
 
     // Send rotation message every second update and only if clients are connected
-    if (RotorSocket::clients_connected > 0 && timers.rotorUpdate->n_passed % 2 == 0) {
+    if (RotorSocket::clients_connected && timers.rotorUpdate->n_passed % 2 == 0) {
       /* Send rotation message if either:
           1. voltage changed significantly compared to last message
           2. rotor started or stopped rotation
@@ -276,6 +275,7 @@ void loop() {
         rotor_ctrl.messenger.sendLastRotation(true);
         adc_volts_prev = rotor_ctrl.rotor.last_adc_volts;
         is_rotating_prev = rotor_ctrl.is_rotating;
+        timers.rotorMessage->start();
       }      
     }
   }

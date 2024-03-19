@@ -23,7 +23,7 @@ namespace Firmware {
         Firmware() {};
 
         // => Init firmware
-        void initFirmware();
+        void init();
 
         // => Generate a random token string, default length = 32
         void generateToken(const int &len = 32);

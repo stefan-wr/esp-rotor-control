@@ -5,8 +5,9 @@
 
 namespace Stats {
 
+    // *************
     // Counter Class
-    // ***************
+    // *************
     class Counter {
     private:
         const char *_key;

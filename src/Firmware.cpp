@@ -13,7 +13,7 @@ extern BlinkingLED wifi_led;
 namespace Firmware {
 
     // => Init firmware
-    void Firmware::initFirmware() {
+    void Firmware::init() {
         size = 0;
         is_updating = false;
         upload_progress = 0;
@@ -48,7 +48,7 @@ namespace Firmware {
     // => Handler for update request
     // -----------------------------
     void handleUpdateRequest(AsyncWebServerRequest *request) {
-        RotorServer::authenticateRequest(request);
+        if (!RotorServer::authenticateRequest(request)) { return; }
 
         firmware.md5 = "";
         firmware.size = 0;
@@ -85,11 +85,7 @@ namespace Firmware {
     // => Upload handler for firmware upload via HTTP Post multipart/formdata
     // ----------------------------------------------------------------------
     void handleFirmwareUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-        /*
-        if (authenticate && !request->authenticate(http_username, http_password))
-            request->requestAuthentication();
-        */
-
+        
         // First data packet
         // *****************    
         if (!index) {
