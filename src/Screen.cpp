@@ -15,6 +15,11 @@
 
 namespace Screen {
 
+    const unsigned char rotate_right_icon[] = {0,0,0,0,3,224,7,240,14,56,28,28,24,12,24,12,
+                                               24,76,28,220,12,248,0,240,0,252,0,248,0,0,0,0};
+    const unsigned char rotate_left_icon[] = {0,0,0,0,3,224,7,240,14,56,28,28,24,12,24,12,
+                                              25,12,29,156,15,152,7,128,31,128,15,128,0,0,0,0};
+
     // => Initialise screen
     bool Screen::init() {
         screen = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
@@ -209,29 +214,32 @@ namespace Screen {
     // => Draw sidebar with additional information
     // -------------------------------------------
     void Screen::drawSidebar() {
-        screen->fillRoundRect(SCREEN_WIDTH - 19, 0, 19, SCREEN_HEIGHT, 4, WHITE); // 109,0
+        screen->fillRoundRect(SCREEN_WIDTH - 19, 0, 19, 19, 3, WHITE); // 109,0
+        screen->fillRoundRect(SCREEN_WIDTH - 19, 22, 19, 42, 3, WHITE); // 109,0
         screen->setTextColor(BLACK);
         
         // Rotation indicators
         if (rotor_ctrl.is_rotating) {
             if (rotor_ctrl.direction) {
-                screen->fillTriangle(114, 5, 122, 9, 114, 13, BLACK);   // Left
+                //screen->fillTriangle(114, 5, 122, 9, 114, 13, BLACK);   // Left
+                screen->drawBitmap(110, 2, rotate_right_icon, 16, 16, BLACK);
             } else {
-                screen->fillTriangle(114, 9, 122, 5, 122, 13, BLACK);   // Right
+                //screen->fillTriangle(114, 9, 122, 5, 122, 13, BLACK);   // Right
+                screen->drawBitmap(110, 2, rotate_left_icon, 16, 16, BLACK);
             }
         } else {
-            screen->fillRoundRect(114, 5, 9, 9, 2, BLACK);
+            screen->fillRoundRect(114, 5, 9, 9, 1, BLACK);
         }
 
         // Overlap indicator
         if (rotor_ctrl.rotor.last_angle > 360.0f) {
-            screen->setCursor(113, 19);
+            screen->setCursor(113, 27);
             screen->print("OL");
         }
 
         // Auto rotation indicator
         if (rotor_ctrl.is_auto_rotating) {
-            screen->setCursor(113, 32);
+            screen->setCursor(113, 40);
             screen->print("AR");
         }
 
