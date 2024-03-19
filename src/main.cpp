@@ -148,10 +148,10 @@ void setup() {
 
   // Start WiFi connection
   // ---------------------
-  if (!initWiFi()) {
+  if (!WiFiFunctions::initWiFi()) {
     // WiFi connection failed -> launch ESP in AccessPoint WiFi mode
     wifi_led.invert();
-    if (!startAPServer(rotor_server.server, dns_server)) {
+    if (!WiFiFunctions::startAPServer(rotor_server.server, dns_server)) {
       fatalError("Failed to start WiFi in AP mode! Try resetting WiFi with button, or reflash firmware.");
     }
   } else {
@@ -246,7 +246,7 @@ void loop() {
         rotor_ctrl.stop();
         wifi_led.blinkBlocking(4, 250ul);
         Serial.println("[BTN] held for 2s. Resetting WiFi credentials and restart.");
-        resetCredentials();
+        WiFiFunctions::resetCredentials();
         ESP.restart();
       }
     }
@@ -407,10 +407,10 @@ void loop() {
   // Scanning for networks
   if (!in_station_mode) {
     if (scan_now || timers.networkScan->passed()) {
-      startNetworkScan();
+      WiFiFunctions::startNetworkScan();
       scan_now = false;
     }
-    watchNetworkScan();
+    WiFiFunctions::watchNetworkScan();
   }
 
   // DNS Server

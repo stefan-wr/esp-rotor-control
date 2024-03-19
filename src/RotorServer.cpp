@@ -156,7 +156,7 @@ namespace RotorServer {
     server->on("/disconnect", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!authenticateRequest(request)) { return; }
       request->send(200);
-      resetCredentials();
+      WiFiFunctions::resetCredentials();
       delay(1000);
       ESP.restart();
     });

@@ -19,7 +19,7 @@ namespace Settings {
         StaticJsonDocument<192> doc;
         doc["version"] = version;
         doc["espID"] = esp_id;
-        doc["ssid"] = wifi_ssid;
+        doc["ssid"] = WiFiFunctions::wifi_config.ssid;
         doc["rssi"] = (String)WiFi.RSSI();
         doc["hasScreen"] = has_screen;
         doc["useScreen"] = use_screen;

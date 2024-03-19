@@ -5,55 +5,53 @@
 #include<ESPAsyncWebServer.h>
 #include<DNSServer.h>
 
-// STATION mode global WiFi-credentials
-// Defined in WiFiFunctions.cpp
-extern String wifi_ssid;
-extern String wifi_bssid;
-extern String wifi_pw;
-extern uint8_t wifi_bssid_uint8[6];
 
-// --------------------------------
+namespace WiFiFunctions {
 
-// => Save credentials to PREFS
-bool saveCredentials();
+    // =============
+    // Configuration
+    // =============
 
-// => Load WiFi credentials from PREFS
-void loadCredentials();
+    // WiFi credentials
+    struct WiFiConfig {
+        String ssid;
+        String bssid;
+        String password;
+        uint8_t bssid_uint8t[6];
+    };
 
-// => Overwrite the saved credentials with empty strings
-bool resetCredentials();
+    extern struct WiFiConfig wifi_config;
 
-// --------------------------------
+    // => Clear WiFi credentials with empty strings
+    bool resetCredentials();
 
-// => React to button interrupt for resetting WiFi credentials
-void resetCredentialsInterrupt();
+    // =========
+    // Utilities
+    // =========
 
-// => Convert wifi_bssid BSSID string to uint8_t
-bool bssidToUint8();
+    // => Return ip url from current AP IP
+    String get_ip_url();
 
-// => Return ip url from current AP IP
-String get_ip_url();
+    // =============
+    // Networks Scan
+    // =============
 
-// => Create HTML <li> item for a scanned network
-String networkItemHTML(const String &ssid, const String &bssid, const int &rssi);
+    // => Start async scan for WiFi-networks
+    void startNetworkScan();
+    // => Check for completion of async network scan and create <ul> of found networks
+    void watchNetworkScan();
 
-// => Scan for WiFi-networks and create <ul> of found networks
-void scanNetworks();
+    // ======
+    // Server
+    // ======
 
-// => Start async scan for WiFi-networks
-void startNetworkScan();
+    // => Initialise WiFi connection from saved parameters.
+    // @return true if success, false if connecting fails
+    bool initWiFi();
 
-// => Check for completion of async network scan and create <ul> of found networks
-void watchNetworkScan();
-
-// => Initialise WiFi connection from saved parameters.
-// Return false when connecting fails.
-bool initWiFi();
-
-// => Load server config
-void initServerConfig();
-
-// Start AP mode server and ask for local WiFi credentials.
-bool startAPServer(AsyncWebServer *server, DNSServer &dns_server);
+    // => Start AP mode server and ask for local WiFi credentials.
+    // @return true if success, false if server could no be started
+    bool startAPServer(AsyncWebServer *server, DNSServer &dns_server);
+}
 
 #endif // WIFIFUNCTIONS_H

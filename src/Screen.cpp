@@ -281,7 +281,7 @@ namespace Screen {
 
             moveCursor(0, gap);
             screen->setTextWrap(false);
-            screen->printf("SSID: %s\n", wifi_ssid.c_str());
+            screen->printf("SSID: %s\n", WiFiFunctions::wifi_config.ssid.c_str());
             screen->setTextWrap(true);
 
             moveCursor(0, gap);
