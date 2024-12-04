@@ -135,17 +135,25 @@ export const useSettingsStore = defineStore('settings', () => {
 
     // Test wether a given array is a valid array of favorites
     function isValidFavoritesArray(array) {
-        if (Array.isArray(array)) {
-            for (let item of array) {
-                for (let prop of ['id', 'name', 'angle']) {
-                    if (!Object.hasOwn(item, prop)) {
-                        return false;
-                    }
-                }
-            }
-        } else {
+        // Check for array
+        if (!Array.isArray(array)) {
             return false;
         }
+
+        // Array is too long
+        if (array.length > maxFavorites) {
+            return false;
+        }
+
+        // Check for properties
+        for (let item of array) {
+            for (let prop of ['id', 'name', 'angle']) {
+                if (!Object.hasOwn(item, prop)) {
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 

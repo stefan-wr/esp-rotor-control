@@ -1,13 +1,7 @@
 #include <Arduino.h>
-#include <ESPAsyncWebServer.h>
-
 #include <Favorites.h>
 #include <SimpleFS.h>
 #include <RotorSocket.h>
-
-
-// Path to save favorites at in FS
-const char* favs_path = "/favorites.json";
 
 // ******************************
 // Define Favorites class members
@@ -23,12 +17,12 @@ void Favorites::init() {
 
 // Load favorites from FS
 void Favorites::load() {
-    favs_buffer = readFromFS(favs_path);
+    favs_buffer = readFromFS(FAVORITES_PATH);
 }
 
 // Save favorites to FS
 void Favorites::save() {
-    writeToFS(favs_path, favs_buffer);
+    writeToFS(FAVORITES_PATH, favs_buffer);
 }
 
 // Set, save and send favorites from message

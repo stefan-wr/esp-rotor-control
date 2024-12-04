@@ -6,7 +6,7 @@
 
       <!-- Rotation -->
       <div
-        v-if="rotorStore.rotor.rotation === -1"
+        v-if="rotorStore.rotor.rotation === -1 && props.full"
         class="rotation-lbl corner-lbl bold medium no-select"
       >
         <div class="rotate-ccw">
@@ -15,14 +15,14 @@
       </div>
 
       <div
-        v-if="rotorStore.rotor.rotation === 0"
+        v-if="rotorStore.rotor.rotation === 0 && props.full"
         class="rotation-lbl corner-lbl bold medium no-select"
       >
         STOP
       </div>
 
       <div
-        v-if="rotorStore.rotor.rotation === 1"
+        v-if="rotorStore.rotor.rotation === 1 && props.full"
         class="rotation-lbl corner-lbl bold medium no-select"
       >
         <div class="rotate-cw">
@@ -31,13 +31,17 @@
       </div>
 
       <!-- Overlap -->
-      <div v-if="rotorStore.isOverlap" id="overlap-lbl" class="corner-lbl medium bold no-select">
+      <div
+        v-if="rotorStore.isOverlap && props.full"
+        id="overlap-lbl"
+        class="corner-lbl medium bold no-select"
+      >
         OL
       </div>
 
       <!-- Lock-->
       <div
-        v-if="settingsStore.lock.isLocked"
+        v-if="settingsStore.lock.isLocked && props.full"
         id="lock-lbl"
         class="corner-lbl medium bold no-select"
       >
@@ -51,8 +55,9 @@
         ref="compass"
         @click="requestAngle"
         :class="{
-          'mouse-inside': uiStore.ui.isMouseInCompass && !settingsStore.isLockedByElse,
-          locked: settingsStore.isLockedByElse
+          'mouse-inside':
+            uiStore.ui.isMouseInCompass && !settingsStore.isLockedByElse && props.full,
+          locked: settingsStore.isLockedByElse && props.full
         }"
         viewBox="0 30 1000 940"
         style="fill-rule: evenodd; clip-rule: evenodd; stroke-linejoin: round; stroke-miterlimit: 2"
@@ -109,7 +114,10 @@
             v-for="fav in settingsStore.favorites.array"
             :key="fav.id"
             class="cmp-favorite-dot"
-            :class="{ 'cmp-lbl-disabled': settingsStore.isLockedByElse }"
+            :class="{
+              'cmp-lbl-disabled': settingsStore.isLockedByElse && props.full,
+              'cmp-lbl-enabled': !settingsStore.isLockedByElse && props.full
+            }"
             @click="
               if (!settingsStore.isLockedByElse) {
                 umbrellaStore.sendTarget(fav.angle);
@@ -150,7 +158,7 @@
             :transform="'rotate(' + cardinal.rot + ')'"
             :style="'transform-origin:' + cardinal.x + 'px ' + cardinal.y + 'px'"
           >
-            {{ cardinal.dir }}
+            {{ $t('compass.cardinals.' + cardinal.dir) }}
           </text>
         </g>
 
@@ -164,7 +172,10 @@
           id="cmp-req-needle"
           style="fill: var(--compass-req-needle-color)"
           :style="{ transform: 'rotate(' + uiStore.ui.requestAngle + 'deg)' }"
-          :class="{ 'hide-opacity': !uiStore.ui.isMouseInCompass || settingsStore.isLockedByElse }"
+          :class="{
+            'hide-opacity':
+              !uiStore.ui.isMouseInCompass || settingsStore.isLockedByElse || !props.full
+          }"
         >
           <path d="M500,120 L 515,160 L 515,700 L 500,700 L 485,700 L 485,160" />
         </g>
@@ -203,7 +214,8 @@
 
           <text
             :class="{
-              'hide-opacity': !uiStore.ui.isMouseInCompass || settingsStore.isLockedByElse
+              'hide-opacity':
+                !uiStore.ui.isMouseInCompass || settingsStore.isLockedByElse || !props.full
             }"
             x="500px"
             y="548"
@@ -226,23 +238,26 @@
             :x="deg.x"
             :y="deg.y"
             @click="
-              if (!settingsStore.isLockedByElse) {
+              if (!settingsStore.isLockedByElse && props.full) {
                 umbrellaStore.sendTarget(deg.angle);
               }
             "
             @keydown.enter="
-              if (!settingsStore.isLockedByElse) {
+              if (!settingsStore.isLockedByElse && props.full) {
                 umbrellaStore.sendTarget(deg.angle);
               }
             "
             @keyup.space="
-              if (!settingsStore.isLockedByElse) {
+              if (!settingsStore.isLockedByElse && props.full) {
                 umbrellaStore.sendTarget(deg.angle);
               }
             "
             @keydown.space.prevent=""
-            :class="{ 'cmp-lbl-disabled': settingsStore.isLockedByElse }"
-            tabindex="0"
+            :class="{
+              'cmp-lbl-disabled': settingsStore.isLockedByElse && props.full,
+              'cmp-lbl-enabled': !settingsStore.isLockedByElse && props.full
+            }"
+            :tabindex="!settingsStore.isLockedByElse && props.full ? 0 : -1"
             dominant-baseline="middle"
           >
             {{ deg.angle }}°
@@ -290,13 +305,33 @@
 
     <!-- Additional Information -->
     <!-- ====================== -->
-    <div class="compass-label border-box">
+    <!--div class="compass-label border-box">
       <span class="small txt-dark">{{ $t('compass.position') }}</span>
       <span class="small txt-dark">{{ $t('compass.target') }}</span>
       <span class="small txt-dark">{{ $t('compass.time') }}</span>
       <span class="large bold">{{ rotorStore.angle1D }}°</span>
       <span class="large bold">{{ target }}</span>
       <span class="medium bold monospace" :title="$t('compass.timeDscr')">{{ currentTime }}</span>
+    </div-->
+
+    <div class="compass-labels border-box" v-if="props.full">
+      <div class="flex-vc gap-half">
+        <span class="small txt-dark">{{ $t('compass.position') }}</span>
+        <span class="label-value large bold monospace">{{ rotorStore.angle1D }}°</span>
+      </div>
+      <div class="flex-vc gap-half">
+        <span class="small txt-dark">{{ $t('compass.target') }}</span>
+        <span class="label-value large bold monospace">{{ target }}</span>
+      </div>
+      <div class="flex-vc gap-half">
+        <span class="small txt-dark">{{ $t('compass.time') }}</span>
+        <span
+          class="label-value medium bold monospace flex-cc no-select"
+          :title="$t('compass.timeDscr')"
+        >
+          {{ currentTime }}
+        </span>
+      </div>
     </div>
   </div>
 </template>
@@ -310,13 +345,18 @@ import { useRotorStore } from '@/stores/rotor';
 import { useSettingsStore } from '@/stores/settings';
 import { useUIStore } from '@/stores/ui';
 
-import { useI18n } from "vue-i18n";
-const { t } = useI18n();
-
 const umbrellaStore = useUmbrellaStore();
 const rotorStore = useRotorStore();
 const settingsStore = useSettingsStore();
 const uiStore = useUIStore();
+
+const props = defineProps({
+  full: {
+    type: Boolean,
+    default: true,
+    required: false
+  }
+});
 
 const compass = ref(null);
 
@@ -337,9 +377,9 @@ const degreeLabels = [
 
 const cardinalLabels = [
   { dir: 'N', x: 486, y: 214, rot: 0 },
-  { dir: t('compass.cardinals.NE'), x: 690, y: 265, rot: 45 },
-  { dir: t('compass.cardinals.E'), x: 786, y: 513, rot: 0 },
-  { dir: t('compass.cardinals.SE'), x: 715, y: 757, rot: -45 },
+  { dir: 'NE', x: 690, y: 265, rot: 45 },
+  { dir: 'E', x: 786, y: 513, rot: 0 },
+  { dir: 'SE', x: 715, y: 757, rot: -45 },
   { dir: 'S', x: 487, y: 815, rot: -0 },
   { dir: 'SW', x: 243, y: 712, rot: 45 },
   { dir: 'W', x: 182, y: 513, rot: 0 },
@@ -358,8 +398,8 @@ const target = computed(() => {
 // ------------------
 const today = ref(new Date());
 const currentTime = computed(() => {
-  let time = String(today.value.getHours()).padStart(2, '0') + ":";
-  time += String(today.value.getMinutes()).padStart(2, '0') + ":";
+  let time = String(today.value.getHours()).padStart(2, '0') + ':';
+  time += String(today.value.getMinutes()).padStart(2, '0') + ':';
   time += String(today.value.getSeconds()).padStart(2, '0');
   return time;
 });
@@ -369,18 +409,18 @@ let intervalId;
 onMounted(() => {
   intervalId = setInterval(() => {
     today.value = new Date();
-  }, 100)
-})
+  }, 100);
+});
 
 // Disable update time on unmount
 onUnmounted(() => {
-  clearInterval(intervalId)
+  clearInterval(intervalId);
 });
 
 // Change ring color if rotor is locked by someone else
 // ----------------------------------------------------
 const ringColor = computed(() => {
-  if (settingsStore.isLockedByElse) {
+  if (settingsStore.isLockedByElse && props.full) {
     return 'fill: var(--alert-color)';
   } else {
     return 'fill: var(--compass-color)';
@@ -428,7 +468,7 @@ watch(
 // Request auto rotation from mouse click in compass
 // -------------------------------------------------
 function requestAngle() {
-  if (!settingsStore.isLockedByElse) {
+  if (!settingsStore.isLockedByElse && props.full) {
     const needle = document.getElementById('cmp-req-needle');
     needle.style.filter = 'brightness(120%)';
     setTimeout(() => {
@@ -545,26 +585,21 @@ const favoritesRingColor = computed(() => {
 #cmp-degrees {
   text-anchor: middle;
   font-size: 36px;
-  cursor: pointer;
-
-  text:hover,
-  text:focus-visible {
-    font-weight: bold;
-  }
-
-  text:active {
-    font-weight: normal;
-  }
 }
 
 .cmp-favorite-dot {
   text-anchor: middle;
   font-size: 28px;
+}
+
+.cmp-lbl-enabled {
   cursor: pointer;
 
-  &:hover {
+  &:hover,
+  &:focus-visible {
     font-weight: bold;
   }
+
   &:active {
     font-weight: normal;
   }
@@ -572,6 +607,7 @@ const favoritesRingColor = computed(() => {
 
 .cmp-lbl-disabled {
   cursor: not-allowed;
+
   &:hover {
     font-weight: unset !important;
   }
@@ -643,12 +679,29 @@ const favoritesRingColor = computed(() => {
 }
 
 /* Bottom Card */
+
+/*
 .compass-label {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: auto auto auto;
   align-items: center;
   justify-content: center;
   column-gap: 1em;
   row-gap: 0.5em;
+}
+*/
+
+.compass-labels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: center;
+  gap: 1em;
+
+  .label-value {
+    min-height: 2rem;
+    min-width: 5.5rem;
+    align-self: center;
+  }
 }
 </style>

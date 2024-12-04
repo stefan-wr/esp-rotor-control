@@ -12,6 +12,9 @@
 #include <Firmware.h>           // Exposes Global: firmware
 #include <RotorServer.h>        // Exposes Global: server
 #include <RotorSocket.h>        // Expose Global: websocket
+#include <AppIndex.h>
+
+extern bool just_booted;
 
 namespace Screen {
 
@@ -159,15 +162,8 @@ namespace Screen {
         screen->fillCircle(cx, cy, r, color);
         screen->fillCircle(cx, cy, r - 2, !color);
 
-        // Reticle
-        /*
-        screen->drawFastHLine(cx - r + 13, cy, 2 * (r - 13) + 1, color);
-        screen->drawFastVLine(cx, cy - r + 13, 2 * (r - 13) + 1, color);
-        screen->fillCircle(cx, cy, 13, !color);
-        */
-
         // Ticks
-        for (float a = 0; a < 360; a += 30 ) {
+        for (float a = 0.0f; a < 360.0f; a += 30.0f ) {
             compass.tick_sin = sin(a * deg_to_rad_factor);
             compass.tick_cos = cos(a * deg_to_rad_factor);
             compass.tick_x1 = round(cx + compass.tick_sin * r);
@@ -183,8 +179,8 @@ namespace Screen {
         compass.needle_cos = cos(rotor_ctrl.rotor.last_angle_rad);
         compass.needle_x1 = round(cx + compass.needle_sin * (r - 5));
         compass.needle_y1 = round(cy - compass.needle_cos * (r - 5));
-        compass.needle_x2 = round(cx - compass.needle_sin * (r * 0.4));
-        compass.needle_y2 = round(cy + compass.needle_cos * (r * 0.4));
+        compass.needle_x2 = round(cx - compass.needle_sin * (r * 0.4f));
+        compass.needle_y2 = round(cy + compass.needle_cos * (r * 0.4f));
         screen->drawLine(compass.needle_x2, compass.needle_y2,
                          compass.needle_x1, compass.needle_y1, color);
 
@@ -194,8 +190,8 @@ namespace Screen {
             compass.target_cos = cos(rotor_ctrl.auto_rotation_target_rad);
             compass.target_x1 = round(cx + compass.target_sin * (r - 4));
             compass.target_y1 = round(cy - compass.target_cos * (r - 4));
-            compass.target_x2 = round(cx + compass.target_sin * (r * 0.5));
-            compass.target_y2 = round(cy - compass.target_cos * (r * 0.5));
+            compass.target_x2 = round(cx + compass.target_sin * (r * 0.5f));
+            compass.target_y2 = round(cy - compass.target_cos * (r * 0.5f));
             screen->drawLine(compass.target_x2, compass.target_y2,
                              compass.target_x1, compass.target_y1, color);
         }
@@ -209,6 +205,11 @@ namespace Screen {
         if (rotor_ctrl.rotor.last_angle > 360.0f) {
             screen->fillCircle(cx + r - 3, cy - r + 3, 2, color);
         }
+
+        if (just_booted) {
+            screen->fillCircle(cx + r - 3, cy + r - 3, 2, color);
+        }
+
     }
 
     // => Draw sidebar with additional information
@@ -351,13 +352,37 @@ namespace Screen {
         screen->printf("Firmware: %s\n", version.c_str());
 
         moveCursor(0, gap);
-        screen->printf("UI Version: %s\n", "0.9.0" );
+        screen->printf("UI Version: %s\n", UI_VERSION);
+    }
+
+    // => Set screen showing angle only
+    // --------------------------------
+    void Screen::showAngleScreen() {
+        drawSidebar();
+        screen->setTextSize(3);
+        screen->setTextColor(WHITE);
+
+        // Angle
+        screen->setCursor(16, SCREEN_HEIGHT / 4 - (CHAR_H * 3 / 2));
+        screen->printf("%3.0f", round(rotor_ctrl.rotor.last_angle));
+        moveCursor(1, 0);
+        printDegree();
+
+        // Target
+        screen->setCursor(16, SCREEN_HEIGHT / 4 * 3 - (CHAR_H * 3 / 2));
+        if (rotor_ctrl.is_auto_rotating) {
+            screen->printf("%3.0f", round(rotor_ctrl.auto_rotation_target));
+            moveCursor(1, 0);
+            printDegree();
+        } else {
+            screen->print("---");
+        }
     }
 
     // => Set the default screen when in STATION mode.
     // -----------------------------------------------
     void Screen::showDefaultScreen() {
-        drawCompass(SCREEN_HALF_WIDTH + 8, SCREEN_HALF_HEIGHT, 30, WHITE);
+        drawCompass(SCREEN_HALF_WIDTH + 9, SCREEN_HALF_HEIGHT, 31, WHITE);
         drawSidebar();
 
         // Draw labels
@@ -370,11 +395,12 @@ namespace Screen {
         ly += gap;
         screen->setCursor(0, ly);
         screen->printf("%3.0f", round(rotor_ctrl.rotor.last_angle));
+        moveCursor(1, 0);
         printDegree();
         
         // ---
         ly += CHAR_H + gap;
-        screen->drawFastHLine(0, ly, 41, WHITE);
+        screen->drawFastHLine(0, ly, 42, WHITE);
 
         // Volts
         ly += 1 + gap;
@@ -397,7 +423,7 @@ namespace Screen {
 
         // ---
         ly += CHAR_H + gap;
-        screen->drawFastHLine(0, ly, 41, WHITE);
+        screen->drawFastHLine(0, ly, 42, WHITE);
 
         // Speed
         ly += 1 + gap;
@@ -494,9 +520,12 @@ namespace Screen {
                     showDefaultScreen();
                     break;
                 case 1:
+                    showAngleScreen();
+                    break;                    
+                case 2:
                     showNetworkScreen();
                     break;
-                case 2:
+                case 3:
                     showSystemScreen();
                     break;
             }

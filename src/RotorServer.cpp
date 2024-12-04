@@ -9,6 +9,9 @@
 #include <RotorSocket.h>      // Exposes Global: websocket
 #include <Firmware.h>         // Exposes Global: firmware
 
+#include <AppIndex.h>
+#include <AppAssets.h>
+
 #define CONFIG_PREFS_KEY "serverPrefs"
 
 namespace RotorServer {
@@ -123,7 +126,7 @@ namespace RotorServer {
       } else {
         // Send root, necessary for page reloads in Vue-App (redirect won't work)
         if (!authenticateRequest(request)) { return; }
-        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/app/index.html.gzip", "text/html");
+        AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gzip, index_html_gzip_len);
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
       }
@@ -133,24 +136,46 @@ namespace RotorServer {
     // Root route, Vue-App index file
     server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (!authenticateRequest(request)) { return; }
-      AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/app/index.html.gzip", "text/html");
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gzip, index_html_gzip_len);
       response->addHeader("Content-Encoding", "gzip");
       response->addHeader("cache-control", "private, max-age=86400");
       request->send(response);
     });
 
 
-    // Fonts & favicons 
-    server->serveStatic("/inter-regular.woff2", LittleFS, "/inter-regular.woff2").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/inter-700.woff2", LittleFS, "/inter-700.woff2").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/site.webmanifest", LittleFS, "/site.webmanifest").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/favicon.ico", LittleFS, "/favicon.ico").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/favicon-16x16.png", LittleFS, "/favicon-16x16.png").setCacheControl("public, max-age=31536000");
-    server->serveStatic("/favicon-32x32.png", LittleFS, "/favicon-32x32.png").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/apple-touch-icon.png", LittleFS, "/apple-touch-icon.png").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/android-chrome-192x192.png", LittleFS, "/android-chrome-192x192.png").setCacheControl("public,max-age=31536000");
-    server->serveStatic("/android-chrome-512x512.png", LittleFS, "/android-chrome-512x512.png").setCacheControl("public,max-age=31536000");
+    // Fonts
+    // -----
+    server->on("/inter-regular.woff2", HTTP_GET, [](AsyncWebServerRequest* request) {
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "font/woff2", inter_regular_woff2, inter_regular_woff2_len);
+      response->addHeader("cache-control", ASSET_CACHE_CONTROL);
+      request->send(response);
+    });
 
+    server->on("/inter-700.woff2", HTTP_GET, [](AsyncWebServerRequest* request) {
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "font/woff2", inter_700_woff2, inter_700_woff2_len);
+      response->addHeader("cache-control", ASSET_CACHE_CONTROL);
+      request->send(response);
+    });
+
+    // Favicons
+    // --------
+    server->on("/favicon-16x16.png", HTTP_GET, [](AsyncWebServerRequest* request) {
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", favicon_16x16_png, favicon_16x16_png_len);
+      response->addHeader("cache-control", ASSET_CACHE_CONTROL);
+      request->send(response);
+    });
+
+    server->on("/favicon-32x32.png", HTTP_GET, [](AsyncWebServerRequest* request) {
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", favicon_32x32_png, favicon_32x32_png_len);
+      response->addHeader("cache-control", ASSET_CACHE_CONTROL);
+      request->send(response);
+    });
+
+    server->on("/apple-touch-icon.png", HTTP_GET, [](AsyncWebServerRequest* request) {
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", apple_touch_icon_png, apple_touch_icon_png_len);
+      response->addHeader("cache-control", ASSET_CACHE_CONTROL);
+      request->send(response);
+    });
 
     // Disconnect ESP from network
     server->on("/disconnect", HTTP_GET, [](AsyncWebServerRequest* request) {

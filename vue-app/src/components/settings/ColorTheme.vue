@@ -11,12 +11,12 @@
       <div class="flex-cst gap-half color-themes">
         <button
           v-for="(theme, key) in uiStore.colorThemes"
-          class="flex-cst gap-half btn-std-resp theme"
+          class="flex-cst gap-half btn-std-resp theme txt-dark"
           :class="{ 'theme-active': uiStore.isActiveColorTheme(key) }"
           @click="uiStore.setColorTheme(key)"
           :disabled="uiStore.isActiveColorTheme(key)"
         >
-          <span class="no-wrap-ellip">{{ $t('settings.colorThemes.themes.' + theme.name) }}</span>
+          <span class="no-wrap-ellip flex-grow">{{ $t('settings.colorThemes.themes.' + theme.name) }}</span>
           <Transition name="icon-trans">
             <Icon
               v-if="uiStore.isActiveColorTheme(key)"
@@ -50,8 +50,9 @@ const uiStore = useUIStore();
   padding-top: 0.7em;
   padding-bottom: 0.7em;
   background-color: var(--content-color-1);
-  color: var(--text-color);
-  transition: background-color 0.1s;
+  transition:
+    background-color 0.1s,
+    color 0.1s;
 
   &:hover {
     background-color: var(--content-color-3);
@@ -66,34 +67,24 @@ const uiStore = useUIStore();
     filter: unset;
   }
 
-  span {
-    color: var(--text-color-darker);
-    flex-grow: 1;
-  }
-
   &:hover {
-    span {
-      color: var(--text-color);
-    }
+    color: var(--text-color);
   }
 }
 
 .theme-active {
   background-color: var(--content-color-3);
+  color: var(--text-color);
   cursor: default;
 
   &:hover {
     filter: none;
   }
-
-  span {
-    color: var(--text-color);
-    opacity: 1;
-  }
 }
 
 .active-icon {
   transform: center;
+  color: var(--text-color);
 }
 
 .icon-trans-enter-active {

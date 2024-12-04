@@ -13,6 +13,9 @@ import { watch, onBeforeMount } from 'vue';
 import { useRotorStore } from '@/stores/rotor';
 import { useUIStore } from '@/stores/ui';
 
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+
 const rotorStore = useRotorStore();
 const uiStore = useUIStore();
 
@@ -20,7 +23,7 @@ const uiStore = useUIStore();
 watch(
   () => rotorStore.rotor.angle,
   () => {
-    document.title = `RotorControl [ ${rotorStore.angle}°, ${rotorStore.cardinal} ]`;
+    document.title = `RotorControl [ ${rotorStore.angle}°, ${t('compass.cardinals.' + rotorStore.cardinal)} ]`;
   }
 );
 

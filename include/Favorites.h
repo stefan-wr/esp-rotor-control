@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#define FAVORITES_PATH "/favorites.json"
+
 // Favorites Class
 // ***************
 class Favorites {

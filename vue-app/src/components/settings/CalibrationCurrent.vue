@@ -15,7 +15,7 @@
     </template>
 
     <template #content>
-      <p class="txt-dark">{{ $t('calibration.current.dscr') }}</p>
+      <p class="txt-dark normal">{{ $t('calibration.current.dscr') }}</p>
 
       <div class="flex-cst gap-half current-cal">
         <div class="border-box flex-csp gap-one flex-grow current-cal-pos">

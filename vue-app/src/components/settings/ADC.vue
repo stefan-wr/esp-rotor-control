@@ -5,7 +5,7 @@
     </template>
 
     <template #action>
-      <span class="large">{{ rotorStore.rotor.adc_v.toFixed(3) }}&nbsp;V</span>
+      <span class="large monospace">{{ rotorStore.rotor.adc_v.toFixed(3) }}&nbsp;V</span>
     </template>
 
     <template #content>

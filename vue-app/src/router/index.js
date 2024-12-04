@@ -3,6 +3,7 @@ import MainView from '../views/MainView.vue';
 import SettingsView from '../views/SettingsView.vue';
 import MessageView from '../views/MessageView.vue';
 import UpdateView from '../views/UpdateView.vue';
+import LicenseView from '../views/LicenseView.vue';  
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -61,6 +62,12 @@ const router = createRouter({
             path: '/update',
             name: 'update',
             component: UpdateView
+        },
+        {
+            path: '/licenses',
+            name: 'licenses',
+            component: LicenseView
+
         },
 
         // Catch-all route to main page

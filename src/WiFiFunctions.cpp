@@ -264,6 +264,14 @@ namespace WiFiFunctions {
       }
     }
 
+    // Enable IPv6
+    /*
+    if(WiFi.enableIpV6()) {
+      Serial.print("[WiFi] Enabled IPv6.");
+    }
+    */
+
+
     // Connection established
     Serial.print("[Try ");
     Serial.printf("%2d", n_try);

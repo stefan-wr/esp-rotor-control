@@ -89,9 +89,13 @@
     "deleteBtn": "Delete favorite."
   },
   "settings": {
+    "system": "System",
     "interface": "User Interface",
     "functions": "Features",
     "calibration": "Calibration",
+    "licenses": "Licenses",
+    "support": "Support",
+
     "network": {
       "title": "Network",
       "dscr": "If disconnected, remote access is no longer possible! Saved WiFi credentials will be deleted.",
@@ -191,7 +195,7 @@
       "confirmMessage": "Reset calibration to factory settings?\n\nTo display an accurate rotor position, an individual calibration is mandatory!"
     },
     "title": "Rotor Calibration",
-    "dscr": "In order for the rotor controller to display the correct position, it must be calibrated. Either choose the guided calibration process or enter the parameters manually.",
+    "dscr": "In order for RotorControl to display the correct position, it must be calibrated. Either choose the guided calibration process or enter the parameters manually.",
     "guidedTab": "Guided",
     "manualTab": "Manual",
     "manual": {

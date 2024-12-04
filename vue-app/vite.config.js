@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import { compression } from 'vite-plugin-compression2';
+import rotorControl from './vite-plugins/vite-plugin-rotor-control'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -17,7 +18,11 @@ export default defineConfig({
     compression({
       threshold: 102400,
       deleteOriginalAssets: true,
-      filename: 'app/[base].gzip'
+      filename: '[base].gzip'
+    }),
+    rotorControl({
+      appPath: 'dist/index.html.gzip',
+      sourcePath: '../include/AppIndex.h'
     })
   ],
   server: {

@@ -20,6 +20,7 @@ export const useUIStore = defineStore('ui', () => {
         localeApplied: false,
 
         disableHeaderLinks: false,
+        activeSettings: 0,
 
         kbscEnabled: useStorage('kbsc-enabled', true),
         fontSize: useStorage('font-size', 14),

@@ -98,13 +98,16 @@
     },
 
     "settings": {
+        "system": "System",
         "interface": "Benutzeroberfläche",
         "functions": "Funktionen",
         "calibration": "Kalibrierung",
+        "licenses": "Lizenzen",
+        "support": "Support",
 
         "network": {
             "title": "Netzwerk",
-            "attention": "ACTHUNG",
+            "attention": "ACHTUNG",
             "dscr": "Wird die Verbindung getrennt, ist ein Fernzugriff nicht mehr möglich! Die gespeicherten Zugangsdaten werden gelöscht.",
             "disconnect": "Trennen",
             "disconnectDscr": "Trennt und setzt die Netzwerverbindung des Rotor Controllers zurück.",
@@ -216,7 +219,7 @@
         },
 
         "title": "Rotor-Kalibrierung",
-        "dscr": "Damit der Rotor-Controller die richtige Position anzeigt, muss er kalibiert werden. Wähle entweder die geführte Kalibrierung, oder gebe die Parameter manuell ein.",
+        "dscr": "Damit RotorControl die richtige Position anzeigt, muss er kalibiert werden. Wähle entweder die geführte Kalibrierung, oder gebe die Parameter manuell ein.",
         "guidedTab": "Geführt",
         "manualTab": "Manuell",
 

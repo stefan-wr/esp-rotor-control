@@ -11,7 +11,7 @@
 #define SCREEN_HALF_HEIGHT 32
 #define CHAR_W 5
 #define CHAR_H 7
-#define N_PAGES 3
+#define N_PAGES 4
 
 namespace Screen {
      
@@ -85,6 +85,9 @@ namespace Screen {
 
         // => Set screen for when WiFi is reconnecting
         void showReconnectingScreen();
+
+        // => Set screen showing the angle only
+        void showAngleScreen();
 
         // => Set the default screen when in STATION mode.
         void showDefaultScreen();

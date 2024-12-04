@@ -72,6 +72,12 @@ $slide-speed: 0.2s;
   }
 }
 
+.show-m-smaller {
+  @media only screen and (min-width: calc($break-m + 1px)) {
+    display: none;
+  }
+}
+
 /* Touch devices */
 @mixin touch() {
   @media (hover: none) {

@@ -26,7 +26,7 @@
 #define COUNT_LOOP_CYCLE_TIME false
 
 // Software version
-const String version = "0.9.3";
+const String version = "0.9.6";
 
 // ESP ID
 String esp_id = "";
@@ -192,6 +192,7 @@ struct {                                      // Intervals
   Timer *updateScreen = new Timer(40);        // 40 ms, 25 Hz
   Timer *loopTimer = new Timer(1000);         // 1 s
   Timer *fwUpdateChecker = new Timer(50);     // 50 ms, 20 Hz
+  Timer *justBootedTimeout = new Timer(8000);
 } timers;
 
 bool is_reconnecting = false;   // Is WiFi trying to reconnect
@@ -199,6 +200,7 @@ float adc_volts_prev = -1;      // Previous loop ADC-Volts
 bool is_rotating_prev = false;  // Was rotor rotating in previous loop cycle
 int clients_connected_prev;     // N of clients connected in previous loop cycle
 bool is_updating_prev = false;  // Was firmware updating in previous loop cycle
+bool just_booted = true;
 
 unsigned long loopCounter = 0;
 unsigned long loop_mus = micros();
@@ -207,6 +209,10 @@ unsigned long loop_mus = micros();
 
 void loop() {
   if (COUNT_LOOP_CYCLE_TIME) loopCounter++;
+
+  if (timers.justBootedTimeout->n_passed < 2 && timers.justBootedTimeout->passed()) {
+    just_booted = false;
+  }
 
   // *********** Button ***********
   // ******************************

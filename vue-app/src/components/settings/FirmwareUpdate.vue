@@ -181,7 +181,7 @@ async function onFileChange(event, files = []) {
   }
 
   // Make sure firmware fits into ESP partition
-  if (!error && fileList[0].size > 1310720) {
+  if (!error && fileList[0].size > 1638400) {
     error = 4;
   }
 

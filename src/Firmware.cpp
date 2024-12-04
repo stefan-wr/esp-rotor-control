@@ -8,6 +8,8 @@
 #include <Timer.h>
 #include <RotorServer.h>
 
+#define MAX_FIRMWARE_SIZE 1638400
+
 extern BlinkingLED wifi_led;
 
 namespace Firmware {
@@ -66,7 +68,7 @@ namespace Firmware {
             }
 
             // File size not suitable
-            if (0 >= firmware.size > 1310720) {
+            if (0 >= firmware.size > MAX_FIRMWARE_SIZE) {
                 Serial.println("[ESP] Firmware update request denied, file size unsuitable.");
                 return request->send(200, "text/plain", "denied");
             }
