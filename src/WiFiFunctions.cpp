@@ -12,6 +12,8 @@
 #include <Timer.h>
 #include <RotorServer.h>
 
+#include <AppAssets.h>
+
 extern BlinkingLED wifi_led;
 
 namespace WiFiFunctions {
@@ -353,9 +355,10 @@ namespace WiFiFunctions {
     // Redirects all URLs to AP server
     dns_server.setTTL(300);
     dns_server.setErrorReplyCode(DNSReplyCode::NoError);
-    Serial.print("[DNS] Starting DNS server for captive portal...");
     if (dns_server.start(53, "*", WiFi.softAPIP())) {
       Serial.println("[DNS] Started DNS server for captive portal.");
+    } else {
+      Serial.println("[DNS] Error: Could not start DNS server for captive portal.");
     }
 
     // Load rotor server config
@@ -368,11 +371,11 @@ namespace WiFiFunctions {
 
     // Root URL
     // --------
+    
     server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
       alert = "";
       request->send(LittleFS, "/ap-index.html", String(), false, processor);
     });
-
 
     // Set WiFi credentials
     // --------------------
@@ -482,10 +485,44 @@ namespace WiFiFunctions {
 
     // Static files (CSS, fonts)
     // -------------------------
-    server->serveStatic("/ap-styles.css", LittleFS, "/ap-styles.css");
+    /*server->serveStatic("/ap-styles.css", LittleFS, "/ap-styles.css");
     server->serveStatic("/inter-regular.woff2", LittleFS, "/inter-regular.woff2");
     server->serveStatic("/inter-700.woff2", LittleFS, "/inter-700.woff2");
     server->on("/favicon.ico",[](AsyncWebServerRequest *request){request->send(404);});
+    */
+       // Fonts
+    // -----
+    server->on("/inter-regular.woff2", HTTP_GET, [](AsyncWebServerRequest* request) {
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "font/woff2", inter_regular_woff2, inter_regular_woff2_len);
+      response->addHeader("cache-control", ASSET_CACHE_CONTROL);
+      request->send(response);
+    });
+
+    server->on("/inter-700.woff2", HTTP_GET, [](AsyncWebServerRequest* request) {
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "font/woff2", inter_700_woff2, inter_700_woff2_len);
+      response->addHeader("cache-control", ASSET_CACHE_CONTROL);
+      request->send(response);
+    });
+
+    // Favicons
+    // --------
+    server->on("/favicon-16x16.png", HTTP_GET, [](AsyncWebServerRequest* request) {
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", favicon_16x16_png, favicon_16x16_png_len);
+      response->addHeader("cache-control", ASSET_CACHE_CONTROL);
+      request->send(response);
+    });
+
+    server->on("/favicon-32x32.png", HTTP_GET, [](AsyncWebServerRequest* request) {
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", favicon_32x32_png, favicon_32x32_png_len);
+      response->addHeader("cache-control", ASSET_CACHE_CONTROL);
+      request->send(response);
+    });
+
+    server->on("/apple-touch-icon.png", HTTP_GET, [](AsyncWebServerRequest* request) {
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", apple_touch_icon_png, apple_touch_icon_png_len);
+      response->addHeader("cache-control", ASSET_CACHE_CONTROL);
+      request->send(response);
+    });
 
 
     // Captive Portal responses
