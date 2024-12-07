@@ -16,19 +16,24 @@ export default defineConfig({
       include: resolve(dirname(fileURLToPath(import.meta.url)), './src/locales/**'),
     }),
     compression({
-      threshold: 102400,
+      include: /^(index\.html)$/,
       deleteOriginalAssets: true,
       filename: '[base].gzip'
     }),
     rotorControl({
-      appPath: 'dist/index.html.gzip',
-      sourcePath: '../include/AppIndex.h'
+      source: 'dist/index.html.gzip',
+      filename: 'AppIndex.h',
+      destination: '../lib/App'
     })
   ],
+  
   server: {
-    host: true
-    //open: '/'
+    host: true,
+    watch: {
+      usePolling: true
+    }
   },
+
   build: {
     outDir: "dist/",
     assetsDir: "",
@@ -40,12 +45,14 @@ export default defineConfig({
       }
     }
   },
+
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@root': fileURLToPath(new URL('./', import.meta.url))
     }
   },
+
   css: {
     preprocessorOptions: {
       scss: {
