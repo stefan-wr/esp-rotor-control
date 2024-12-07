@@ -44,40 +44,6 @@ $slide-speed: 0.2s;
   }
 }
 
-.hide {
-  display: none;
-}
-
-.hide-s {
-  @include small {
-    display: none !important;
-  }
-}
-
-.hide-m {
-  @include medium {
-    display: none !important;
-  }
-}
-
-.hide-l {
-  @include large {
-    display: none !important;
-  }
-}
-
-.show-s-only {
-  @media only screen and (min-width: calc($break-s + 1px)) {
-    display: none;
-  }
-}
-
-.show-m-smaller {
-  @media only screen and (min-width: calc($break-m + 1px)) {
-    display: none;
-  }
-}
-
 /* Touch devices */
 @mixin touch() {
   @media (hover: none) {

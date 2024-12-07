@@ -141,6 +141,44 @@ a {
 }
 
 /* Utility Classes */
+/* =============== */
+
+/* Hide and Show Utilities */
+.hide {
+    display: none;
+  }
+  
+.hide-s {
+    @include small {
+      display: none !important;
+    }
+  }
+  
+.hide-m {
+    @include medium {
+      display: none !important;
+    }
+  }
+  
+.hide-l {
+    @include large {
+      display: none !important;
+    }
+  }
+  
+.show-s-only {
+    @media only screen and (min-width: calc($break-s + 1px)) {
+      display: none;
+    }
+  }
+  
+.show-m-smaller {
+    @media only screen and (min-width: calc($break-m + 1px)) {
+      display: none;
+    }
+  }
+
+/* Font Utilities */
 .bold {
     font-weight: bold;
 }
