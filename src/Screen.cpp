@@ -14,6 +14,8 @@
 #include <RotorSocket.h>        // Expose Global: websocket
 #include <AppIndex.h>
 
+#define SCREEN_ADDRESS 0x3C
+
 extern bool just_booted;
 
 namespace Screen {
@@ -25,8 +27,17 @@ namespace Screen {
 
     // => Initialise screen
     bool Screen::init() {
+        // Test if physical screen is available
+        Wire.begin();
+        Wire.beginTransmission(SCREEN_ADDRESS);
+        if (Wire.endTransmission() != 0) {
+            Serial.println("[Screen] Screen not available.");
+            return false;
+        }
+
+        // Initialise display
         screen = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
-        if (!screen->begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+        if (!screen->begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
             Serial.println("[Screen] Failed to allocate RAM for the screen.");
             disabled = true;
             return false;
@@ -222,10 +233,8 @@ namespace Screen {
         // Rotation indicators
         if (rotor_ctrl.is_rotating) {
             if (rotor_ctrl.direction) {
-                //screen->fillTriangle(114, 5, 122, 9, 114, 13, BLACK);   // Left
                 screen->drawBitmap(110, 2, rotate_right_icon, 16, 16, BLACK);
             } else {
-                //screen->fillTriangle(114, 9, 122, 5, 122, 13, BLACK);   // Right
                 screen->drawBitmap(110, 2, rotate_left_icon, 16, 16, BLACK);
             }
         } else {

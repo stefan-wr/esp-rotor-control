@@ -16,7 +16,7 @@ bool mountFS() {
 String readFromFS(const char* path) {
   Serial.print("[FS] Reading file " + (String)path + "...");
 
-  File file = LittleFS.open(path);
+  File file = LittleFS.open(path, FILE_READ);
   if (!file || file.isDirectory()) {
     Serial.println("failed to open the file.");
     return String();
