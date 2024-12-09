@@ -51,7 +51,8 @@ namespace RotorSocket {
 
         Serial.print("[Websocket] Client ");
         Serial.print(client->id());
-        Serial.println(" connected.");
+        Serial.print(" connected with IP: ");
+        Serial.println(client->remoteIP());
         break;
 
     case WS_EVT_DISCONNECT:
@@ -105,7 +106,7 @@ namespace RotorSocket {
   void socketReceive(char* msg, const size_t &len) {
     // Separate message from identifier, separated by '|'
     int sep_idx;  // Index of separator
-    for(sep_idx =  0; sep_idx < len; ++sep_idx) {
+    for(sep_idx = 0; sep_idx < len; ++sep_idx) {
       if (msg[sep_idx] == '|') { break; }
     }
 
