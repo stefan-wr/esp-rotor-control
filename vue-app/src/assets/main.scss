@@ -145,36 +145,36 @@ a {
 
 /* Hide and Show Utilities */
 .hide {
-    display: none;
-  }
+    display: none !important;
+}
   
 .hide-s {
     @include small {
       display: none !important;
     }
-  }
+}
   
 .hide-m {
     @include medium {
       display: none !important;
     }
-  }
+}
   
 .hide-l {
     @include large {
       display: none !important;
     }
-  }
+}
   
 .show-s-only {
     @media only screen and (min-width: calc($break-s + 1px)) {
-      display: none;
+      display: none !important;;
     }
-  }
+}
   
 .show-m-smaller {
     @media only screen and (min-width: calc($break-m + 1px)) {
-      display: none;
+      display: none !important;;
     }
   }
 
@@ -483,6 +483,7 @@ input:disabled {
 }
 
 /* Form shake animation*/
+/*
 .form-shake, .shake {
     animation: shake 0.3s;
 }
@@ -507,6 +508,7 @@ input:disabled {
         transform: translateX(0%);
     }
 }
+*/
 
 /* Spin animation */
 .spin {

@@ -18,7 +18,7 @@
             @click="toggleForm"
             :disabled="settingsStore.hasMaxFavorites"
           >
-            <Icon icon="fa-solid fa-plus" />
+            <Icon icon="fa-solid fa-plus" class="small-icon"/>
           </button>
         </div>
       </template>
@@ -26,12 +26,11 @@
       <!-- CHILD B -->
       <!-- New favorite form -->
       <template #childB>
-        <div id="fav-form" ref="favForm" :class="{ 'form-shake': formFailed }">
+        <ShakeOnToggle id="fav-form" ref="favForm">
+
           <!-- Input Labels -->
           <label for="fav-name" class="small txt-dark">{{ $t('favorites.nameLabel') }}</label>
-          <label for="fav-angle" class="small txt-dark"
-            >{{ $t('commons.azimut') }} (0° - 450°)</label
-          >
+          <label for="fav-angle" class="small txt-dark">{{ $t('commons.azimut') }} (0° - 450°)</label>
 
           <!-- Name -->
           <input
@@ -46,6 +45,7 @@
             @paste="restrictNamePaste($event)"
             @keyup.enter="angleInput.focus()"
           />
+
           <!-- Angle-->
           <input
             id="fav-angle-input"
@@ -57,22 +57,21 @@
             :max="maxAngle"
             pattern="\d*"
             :placeholder="$t('commons.angle')"
-            ref="angleInput"
             v-model="newAngle"
-            @keyup.enter="addFavorite"
             @keypress="restrictAngleInput($event)"
             @paste.prevent=""
+            @keyup.enter="addFavorite"
           />
 
-          <!-- Buttons -->
           <!-- Cancel Button -->
           <button
             class="btn-std-resp bold no-wrap-ellip"
             :title="$t('commons.cancel')"
             @click="toggleForm"
           >
-            <Icon icon="fa-solid fa-xmark" style="vertical-align:; font-size: 1em" />&nbsp;{{ $t('commons.cancel') }}
+            <Icon icon="fa-solid fa-xmark" />&nbsp;{{ $t('commons.cancel') }}
           </button>
+
           <!-- Add Button -->
           <button
             class="btn-std-resp bold no-wrap-ellip"
@@ -80,15 +79,16 @@
             @click="addFavorite"
             :disabled="settingsStore.hasMaxFavorites"
           >
-            <Icon icon="fa-solid fa-check"></Icon>&nbsp;{{ $t('favorites.createBtn') }}
+            <Icon icon="fa-solid fa-check" />&nbsp;{{ $t('favorites.createBtn') }}
           </button>
-        </div>
+      </ShakeOnToggle>
       </template>
     </CardToggleContentTransition>
 
     <!-- Favorites List Head-->
     <ul v-if="settingsStore.favorites.array.length" id="favorites-list">
       <li class="small txt-dark">
+        <!-- ID -->
         <span
           class="fav-index fav-head-sort-btn"
           @click="settingsStore.sortFavoritesBy.id"
@@ -97,49 +97,66 @@
           tabindex="0"
           >#</span
         >
+
+        <!-- Name -->
         <span
           class="fav-name fav-head-sort-btn"
           @click="settingsStore.sortFavoritesBy.name"
           @keyup.enter="settingsStore.sortFavoritesBy.name"
           :title="$t('favorites.sortByName')"
-
           tabindex="0"
           >Name</span
         >
+
+        <!-- Angle -->
         <span
           class="fav-angle fav-head-sort-btn"
           @click="settingsStore.sortFavoritesBy.angle"
           @keyup.enter="settingsStore.sortFavoritesBy.angle"
           :title="$t('favorites.sortByAngle')"
-
           tabindex="0"
         >
           {{ $t('commons.azimut') }}
         </span>
+
+        <!-- Buttons -->
         <span class="fav-rot">{{ $t('favorites.moveTo') }}</span>
-        <span class="fav-del">{{ $t('favorites.delete') }}</span>
+
+        <!-- Delete -->
+        <span
+          class="fav-del fav-head-sort-btn"
+          @click="resetFavorites"
+          @keyup.enter="resetFavorites"
+          :title="$t('favorites.deleteAll')"
+          tabindex="0"
+        >
+          {{ $t('favorites.delete') }}
+        </span>
         <hr />
       </li>
 
-      <!-- Favorites List Items-->
+      <!-- Favorites List Items -->
       <li v-for="(fav, index) in settingsStore.favorites.array" :key="fav" class="flex-csp">
         <span class="fav-index fav-head small">{{ fav.id }}</span>
         <span class="fav-name no-wrap-ellip">{{ fav.name }}</span>
         <span class="fav-angle">{{ fav.angle }}°</span>
+
         <button
           class="fav-rot btn-std-resp flex-cc"
           :title="$t('favorites.moveToBtn')"
           :disabled="settingsStore.isLockedByElse"
           @click="requestAngle(fav.angle)"
         >
-          <Icon icon="fa-solid fa-play" />
+          <Icon v-if="rotorStore.rotor.rotation" icon="fa-solid fa-pause" class="small-icon" />
+          <Icon v-else  icon="fa-solid fa-play" class="small-icon" />
         </button>
+
         <button
           class="fav-del btn-std-resp flex-cc"
-          @click="settingsStore.remFavorite(index)"
           :title="$t('favorites.deleteBtn')"
+          @click="settingsStore.remFavorite(index)"
         >
-          <Icon icon="fa-solid fa-xmark" />
+          <Icon icon="fa-solid fa-xmark" class="small-icon" />
         </button>
         <hr v-if="index !== settingsStore.favorites.array.length - 1" />
       </li>
@@ -150,20 +167,27 @@
 <script setup>
 import CardCollapsable from '@/components/CardCollapsable.vue';
 import CardToggleContentTransition from '@/components/CardToggleContentTransition.vue';
+import ShakeOnToggle from '@/components/ShakeOnToggle.vue';
 
 import { ref, computed } from 'vue';
-
+import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '@/stores/settings';
-import { useUmbrellaStore } from '../stores/umbrella';
+import { useUmbrellaStore } from '@/stores/umbrella';
+import { useRotorStore } from '@/stores/rotor';
 
+const { t } = useI18n();
 const settingsStore = useSettingsStore();
 const umbrellaStore = useUmbrellaStore();
+const rotorStore = useRotorStore();
 
-// Toggle between dscr and 'add new favorite form'
-// -----------------------------------------------
+// V-Models
+const newName = ref('');
+const newAngle = ref('');
+
+// Toggle between card description and 'add new favorite form'
+// -----------------------------------------------------------
 const isFormOpen = ref(false);
 const nameInput = ref(null);
-const angleInput = ref(null);
 
 function toggleForm() {
   if (isFormOpen.value) {
@@ -184,10 +208,6 @@ function toggleForm() {
 // -------------------
 const maxNameLength = 30;
 const maxAngle = 450;
-
-// V-Models
-const newName = ref('');
-const newAngle = ref('');
 
 // Used to add outline to input if value is not allowed
 const isAngleWrong = computed(() => {
@@ -228,13 +248,10 @@ function restrictNamePaste(event) {
 
 // Shake form
 // ----------
-const formFailed = ref(false);
+const favForm = ref(null);
 
 function shakeForm() {
-  formFailed.value = true;
-  setTimeout(() => {
-    formFailed.value = false;
-  }, 300);
+  favForm.value.shake();
 }
 
 // Add favorite
@@ -269,15 +286,33 @@ function addFavorite() {
   }
 }
 
-// Move to favorite
-// ----------------
-function requestAngle(angle) {
-  if (!settingsStore.isLockedByElse) {
-    if (angle > 360) {
-      angle -= 360;
-    }
-    umbrellaStore.sendTarget(angle);
+// Delete all favorites
+// --------------------
+function resetFavorites() {
+  if (confirm(t('favorites.removeAlert'))) {
+    settingsStore.resetFavorites();
   }
+}
+
+// Rotate to favorite / stop rotation
+// ----------------------------------
+function requestAngle(angle) {
+  // Rotor is locked
+  if (settingsStore.isLockedByElse) {
+    return;
+  }
+
+  // Action 1: Stop roation
+  if (rotorStore.rotor.rotation) {
+    umbrellaStore.sendRotation(0);
+    return;
+  }
+
+  // Action 2: Rotate to angle
+  if (angle > 360) {
+    angle -= 360;
+  }
+  umbrellaStore.sendTarget(angle);
 }
 </script>
 
@@ -287,6 +322,10 @@ function requestAngle(angle) {
 }
 .card-dscr {
   margin-bottom: 1em;
+}
+
+.small-icon {
+  min-width: 1em;
 }
 
 /* Add-Favorite Dialog */

@@ -7,7 +7,7 @@
       </template>
     </i18n-t>
 
-    <div class="man-cal-inputs border-box" :class="{ 'form-shake': manualFormFailed }">
+    <ShakeOnToggle class="man-cal-inputs border-box" ref="manForm">
       <span></span>
       <label for="azimuth-1" class="small txt-dark">{{ $t('commons.azimut') }} in °</label>
       <label for="adc-1" class="small txt-dark">{{ $t('commons.voltage') }} in V</label>
@@ -70,11 +70,12 @@
       >
         <Icon icon="fa-solid fa-check"></Icon>&nbsp;{{ $t('commons.accept') }}
       </button>
-    </div>
+    </ShakeOnToggle>
   </div>
 </template>
 
 <script setup>
+import ShakeOnToggle from '@/components/ShakeOnToggle.vue';
 import { ref, computed } from 'vue';
 import { useUmbrellaStore } from '@/stores/umbrella';
 const umbrellaStore = useUmbrellaStore();
@@ -116,10 +117,6 @@ const isNewPos2AdcWrong = computed(() => {
 
 // Confirm parameters
 // ------------------
-const pos1Angle = ref(0);
-const pos2Angle = ref(0);
-const pos1Adc = ref(0);
-const pos2Adc = ref(0);
 
 // Enable / disable confirm button
 const isManualConfirmEnabled = computed(() => {
@@ -141,13 +138,10 @@ const isManualConfirmEnabled = computed(() => {
 
 // Shake form
 // ----------
-const manualFormFailed = ref(false);
+const manForm = ref(null);
 
-function shakeManualForm() {
-  manualFormFailed.value = true;
-  setTimeout(() => {
-    manualFormFailed.value = false;
-  }, 300);
+function shakeForm() {
+  manForm.value.shake();
 }
 
 // Confirm calibration
@@ -166,18 +160,14 @@ function testNewParams() {
 
 function confirmManualCal() {
   if (testNewParams()) {
-    pos1Angle.value = Number(newPos1Angle.value.toFixed(4));
-    pos2Angle.value = Number(newPos2Angle.value.toFixed(4));
-    pos1Adc.value = Number(newPos1Adc.value.toFixed(4));
-    pos2Adc.value = Number(newPos2Adc.value.toFixed(4));
     umbrellaStore.sendCalibration(
-      pos1Angle.value,
-      pos1Adc.value,
-      pos2Angle.value,
-      pos2Adc.value
+      Number(newPos1Angle.value.toFixed(4)),
+      Number(newPos1Adc.value.toFixed(4)),
+      Number(newPos2Angle.value.toFixed(4)),
+      Number(newPos2Adc.value.toFixed(4))
     );
   } else {
-    shakeManualForm();
+    shakeForm();
   }
 }
 
@@ -188,11 +178,6 @@ function reset() {
   newPos2Angle.value = null;
   newPos1Adc.value = null;
   newPos2Adc.value = null;
-
-  pos1Angle.value = null;
-  pos2Angle.value = null;
-  pos1Adc.value = null;
-  pos2Adc.value = null;
 }
 
 // Expose reset function to parent components

@@ -56,7 +56,7 @@ const hasTransitionClass = ref(false);
 /** Toggle collapse card content. After animation played:
  *  - set fixed height to hidden card content
  *  - remove CSS transitions from card content
- * This avoids ressizing of hidden content to affect the collapsed card
+ * This avoids resizing of hidden content to affect the collapsed card
  */
 function toggleCollapse() {
   if (uiStore.ui.cards[props.title]) {

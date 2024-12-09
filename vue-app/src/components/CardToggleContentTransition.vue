@@ -4,8 +4,8 @@
     <Transition
       name="childA-trans"
       @before-enter="$emit('before-transition')"
-      @enter="onEnter"
-      @after-enter="$emit('after-transition')"
+      @enter="applyHeightAndEmit('while-transition')"
+      @after-enter="applyHeightAndEmit('after-transition')"
       @before-leave="$emit('before-transition')"
       @leave="$emit('while-transition')"
       @after-leave="$emit('after-transition')"
@@ -15,7 +15,12 @@
     </Transition>
     
     <!-- CHILD B -->
-    <Transition name="childB-trans" @enter="applyCurrentWrapHeight" v-show="toggle">
+    <Transition
+      name="childB-trans"
+      @enter="applyCurrentWrapHeight"
+      @after-enter="applyCurrentWrapHeight"
+      v-show="toggle"
+    >
       <slot name="childB"></slot>
     </Transition>
   </div>
@@ -38,9 +43,9 @@ const props = defineProps({
 
 // Emitted events
 const emit = defineEmits(['while-transition', 'before-transition', 'after-transition']);
-function onEnter() {
+function applyHeightAndEmit(eventToEmit = '') {
   applyCurrentWrapHeight();
-  emit('while-transition');
+  emit(eventToEmit);
 }
 
 // Transition between child-A and child-B.

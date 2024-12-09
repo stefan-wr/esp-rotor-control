@@ -13,9 +13,9 @@
 
     <!-- Position 1 Input -->
     <div class="auto-cal-inputs flex-cst gap-one">
-      <div
+      <ShakeOnToggle
+        ref="pos1Form"
         class="flex-grow border-box flex-vst gap-one auto-cal-pos"
-        :class="{ 'form-shake': pos1FormFailed }"
       >
         <label for="azimuth-1" class="flex gap-half">
           <span>Position&nbsp;1</span>
@@ -43,12 +43,12 @@
         >
           <Icon icon="fa-solid fa-check"></Icon>
         </button>
-      </div>
+      </ShakeOnToggle>
 
       <!-- Position 2 Input -->
-      <div
+      <ShakeOnToggle
+        ref="pos2Form"
         class="flex-grow border-box flex-vst gap-one auto-cal-pos"
-        :class="{ 'form-shake': pos2FormFailed }"
       >
         <label for="azimuth-2" class="flex gap-half">
           <span>Position&nbsp;2</span>
@@ -76,7 +76,7 @@
         >
           <Icon icon="fa-solid fa-check"></Icon>
         </button>
-      </div>
+      </ShakeOnToggle>
     </div>
 
     <!-- Arrows -->
@@ -119,16 +119,20 @@
 </template>
 
 <script setup>
+import ShakeOnToggle from '@/components/ShakeOnToggle.vue';
 import { ref, computed } from 'vue';
-
+import { useI18n } from 'vue-i18n';
 import { useUmbrellaStore } from '@/stores/umbrella';
 import { useRotorStore } from '@/stores/rotor';
 
+const { t } = useI18n();
 const umbrellaStore = useUmbrellaStore();
 const rotorStore = useRotorStore();
 
 // Element Refs
 // ------------
+const pos1Form = ref(null);
+const pos2Form = ref(null);
 const pos1Input = ref(null);
 const pos2Input = ref(null);
 const calConfirmBtn = ref(null);
@@ -158,13 +162,8 @@ function valueInRange(value, range) {
 
 // Calibration parameters
 // ----------------------
-
-// V-Models
 const newPos1Angle = ref(null);
-const newPos2Angle = ref(null);
-
 const pos1Range = [20, 40];
-const pos2Range = [420, 450];
 
 // Test wether entered value on pos 1 input is not allowed
 const isNewPos1AngleWrong = computed(() => {
@@ -180,6 +179,11 @@ const isNewPos1AngleWrong = computed(() => {
     return true;
   }
 });
+
+// ----------
+
+const newPos2Angle = ref(null);
+const pos2Range = [420, 450];
 
 // Test wether entered value on pos 2 input is not allowed
 const isNewPos2AngleWrong = computed(() => {
@@ -199,9 +203,7 @@ const isNewPos2AngleWrong = computed(() => {
 // Confirm parameters
 // ------------------
 const pos1Angle = ref(0);
-const pos2Angle = ref(0);
 const pos1Adc = ref(0);
-const pos2Adc = ref(0);
 
 // Confirm pos 1 angle
 function confirmPos1(event) {
@@ -211,7 +213,7 @@ function confirmPos1(event) {
     pos2Input.value.focus();
     newPos1Angle.value = null;
   } else if (event.target.tagName === 'BUTTON') {
-    // Only reset input if event cam from button, shouldn't be reachable
+    // Only reset input if event came from button, shouldn't be reachable
     shakePos1Form();
     newPos1Angle.value = null;
     pos1Input.value.focus();
@@ -220,7 +222,12 @@ function confirmPos1(event) {
   }
 }
 
-// Confirm pos 1 angle
+// ----------
+
+const pos2Angle = ref(0);
+const pos2Adc = ref(0);
+
+// Confirm pos 2 angle
 function confirmPos2(event) {
   if (newPos2Angle.value !== null && !isNewPos2AngleWrong.value) {
     pos2Angle.value = Number(newPos2Angle.value.toFixed(1));
@@ -228,7 +235,7 @@ function confirmPos2(event) {
     calConfirmBtn.value.focus();
     newPos2Angle.value = null;
   } else if (event.target.tagName === 'BUTTON') {
-    // Only reset input if event cam from button, shouldn't be reachable
+    // Only reset input if event came from button, shouldn't be reachable
     shakePos2Form();
     newPos2Angle.value = null;
     pos2Input.value.focus();
@@ -237,7 +244,18 @@ function confirmPos2(event) {
   }
 }
 
+// Shake Forms
+// -----------
+function shakePos1Form() {
+  pos1Form.value.shake();
+}
+
+function shakePos2Form() {
+  pos2Form.value.shake();
+}
+
 // Enable / disable main confirm button
+// ------------------------------------
 const isAutoConfirmEnabled = computed(() => {
   if (
     pos1Angle.value >= pos1Range[0] &&
@@ -251,32 +269,11 @@ const isAutoConfirmEnabled = computed(() => {
   }
 });
 
-// Shake Forms
-// -----------
-const pos1FormFailed = ref(false);
-const pos2FormFailed = ref(false);
-
-function shakePos1Form() {
-  pos1FormFailed.value = true;
-  setTimeout(() => {
-    pos1FormFailed.value = false;
-  }, 300);
-}
-
-function shakePos2Form() {
-  pos2FormFailed.value = true;
-  setTimeout(() => {
-    pos2FormFailed.value = false;
-  }, 300);
-}
-
 // Confirm Calibration
 // -------------------
 function testNewParams() {
   if (pos2Adc.value <= pos1Adc.value) {
-    alert(
-      'Position 2 Spannung darf nicht kleiner oder gleich Position 1 Spannung sein.\n\nDer Rotor muss VOR der Eingabe der Winkel auf die entsprechenden Positionsbereiche gedreht werden.'
-    );
+    alert(t('calibration.guided.errorVoltage'));
     return false;
   } else {
     return true;

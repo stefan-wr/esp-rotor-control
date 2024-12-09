@@ -264,55 +264,7 @@
           </text>
         </g>
       </svg>
-
-      <!-- ****************************** -->
-
-      <!--svg
-        id="compass"
-        ref="compass"
-        :class="{
-          'mouse-inside': uiStore.ui.isMouseInCompass && !settingsStore.isLockedByElse,
-          locked: settingsStore.isLockedByElse
-        }"
-        viewBox="0 0 1000 1000"
-        style="fill-rule: evenodd"
-        @click="requestAngle"
-      >
-        <path
-          d="M500,0C775.958,0 1000,224.042 1000,500C1000,775.958 775.958,1000 500,1000C224.042,1000 0,775.958 0,500C0,224.042 224.042,0 500,0ZM500,50C748.362,50 950,251.638 950,500C950,748.362 748.362,950 500,950C251.638,950 50,748.362 50,500C50,251.638 251.638,50 500,50Z"
-          :style="ringColor"
-        />
-        <g
-          id="cmp-req-needle"
-          :style="{ transform: 'rotate(' + uiStore.ui.requestAngle + 'deg)' }"
-          :class="{ hidden: !uiStore.ui.isMouseInCompass || settingsStore.isLockedByElse }"
-        >
-          <path d="M500,15L515,40L515,700L485,700L485,40L" />
-        </g>
-        <g
-          v-if="rotorStore.hasTarget"
-          id="cmp-target-needle"
-          :style="{ transform: 'rotate(' + rotorStore.rotor.target + 'deg)' }"
-        >
-          <path d="M500,200L550,500L500,650L450,500L500,200" :style="ringColor" />
-          >
-        </g>
-        <g id="cmp-needle" :style="{ transform: 'rotate(' + rotorStore.angle1D + 'deg)' }">
-          <path d="M500,200L550,500L500,650L450,500L500,200" :style="ringColor" />
-        </g>
-      </svg!-->
     </div>
-
-    <!-- Additional Information -->
-    <!-- ====================== -->
-    <!--div class="compass-label border-box">
-      <span class="small txt-dark">{{ $t('compass.position') }}</span>
-      <span class="small txt-dark">{{ $t('compass.target') }}</span>
-      <span class="small txt-dark">{{ $t('compass.time') }}</span>
-      <span class="large bold">{{ rotorStore.angle1D }}°</span>
-      <span class="large bold">{{ target }}</span>
-      <span class="medium bold monospace" :title="$t('compass.timeDscr')">{{ currentTime }}</span>
-    </div-->
 
     <div class="compass-labels border-box" v-if="props.full">
       <div class="flex-vc gap-half">
@@ -335,6 +287,11 @@
     </div>
   </div>
 </template>
+
+
+<!-- ********************* -->
+<!-- ********************* -->
+
 
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
@@ -429,18 +386,21 @@ const ringColor = computed(() => {
 
 // Get and set request angle from mouse position in compass
 // --------------------------------------------------------
+const angleFactor = 180 / Math.PI;
+const radiusFactor = 0.5 - 0.09;
+
 function setRequestAngle(event) {
-  // Transform mouse position from insde compass
+  // Transform mouse position from inside compass
   // bounding-rectangle to polar coordinates.
   const rect = compass.value.getBoundingClientRect();
   const x = event.offsetX - rect.width / 2;
-  const y = (event.offsetY - rect.height / 2) * -1;
+  const y = -(event.offsetY - rect.height / 2);
   const radius = Math.sqrt(x * x + y * y);
 
   // Check wether mouse is outside of compass circle
-  if (radius < rect.width * (0.5 - 0.09)) {
+  if (radius < rect.width * radiusFactor) {
     uiStore.ui.isMouseInCompass = true;
-    let angle = (Math.atan2(x, y) * 180) / Math.PI;
+    let angle = Math.atan2(x, y) * angleFactor;
     if (angle < 0) {
       angle = 360 + angle;
     }
@@ -496,14 +456,15 @@ const favoritesRingRadius = computed(() => {
   return radius;
 });
 
-// Dot X-coordinate
+// Dot coordinates
+const dotFactor = Math.PI / 180;
+
 function favoriteXCoordinate(angle) {
-  return 500 + Math.sin((angle / 180) * Math.PI) * favoritesRingRadius.value;
+  return 500 + Math.sin(angle * dotFactor) * favoritesRingRadius.value;
 }
 
-// Dot Y-coordinate
 function favoriteYCoordinate(angle) {
-  return 500 - Math.cos((angle / 180) * Math.PI) * favoritesRingRadius.value;
+  return 500 - Math.cos(angle * dotFactor) * favoritesRingRadius.value;
 }
 
 // Color of favorite rings depends on position
@@ -516,6 +477,11 @@ const favoritesRingColor = computed(() => {
   }
 });
 </script>
+
+
+<!-- ********************* -->
+<!-- ********************* -->
+
 
 <style lang="scss" scoped>
 #compass-svg {

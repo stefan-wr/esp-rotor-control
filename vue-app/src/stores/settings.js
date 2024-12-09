@@ -23,7 +23,7 @@ export const useSettingsStore = defineStore('settings', () => {
         offset: 0.0
     });
 
-    // Favorites
+    // Favorites [{id, name, angle},...]
     const favorites = reactive({
         array: [],
         sortedBy: 'id'
@@ -181,6 +181,12 @@ export const useSettingsStore = defineStore('settings', () => {
         umbrellaStore.sendFavorites(); // 4. Send changes to controller
     }
 
+    // Remove all favorites
+    function resetFavorites() {
+        favorites.array = [];
+        umbrellaStore.sendFavorites();
+    }
+
     // Reset IDs to fill the gap that a removed favorite left behind
     // Works on copy of favorites first and replaces original array with result
     function reorderFavoritesIds() {
@@ -287,6 +293,7 @@ export const useSettingsStore = defineStore('settings', () => {
         isValidFavoritesArray,
         addFavorite,
         remFavorite,
+        resetFavorites,
         sortFavoritesBy,
         reapplyFavoriteSorting,
         closeLock,

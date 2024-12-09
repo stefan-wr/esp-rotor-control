@@ -12,6 +12,8 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import {
     faPlay,
+    faPause,
+    faStop,
     faRotateRight,
     faRotateLeft,
     faRotate,
@@ -55,6 +57,8 @@ import {
 
 library.add(
     faPlay,
+    faPause,
+    faStop,
     faRotateRight,
     faRotateLeft,
     faRotate,

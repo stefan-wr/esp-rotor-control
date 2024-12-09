@@ -1,13 +1,13 @@
 <template>
   <main class="gap-one">
-    <div id="settings-left" class="flex-vst gap-one" style="height: 100%">
-      <!-- Menu -->
 
+    <!-- Menu -->
+    <div id="settings-left" class="flex-vst gap-one" style="height: 100%">
       <ul id="settings-menu" class="flex-vst gap-half">
         <li v-for="item in settingsMenu">
           <button
             class="menu-item flex-cst gap-half btn-std-resp txt-dark"
-            :class="{ 'menu-item-active': uiStore.ui.activeSettings === item.id }"
+            :class="{ 'menu-item-active': uiStore.ui.activeSetting === item.id }"
             @click="setActiveSetting(item.id)"
           >
             <Icon :icon="'fa-solid ' + item.icon" class="menu-icon" />
@@ -22,14 +22,13 @@
           <span>|</span>
           <a class="a-hover-dark" href="#">Support</a>
         </div>
-        <Compass :full="false" class="hide-m" v-if="uiStore.ui.activeSettings === 1"></Compass>
+        <Compass :full="false" class="hide-m" v-if="[1, 3].includes(uiStore.ui.activeSetting)"></Compass>
       </div>
     </div>
 
     <!-- Settings -->
-
     <div id="settings-right">
-      <div class="flex-vst gap-one" v-if="uiStore.ui.activeSettings === 0">
+      <div class="flex-vst gap-one" v-if="uiStore.ui.activeSetting === 0">
         <h2 class="medium hide-m">{{ $t('settings.system') }}</h2>
         <Disconnect></Disconnect>
         <Reboot></Reboot>
@@ -37,7 +36,7 @@
         <FirmwareUpdate></FirmwareUpdate>
       </div>
 
-      <div class="flex-vst gap-one" v-else-if="uiStore.ui.activeSettings === 1">
+      <div class="flex-vst gap-one" v-else-if="uiStore.ui.activeSetting === 1">
         <h2 class="medium hide-m">{{ $t('settings.interface') }}</h2>
         <LanguageSelector></LanguageSelector>
         <FontSize></FontSize>
@@ -45,7 +44,7 @@
         <CompassSettings></CompassSettings>
       </div>
 
-      <div class="flex-vst gap-one" v-else-if="uiStore.ui.activeSettings === 2">
+      <div class="flex-vst gap-one" v-else-if="uiStore.ui.activeSetting === 2">
         <h2 class="medium hide-m">{{ $t('settings.functions') }}</h2>
         <KeyboardShortcuts></KeyboardShortcuts>
         <UseOverlap></UseOverlap>
@@ -54,7 +53,7 @@
         <ResetLock></ResetLock>
       </div>
 
-      <div class="flex-vst gap-one" v-else-if="uiStore.ui.activeSettings === 3">
+      <div class="flex-vst gap-one" v-else-if="uiStore.ui.activeSetting === 3">
         <h2 class="medium hide-m">{{ $t('settings.calibration') }}</h2>
         <ADC></ADC>
         <CalibrationCurrent></CalibrationCurrent>
@@ -124,7 +123,7 @@ const settingsMenu = [
 ];
 
 function setActiveSetting(id) {
-  uiStore.ui.activeSettings = id;
+  uiStore.ui.activeSetting = id;
 }
 
 // Re-enable header links when mounting SettingsView

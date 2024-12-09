@@ -35,17 +35,16 @@ import SettingCard from '@/components/settings/SettingCard.vue';
 import { useSettingsStore } from '@/stores/settings';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
-
 import { useI18n } from "vue-i18n";
-const { t } = useI18n();
 
+const { t } = useI18n();
 const settingsStore = useSettingsStore();
 const router = useRouter();
 
 const disconnectBtn = ref(null);
 const waitingForDisconnect = ref(false);
 
-// Request conmirmation before sending disconnect request
+// Request confirmation before sending disconnect request
 function disconnect(event) {
   if (confirm(t('settings.network.alert'))) {
     disconnectBtn.value.style.width = String(disconnectBtn.value.offsetWidth) + 'px';

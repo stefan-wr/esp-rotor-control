@@ -1,259 +1,232 @@
 {
-    "locales": {
-        "de": "Deutsch",
-        "en": "English"
+  "locales": {
+    "de": "Deutsch",
+    "en": "English"
+  },
+  "commons": {
+    "accept": "Bestätigen",
+    "cancel": "Abbrechen",
+    "reset": "Zurücksetzen",
+    "back": "Zurück",
+    "on": "AN",
+    "off": "AUS",
+    "azimut": "Azimuth",
+    "angle": "Winkel",
+    "settings": "Einstellungen",
+    "file": "Datei",
+    "size": "Größe",
+    "voltage": "Spannung",
+    "toggleDscr": "Bereich '{title}' ein-/ausklappen."
+  },
+  "header": {
+    "no": "Keine",
+    "connection": "Verbindung",
+    "notConnectedLedDscr": "Keine Verbindung zum RotorControl.",
+    "connectedLedDscr": "Verbindung zum RotorControl steht."
+  },
+  "messages": {
+    "autoReload": "Diese Seite aktualisiert sich automatisch in",
+    "seconds": "1 Sekunde. | {n} Sekunden.",
+    "reboot": "RotorControl startet sich jetzt neu.",
+    "rebootFailed": "FEHLER: RotorControl reagiert nicht auf Neustart-Anfrage.",
+    "disconnect": "RotorControl trennt sich nun vom Netzwerk und startet sich neu. Die Rotor-Steuerung ist damit inaktiv, bis eine neue Netzwerkverbindung eingerichtet wurde. Sie können diesen Tab schließen.",
+    "disconnectFailed": "FEHLER: RotorControl reagiert nicht auf die Anfrage zum Trennen der Netzwerkverbindung."
+  },
+  "compass": {
+    "cardinals": {
+      "N": "N",
+      "NNE": "NNO",
+      "NE": "NO",
+      "ENE": "ONO",
+      "E": "O",
+      "ESE": "OSO",
+      "SE": "SO",
+      "SSE": "SSO",
+      "S": "S",
+      "SSW": "SSW",
+      "SW": "SW",
+      "WSW": "WSW",
+      "W": "W",
+      "WNW": "WNW",
+      "NW": "NW",
+      "NNW": "NNW"
     },
-
-    "commons": {
-        "accept": "Bestätigen",
-        "cancel": "Abbrechen",
-        "reset": "Zurücksetzen",
-        "back": "Zurück",
-        "on": "AN",
-        "off": "AUS",
-        "azimut": "Azimuth",
-        "angle": "Winkel",
-        "settings": "Einstellungen",
-        "file": "Datei",
-        "size": "Größe",
-        "voltage": "Spannung",
-        "toggleDscr": "Bereich '{title}' ein-/ausklappen."
+    "position": "Position",
+    "target": "Zielposition",
+    "time": "Uhrzeit",
+    "timeDscr": "Die aktuelle Systemzeit"
+  },
+  "manualRotation": {
+    "title": "Manuelle Rotation",
+    "ccwDscr": "Dreht den Rotor gegen den Uhrzeigersinn.",
+    "cwDscr": "Dreht den Rotor mit dem Uhrzeigersinn.",
+    "stopDscr": "Stoppt den Rotor."
+  },
+  "speed": {
+    "title": "Geschwindigkeit"
+  },
+  "lock": {
+    "title": "Rotorsperre",
+    "dscr": "Sperre den Rotor für andere Benutzer. Gebe dazu im Feld unten deinen Name ein und betätige den Schalter rechts daneben.",
+    "namePlaceholder": "Dein Name",
+    "lockedInfo": "Rotor {locked} von ",
+    "locked": "gesperrt"
+  },
+  "favorites": {
+    "title": "Favoriten",
+    "dscr": "Lege bis zu 10 Favoriten an, die per Tastendruck automatisch angefahren werden können.",
+    "addBtnDscr": "Neuen Favoriten anlegen.",
+    "nameLabel": "Favoriten-Bezeichner",
+    "namePlaceholder": "Bezeichner",
+    "createBtn": "Anlegen",
+    "createBtnDscr": "Favoriten anlegen.",
+    "sortByID": "Favoriten nach ID sortieren",
+    "sortByName": "Favoriten nach Namen sortieren",
+    "sortByAngle": "Favoriten nach Winkel sortieren",
+    "moveTo": "Anfahr.",
+    "delete": "Lösch.",
+    "moveToBtn": "Favoriten anfahren.",
+    "deleteBtn": "Favoriten löschen.",
+    "deleteAll": "Alle Favoriten löschen.",
+    "removeAlert": "Alle Favoriten löschen?"
+  },
+  "settings": {
+    "system": "System",
+    "interface": "Benutzeroberfläche",
+    "functions": "Funktionen",
+    "calibration": "Kalibrierung",
+    "licenses": "Lizenzen",
+    "support": "Support",
+    "network": {
+      "title": "Netzwerk",
+      "attention": "ACHTUNG",
+      "dscr": "Wird die Verbindung getrennt, ist ein Fernzugriff nicht mehr möglich! Die gespeicherten Zugangsdaten werden gelöscht.",
+      "disconnect": "Trennen",
+      "disconnectDscr": "Trennt und setzt die Netzwerverbindung des Rotor Controllers zurück.",
+      "alert": "ACHTUNG!\nWirklich die Netzwerkverbindung trennen?\n\nDies löscht das gespeicherte WiFi-Passwort.\nEin Fernzugriff ist dann nicht mehr möglich.\nDer RotorControl muss danach lokal neu eingerichtet werden."
     },
-
-    "header": {
-        "no": "Keine",
-        "connection": "Verbindung",
-        "notConnectedLedDscr": "Keine Verbindung zum RotorControl.",
-        "connectedLedDscr": "Verbindung zum RotorControl steht."
+    "reboot": {
+      "title": "Neustart",
+      "dscr": "Startet den RotorControl neu. Die Netzwerkeinstellungen bleiben erhalten.",
+      "btn": "Neu starten",
+      "btnDscr": "Startet den RostorControl neu."
     },
-
-    "messages": {
-        "autoReload": "Diese Seite aktualisiert sich automatisch in",
-        "seconds": "1 Sekunde. | {n} Sekunden.",
-        "reboot": "RotorControl startet sich jetzt neu.",
-        "rebootFailed": "FEHLER: RotorControl reagiert nicht auf Neustart-Anfrage.",
-        "disconnect": "RotorControl trennt sich nun vom Netzwerk und startet sich neu. Die Rotor-Steuerung ist damit inaktiv, bis eine neue Netzwerkverbindung eingerichtet wurde. Sie können diesen Tab schließen.",
-        "disconnectFailed": "FEHLER: RotorControl reagiert nicht auf die Anfrage zum Trennen der Netzwerkverbindung."
+    "firmware": {
+      "title": "Firmware Version",
+      "dscr": "Suche nach vefügbaren Firmware Versionen.",
+      "installedVersion": "Installierte Version:",
+      "btn": "Suchen",
+      "availableFirmware": "Verfügbare Firmware:",
+      "moreInfo": "Mehr Info",
+      "moreInfoDscr": "Besucht die RotorCotrol Webseite, um mehr Informationen über verfübare Firmware Versionen zu erhalten.",
+      "downloadDscr": "Firmware-Datei herunterladen.",
+      "installed": "Installiert",
+      "old": "Alt",
+      "new": "Neu",
+      "error": "Die Suche nach verfügbaren Firmwares ist fehlgeschagen."
     },
-
-    "compass": {
-        "cardinals": {
-            "N": "N",
-            "NNE": "NNO",
-            "NE": "NO",
-            "ENE": "ONO",
-            "E": "O",
-            "ESE": "OSO",
-            "SE": "SO",
-            "SSE": "SSO",
-            "S": "S",
-            "SSW": "SSW",
-            "SW": "SW",
-            "WSW": "WSW",
-            "W": "W",
-            "WNW": "WNW",
-            "NW": "NW",
-            "NNW": "NNW"
-        },
-        "position": "Position",
-        "target": "Zielposition",
-        "time": "Uhrzeit",
-        "timeDscr": "Die aktuelle Systemzeit"
-    },
-
-    "manualRotation": {
-        "title": "Manuelle Rotation",
-        "ccwDscr": "Dreht den Rotor gegen den Uhrzeigersinn.",
-        "cwDscr": "Dreht den Rotor mit dem Uhrzeigersinn.",
-        "stopDscr": "Stoppt den Rotor."
-    },
-
-    "speed": {
-        "title": "Geschwindigkeit"
-    },
-
-    "lock": {
-        "title": "Rotorsperre",
-        "dscr": "Sperre den Rotor für andere Benutzer. Gebe dazu im Feld unten deinen Name ein und betätige den Schalter rechts daneben.",
-        "namePlaceholder": "Dein Name",
-        "lockedInfo": "Rotor {locked} von ",
-        "locked": "gesperrt"
-    },
-
-    "favorites": {
-        "title": "Favoriten",
-        "dscr": "Lege bis zu 10 Favoriten an, die per Tastendruck automatisch angefahren werden können.",
-        "addBtnDscr": "Neuen Favoriten anlegen.",
-        "nameLabel": "Favoriten-Bezeichner",
-        "namePlaceholder": "Bezeichner",
-        "createBtn": "Anlegen",
-        "createBtnDscr": "Favoriten anlegen.",
-        "sortByID": "Favoriten nach ID sortieren",
-        "sortByName": "Favoriten nach Namen sortieren",
-        "sortByAngle": "Favoriten nach Winkel sortieren",
-        "moveTo": "Anfahr.",
-        "delete": "Lösch.",
-        "moveToBtn": "Favoriten anfahren.",
-        "deleteBtn": "Favoriten löschen."
-    },
-
-    "settings": {
-        "system": "System",
-        "interface": "Benutzeroberfläche",
-        "functions": "Funktionen",
-        "calibration": "Kalibrierung",
-        "licenses": "Lizenzen",
-        "support": "Support",
-
-        "network": {
-            "title": "Netzwerk",
-            "attention": "ACHTUNG",
-            "dscr": "Wird die Verbindung getrennt, ist ein Fernzugriff nicht mehr möglich! Die gespeicherten Zugangsdaten werden gelöscht.",
-            "disconnect": "Trennen",
-            "disconnectDscr": "Trennt und setzt die Netzwerverbindung des Rotor Controllers zurück.",
-            "alert": "ACHTUNG!\nWirklich die Netzwerkverbindung trennen?\n\nDies löscht das gespeicherte WiFi-Passwort.\nEin Fernzugriff ist dann nicht mehr möglich.\nDer RotorControl muss danach lokal neu eingerichtet werden."
-        },
-
-        "reboot": {
-            "title": "Neustart",
-            "dscr": "Startet den RotorControl neu. Die Netzwerkeinstellungen bleiben erhalten.",
-            "btn": "Neu starten",
-            "btnDscr": "Startet den RostorControl neu."
-        },
-
-        "firmware": {
-            "title": "Firmware Version",
-            "dscr": "Suche nach vefügbaren Firmware Versionen.",
-            "installedVersion": "Installierte Version:",
-            "btn": "Suchen",
-            "availableFirmware": "Verfügbare Firmware:",
-            "moreInfo": "Mehr Info",
-            "moreInfoDscr": "Besucht die RotorCotrol Webseite, um mehr Informationen über verfübare Firmware Versionen zu erhalten.",
-            "downloadDscr": "Firmware-Datei herunterladen.",
-            "installed": "Installiert",
-            "old": "Alt",
-            "new": "Neu",
-            "error": "Die Suche nach verfügbaren Firmwares ist fehlgeschagen."
-        },
-
-        "update": {
-            "title": "Firmware Update",
-            "dscr": "Aktualisiere die Firmware durch hochladen einer neuen Firmware Datei.",
-            "dropzone": "Datei hier ablegen oder drücken zum Durchsuchen.",
-            "updateBtn": "Ausführen",
-            "updateBtnDscr": "Update starten.",
-            "error1": "Es darf nur genau eine Datei ausgewählt werden!",
-            "error2": "Diese Firmware-Datei ist keine .bin Datei.",
-            "error3": "Diese Firmware-Datei ist leer.",
-            "error4": "Diese Firmware-Datei ist zu groß (> 1.280 KB)." ,
-            "error5": "Der MD5-Hash dieser Datei konnte nicht bestimmt werden."
-        },
-
-        "fontSize": {
-            "title": "Schriftgröße",
-            "minusBtnDscr": "Schrift verkleinern.",
-            "plusBtnDscr": "Schrift vergrößern."
-        },
-
-        "colorThemes": {
-            "title": "Farbdesign",
-            "dscr": "Wähle eines von mehreren vorgefertigten Farbdesigns für die Benutzeroberfläche aus.",
-            "themes": {
-                "Ostsee": "Ostsee",
-                "Nordlicht": "Nordlicht",
-                "Krolock": "Krolock",
-                "Kitzsteinhorn": "Kitzsteinhorn"
-            }
-        },
-
-        "compass": {
-            "title": "Positionsanzeige",
-            "dscr": "Aktiviere / Deaktiviere einzelne Elemente der Positionsanzeige.",
-            "degrees": "Gradzahlen",
-            "cardinals": "Himmelsrichtungen",
-            "favorites": "Favoritenpunkte"
-        },
-
-        "keyboard": {
-            "title": "Tastatursteuerung",
-            "dscr": "Erlaubt im Controller-Tab die manuelle Steuerung des Rotors über die Pfeiltasten."
-        },
-
-        "overlap": {
-            "dscr": "Erlaube dem Rotor den Overlap-Bereich zwischen 360° und 450° für die automatische Rotation zu benutzen."
-        },
-
-        "smoothSpeed": {
-            "title": "Sanftes Anfahren",
-            "dscr": "Wenn aktiviert, fährt der Rotor langsam an und beschleunigt sanft auf die eingestellte Geschwindigkeit."
-        },
-
-        "screen": {
-            "title": "Bildschirm",
-            "dscr": "Aktiviere / Deaktiviere die Mini-Anzeige am Gerät."
-        },
-
-        "lock": {
-            "dscr": "Setzt die Sperrung des Rotors zurück und gibt diesen wieder frei.",
-            "btnDscr": "Setzt die Rotorsperre zurück.",
-            "alert": "Die Rotorsperre wurde zurückgesetzt."
-        },
-
-        "language": {
-            "title": "Sprache",
-            "dscr": "Wähle die Sprache der Benutzeroberfläche."
-        }
-    },
-
-    "calibration": {
-        "voltage": {
-            "title": "Positions-Spannung",
-            "dscr": "Die aktuell gemessene Positions-Spannung des Rotors. Mithilfe der Kalibrierung wird aus dieser Spannung die Rotor-Position berechnet."
-        },
-
-        "current": {
-            "title": "Aktuelle Kalibrierung",
-            "dscr": "Die aktuell verwendeten Kalibrations-Parameter.",
-            "btnDscr": "Stellt die Standard-Kalibrierung wieder her.",
-            "confirmMessage": "Kalibrierung auf Werkseinstellungen zurücksetzen?\n\nFür eine genaue Positionsanzeige ist eine individuelle Kalibrierung auf jeden Fall erforderlich!"
-        },
-
-        "title": "Rotor-Kalibrierung",
-        "dscr": "Damit RotorControl die richtige Position anzeigt, muss er kalibiert werden. Wähle entweder die geführte Kalibrierung, oder gebe die Parameter manuell ein.",
-        "guidedTab": "Geführt",
-        "manualTab": "Manuell",
-
-        "guided": {
-            "step1": "Drehe den Rotor über das Original-Steuergerät auf eine Position zwischen 20° und 40°.",
-            "step2": "Trage den genauen Winkel, möglichst exakt am Steuergerät abgelesen, bei Position 1 ein und drücke den Haken darunter.",
-            "step3": "Drehe den Rotor nun auf eine zweite Position zwischen 430° und 450°.",
-            "step4": "Trage den genauen Winkel diesmal bei Position 2 ein und drücke auf den Haken darunter.",
-            "step5": "Danach drücke auf \"Bestätigen\".",
-            "confirmPosBtnDscr": "Position {pos} bestätigen.",
-            "confirmBtnDscr": "Kalibrations-Parameter bestätigen und anwenden."
-        },
-
-        "manual": {
-            "dscr": "Hier können die Kalibrations-Parameter manuell eingegeben werden. Dabei muss {comparison} gelten. Die Parameter werden auf 4 Dezimalstellen gerundet.",
-            "btnDscr": "Kalibrations-Parameter bestätigen und anwenden.",
-            "errorAngle": "Position 2 Azimuth darf nicht kleiner oder gleich Position 1 Azimuth sein.",
-            "errorVoltage": "Position 2 Spannung darf nicht kleiner oder gleich Position 1 Spannung sein."
-
-        }
-    },
-
     "update": {
-        "dscr1": "Bitte warte, während das Firmware Update hochgeladen wird.",
-        "dscr2": "Nach erfolgreichem Update wird RotorControl neugestartet.",
-        "waitingForReboot": "Warte auf Neustart",
-        "completeUpdate": "Update abschließen",
-        "successInfo": "Update erfolgreich durchgeführt. RotorControl wird neu gestartet.",
-        "updateFailed": "Update fehlgeschlagen!",
-        "preUpdateError1": "@:update.updateFailed (Verbindungsfehler bei der Update-Anfrage)",
-        "preUpdateError2": "@:update.updateFailed (Update-Anfrage von RotorControl abgelehnt.)",
-        "preUpdateError3": "@:update.updateFailed (Leeren Token von RotorControl erhalten.)",
-        "updateError1": "@:update.updateFailed Die Firmware-Datei wurde nicht akzeptiert. ({response})",
-        "updateError2": "@:update.updateFailed Die Firmware-Datei konnte nicht hochgeladen werden."
-
+      "title": "Firmware Update",
+      "dscr": "Aktualisiere die Firmware durch hochladen einer neuen Firmware Datei.",
+      "dropzone": "Datei hier ablegen oder drücken zum Durchsuchen.",
+      "updateBtn": "Ausführen",
+      "updateBtnDscr": "Update starten.",
+      "error1": "Es darf nur genau eine Datei ausgewählt werden!",
+      "error2": "Diese Firmware-Datei ist keine .bin Datei.",
+      "error3": "Diese Firmware-Datei ist leer.",
+      "error4": "Diese Firmware-Datei ist zu groß (> 1.280 KB).",
+      "error5": "Der MD5-Hash dieser Datei konnte nicht bestimmt werden."
+    },
+    "fontSize": {
+      "title": "Schriftgröße",
+      "minusBtnDscr": "Schrift verkleinern.",
+      "plusBtnDscr": "Schrift vergrößern."
+    },
+    "colorThemes": {
+      "title": "Farbdesign",
+      "dscr": "Wähle eines von mehreren vorgefertigten Farbdesigns für die Benutzeroberfläche aus.",
+      "themes": {
+        "Ostsee": "Ostsee",
+        "Nordlicht": "Nordlicht",
+        "Krolock": "Krolock",
+        "Kitzsteinhorn": "Kitzsteinhorn"
+      }
+    },
+    "compass": {
+      "title": "Positionsanzeige",
+      "dscr": "Aktiviere / Deaktiviere einzelne Elemente der Positionsanzeige.",
+      "degrees": "Gradzahlen",
+      "cardinals": "Himmelsrichtungen",
+      "favorites": "Favoritenpunkte"
+    },
+    "keyboard": {
+      "title": "Tastatursteuerung",
+      "dscr": "Erlaubt im Controller-Tab die manuelle Steuerung des Rotors über die Pfeiltasten."
+    },
+    "overlap": {
+      "dscr": "Erlaube dem Rotor den Overlap-Bereich zwischen 360° und 450° für die automatische Rotation zu benutzen."
+    },
+    "smoothSpeed": {
+      "title": "Sanftes Anfahren",
+      "dscr": "Wenn aktiviert, fährt der Rotor langsam an und beschleunigt sanft auf die eingestellte Geschwindigkeit."
+    },
+    "screen": {
+      "title": "Bildschirm",
+      "dscr": "Aktiviere / Deaktiviere die Mini-Anzeige am Gerät."
+    },
+    "lock": {
+      "dscr": "Setzt die Sperrung des Rotors zurück und gibt diesen wieder frei.",
+      "btnDscr": "Setzt die Rotorsperre zurück.",
+      "alert": "Die Rotorsperre wurde zurückgesetzt."
+    },
+    "language": {
+      "title": "Sprache",
+      "dscr": "Wähle die Sprache der Benutzeroberfläche."
     }
+  },
+  "calibration": {
+    "voltage": {
+      "title": "Positions-Spannung",
+      "dscr": "Die aktuell gemessene Positions-Spannung des Rotors. Mithilfe der Kalibrierung wird aus dieser Spannung die Rotor-Position berechnet."
+    },
+    "current": {
+      "title": "Aktuelle Kalibrierung",
+      "dscr": "Die aktuell verwendeten Kalibrations-Parameter.",
+      "btnDscr": "Stellt die Standard-Kalibrierung wieder her.",
+      "confirmMessage": "Kalibrierung auf Werkseinstellungen zurücksetzen?\n\nFür eine genaue Positionsanzeige ist eine individuelle Kalibrierung auf jeden Fall erforderlich!"
+    },
+    "title": "Rotor-Kalibrierung",
+    "dscr": "Damit RotorControl die richtige Position anzeigt, muss er kalibiert werden. Wähle entweder die geführte Kalibrierung, oder gebe die Parameter manuell ein.",
+    "guidedTab": "Geführt",
+    "manualTab": "Manuell",
+    "guided": {
+      "step1": "Drehe den Rotor über das Original-Steuergerät auf eine Position zwischen 20° und 40°.",
+      "step2": "Trage den genauen Winkel, möglichst exakt am Steuergerät abgelesen, bei Position 1 ein und drücke den Haken darunter.",
+      "step3": "Drehe den Rotor nun auf eine zweite Position zwischen 430° und 450°.",
+      "step4": "Trage den genauen Winkel diesmal bei Position 2 ein und drücke auf den Haken darunter.",
+      "step5": "Danach drücke auf \"Bestätigen\".",
+      "confirmPosBtnDscr": "Position {pos} bestätigen.",
+      "confirmBtnDscr": "Kalibrations-Parameter bestätigen und anwenden.",
+      "errorVoltage": "Position 2 Spannung darf nicht kleiner oder gleich Position 1 Spannung sein.\n\nDer Rotor muss VOR der Eingabe der Winkel auf die entsprechenden Positionsbereiche gedreht werden."
+    },
+    "manual": {
+      "dscr": "Hier können die Kalibrations-Parameter manuell eingegeben werden. Dabei muss {comparison} gelten. Die Parameter werden auf 4 Dezimalstellen gerundet.",
+      "btnDscr": "Kalibrations-Parameter bestätigen und anwenden.",
+      "errorAngle": "Position 2 Azimuth darf nicht kleiner oder gleich Position 1 Azimuth sein.",
+      "errorVoltage": "Position 2 Spannung darf nicht kleiner oder gleich Position 1 Spannung sein."
+    }
+  },
+  "update": {
+    "dscr1": "Bitte warte, während das Firmware Update hochgeladen wird.",
+    "dscr2": "Nach erfolgreichem Update wird RotorControl neugestartet.",
+    "waitingForReboot": "Warte auf Neustart",
+    "completeUpdate": "Update abschließen",
+    "successInfo": "Update erfolgreich durchgeführt. RotorControl wird neu gestartet.",
+    "updateFailed": "Update fehlgeschlagen!",
+    "preUpdateError1": "@:update.updateFailed (Verbindungsfehler bei der Update-Anfrage)",
+    "preUpdateError2": "@:update.updateFailed (Update-Anfrage von RotorControl abgelehnt.)",
+    "preUpdateError3": "@:update.updateFailed (Leeren Token von RotorControl erhalten.)",
+    "updateError1": "@:update.updateFailed Die Firmware-Datei wurde nicht akzeptiert. ({response})",
+    "updateError2": "@:update.updateFailed Die Firmware-Datei konnte nicht hochgeladen werden."
+  }
 }

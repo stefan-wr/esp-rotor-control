@@ -86,7 +86,9 @@
     "moveTo": "Rot.",
     "delete": "Del.",
     "moveToBtn": "Rotate to favorite.",
-    "deleteBtn": "Delete favorite."
+    "deleteBtn": "Delete favorite.",
+    "deleteAll": "Delete all favorites.",
+    "removeAlert": "Delete all favorites?"
   },
   "settings": {
     "system": "System",
@@ -95,7 +97,6 @@
     "calibration": "Calibration",
     "licenses": "Licenses",
     "support": "Support",
-
     "network": {
       "title": "Network",
       "dscr": "If disconnected, remote access is no longer possible! Saved WiFi credentials will be deleted.",
@@ -211,7 +212,8 @@
       "step4": "This time, enter the exact angle at position 2 and confirm it.",
       "step5": "Then press “Confirm”.",
       "confirmPosBtnDscr": "Confirm position {pos}.",
-      "confirmBtnDscr": "Confirm and apply calibration parameters."
+      "confirmBtnDscr": "Confirm and apply calibration parameters.",
+      "errorVoltage": "Position 2 voltage must not be less than or equal to position 1 voltage.\n\nThe rotor must be rotated to the corresponding position ranges BEFORE entering the angles."
     }
   },
   "update": {
