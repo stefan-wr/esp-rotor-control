@@ -22,7 +22,26 @@
           <span>|</span>
           <a class="a-hover-dark" href="#">Support</a>
         </div>
-        <Compass :full="false" class="hide-m" v-if="[1, 3].includes(uiStore.ui.activeSetting)"></Compass>
+        <Compass
+          v-if="uiStore.ui.activeSetting === 1"
+          :isInteractive="false"
+          :hasFavorites="uiStore.ui.hasFavoritesDots"
+          :hasCardinals="uiStore.ui.hasCardinalLabels"
+          :hasDegrees="uiStore.ui.hasDegreeLabels"
+          :hasCorners="false"
+          :hasBox="false"
+          class="hide-m"
+        ></Compass>
+        <Compass
+          v-if="uiStore.ui.activeSetting === 3"
+          :isInteractive="false"
+          :hasFavorites="false"
+          :hasCardinals="true"
+          :hasDegrees="true"
+          :hasCorners="false"
+          :hasBox="false"
+          class="hide-m"
+        ></Compass>
       </div>
     </div>
 

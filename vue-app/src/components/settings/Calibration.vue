@@ -4,6 +4,10 @@
       <Icon icon="fa-solid fa-wrench"></Icon>
     </template>
 
+    <template #action>
+      <span class="monospace large">{{rotorStore.rotor.angle.toFixed(1)}}°</span>
+    </template>
+
     <template #content>
       <!-- Description -->
       <p class="txt-dark">
@@ -55,12 +59,14 @@ import CalibrationAutomatic from '@/components/settings/CalibrationAutomatic.vue
 import CalibrationManual from '@/components/settings/CalibrationManual.vue';
 
 import { useSettingsStore } from '@/stores/settings';
+import { useRotorStore } from '@/stores/rotor';
 import { useUmbrellaStore } from '@/stores/umbrella';
 
 import { ref } from 'vue';
 
 const settingsStore = useSettingsStore();
 const umbrellaStore = useUmbrellaStore();
+const rotorStore = useRotorStore();
 
 // Toggle between manual- and auto calibration tabs
 // ------------------------------------------------

@@ -1,6 +1,13 @@
 <template>
   <main class="gap-one">
-    <Compass />
+    <Compass
+      :isInteractive="true"
+      :hasFavorites="uiStore.ui.hasFavoritesDots"
+      :hasCardinals="uiStore.ui.hasCardinalLabels"
+      :hasDegrees="uiStore.ui.hasDegreeLabels"
+      :hasCorners="true"
+      :hasBox="true"
+    ></Compass>
     <aside class="flex-vst gap-one">
       <ManualRotation></ManualRotation>
       <SpeedControl></SpeedControl>
@@ -22,9 +29,9 @@ import { useUIStore } from '@/stores/ui';
 
 const uiStore = useUIStore();
 
-onBeforeMount( () => {
+onBeforeMount(() => {
   uiStore.enableHeaderLinks();
-})
+});
 </script>
 
 <style lang="scss" scoped>
