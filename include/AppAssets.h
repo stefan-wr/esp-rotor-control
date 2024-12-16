@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#define ASSET_CACHE_CONTROL "private, max-age=ASSET_MAX_AGE"
+#define ASSET_CACHE_CONTROL "private, max-age=31536000"
 
 // Manifest
 //const char manifest_json[] = "{\"name\":\"RotorControl\",\"short_name\":\"RotorControl\",\"start_url\":\"../index.html\",\"display\":\"standalone\",\"theme_color\":\"#ffffff\",\"background_color\":\"#ffffff\",\"icons\":[{\"src\":\"/android-chrome-192x192.png\",\"sizes\":\"192x192\",\"type\":\"image/png\"},{\"src\":\"/android-chrome-512x512.png\",\"sizes\":\"512x512\",\"type\":\"image/png\"},{\"src\":\"/android-chrome-192x192.png\",\"sizes\":\"192x192\",\"type\":\"image/png\",\"purpose\":\"maskable\"}]}";

@@ -10,6 +10,7 @@ private:
     unsigned long start_ms;
 
 public:
+    Timer();
     Timer(unsigned long interval);
     
     // N of times, the timer was checked and returned true

@@ -15,6 +15,8 @@
 #include <AppIndex.h>
 
 #define SCREEN_ADDRESS 0x3C
+#define SPLASHSCREEN_TIMEOUT 2000
+#define ALERT_TIMEOUT 4000
 
 extern bool just_booted;
 
@@ -51,12 +53,12 @@ namespace Screen {
 
         // Show splash screen at ESP setup until timer expires
         showSplashScreen();
-        splash_screen_timer = new Timer(2000);
+        splash_screen_timer.changeInterval(SPLASHSCREEN_TIMEOUT);
         screen->display();
 
         // Setup alert messages
         alert_txt.reserve(96);
-        alert_timer = new Timer(4000);
+        alert_timer.changeInterval(ALERT_TIMEOUT);
 
         return true;
     }
@@ -133,14 +135,14 @@ namespace Screen {
     // => Set an alert message to be shown full screen for a few seconds
     void Screen::setAlert(const String &txt) {
         alert_txt = txt;
-        alert_timer->start();
+        alert_timer.start();
     }
 
     // => Set an alert message and show it on  the screen immediatly
     void Screen::setAlertImmediatly(const String &txt) {
         if (!disabled) {
             alert_txt = txt;
-            alert_timer->start();
+            alert_timer.start();
             clearScreen();
             showFullscreenAlert();
             screen->display();
@@ -491,7 +493,7 @@ namespace Screen {
         // The splash screen is shown during setup, set by init().
         // Show splash screen, until timer expires.
         if (on_splash_screen) {
-            if (splash_screen_timer->passed()) {
+            if (splash_screen_timer.passed()) {
                 on_splash_screen = false;
             } else {
                 return;
@@ -503,7 +505,7 @@ namespace Screen {
 
         // Alert message, full screen, until timed out
         if (alert_txt != "" && !firmware.is_updating) {
-            if (alert_timer->passed()) {
+            if (alert_timer.passed()) {
                 alert_txt = "";
             } else {
                 showFullscreenAlert();

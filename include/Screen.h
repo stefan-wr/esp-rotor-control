@@ -17,10 +17,10 @@ namespace Screen {
      
     class Screen {
     private:
-        Timer *splash_screen_timer;
+        Timer splash_screen_timer;
         bool on_splash_screen = true;
 
-        Timer *alert_timer;
+        Timer alert_timer;
         String alert_txt;
         bool disabled = false;
 

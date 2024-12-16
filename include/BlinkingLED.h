@@ -13,7 +13,7 @@ private:
     int _n_blinks = 0;
     int _prev_n_blinks = 0;
     bool _continous = false;
-    Timer *_tickTimer;
+    Timer _tickTimer;
 
 public:
     // Constructor

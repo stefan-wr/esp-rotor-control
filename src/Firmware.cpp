@@ -19,8 +19,8 @@ namespace Firmware {
         size = 0;
         is_updating = false;
         upload_progress = 0;
-        timeout = new Timer(1000 * 60 * 2);         // 2 min
-        token_timeout = new Timer(1000 * 60 * 2);   // 2 min
+        timeout.changeInterval(1000 * 60 * 2);         // 2 min
+        token_timeout.changeInterval(1000 * 60 * 2);   // 2 min
         md5.reserve(32);
         token.reserve(32);
         md5 = "";
@@ -37,7 +37,7 @@ namespace Firmware {
             buffer[i] = characters[index];
         }
         token = buffer;
-        token_timeout->start();
+        token_timeout.start();
     }
 
     // => Serial print update error
@@ -102,7 +102,7 @@ namespace Firmware {
 
             // Abort update if token is missing or expired
             if (!Update.hasError() && request->hasHeader("Token")) {
-                if (request->getHeader("Token")->value() != firmware.token || firmware.token_timeout->passed(false)) {
+                if (request->getHeader("Token")->value() != firmware.token || firmware.token_timeout.passed(false)) {
                     Update.abort();
                     Serial.println("[ESP] Update token does not match.");
                 }
@@ -138,7 +138,7 @@ namespace Firmware {
             }
 
             // Reset timeout
-            firmware.timeout->start();
+            firmware.timeout.start();
 
             // Update progress
             firmware.upload_progress = floor((float) index / (float) firmware.size * 100.0f);

@@ -103,15 +103,23 @@ void setup() {
   Serial.print("[Stats] Boot #: ");
   boot_counter.printlnToSerial();
 
+  // Firmware MD5 and size
+  Serial.print("[ESP] Firmware MD5:");
+  Serial.println(ESP.getSketchMD5());
+  Serial.print("[ESP] Firmware size: ");
+  Serial.println(ESP.getSketchSize());
+
   // ESP ID derived from MAC address
   esp_id = WiFi.macAddress();
   esp_id.replace(":", "");
   Serial.print("[ESP] Hardware-ID: ");
   Serial.println(esp_id);
 
-  // Show CPU Frequency
+  // Show CPU Model & Frequency
   if (verbose) {
-    Serial.print("[ESP] CPU Frequency: ");
+    Serial.print("[ESP] Chip model: ");
+    Serial.println(ESP.getChipModel());
+    Serial.print("[ESP] CPU frequency: ");
     Serial.print(getCpuFrequencyMhz());
     Serial.println(" MHz");
   }
@@ -180,19 +188,19 @@ void setup() {
 
 // Timers, that control how often each task in the mainloop is executed
 struct {                                      // Intervals
-  Timer *networkScan = new Timer(20000);      // 20 s
-  Timer *checkWiFi = new Timer(8000);         // 8 s
-  Timer *reconnectTimeout = new Timer(90000); // 90 s
-  Timer *reboot = new Timer(86400000 * 3);    // 3 days
-  Timer *multiBtnHold = new Timer(500);       // 500 ms, 2Hz
-  Timer *cleanSockets = new Timer(1000);      // 1 s
-  Timer *rotorUpdate = new Timer(40);         // 40 ms, 25 Hz
-  Timer *rotorMessage = new Timer(1000);      // 1 s
-  Timer *speedRamp = new Timer(40);           // 40 ms, 25 Hz
-  Timer *updateScreen = new Timer(40);        // 40 ms, 25 Hz
-  Timer *loopTimer = new Timer(1000);         // 1 s
-  Timer *fwUpdateChecker = new Timer(50);     // 50 ms, 20 Hz
-  Timer *justBootedTimeout = new Timer(8000);
+  Timer networkScan{20000};      // 20 s
+  Timer checkWiFi{8000};         // 8 s
+  Timer reconnectTimeout{90000}; // 90 s
+  Timer reboot{86400000 * 3};    // 3 days
+  Timer multiBtnHold{500};       // 500 ms, 2Hz
+  Timer cleanSockets{1000};      // 1 s
+  Timer rotorUpdate{40};         // 40 ms, 25 Hz
+  Timer rotorMessage{1000};      // 1 s
+  Timer speedRamp{40};           // 40 ms, 25 Hz
+  Timer updateScreen{40};        // 40 ms, 25 Hz
+  Timer loopTimer{1000};         // 1 s
+  Timer fwUpdateChecker{50};     // 50 ms, 20 Hz
+  Timer justBootedTimeout{8000};
 } timers;
 
 bool is_reconnecting = false;   // Is WiFi trying to reconnect
@@ -210,7 +218,7 @@ unsigned long loop_mus = micros();
 void loop() {
   if (COUNT_LOOP_CYCLE_TIME) loopCounter++;
 
-  if (timers.justBootedTimeout->n_passed < 2 && timers.justBootedTimeout->passed()) {
+  if (timers.justBootedTimeout.n_passed < 2 && timers.justBootedTimeout.passed()) {
     just_booted = false;
   }
 
@@ -235,8 +243,8 @@ void loop() {
     // Enable further checks for wether multi button is being held down
     multi_btn_pressed = false;
     multi_btn_hold = true;
-    timers.multiBtnHold->reset();
-    timers.multiBtnHold->start();
+    timers.multiBtnHold.reset();
+    timers.multiBtnHold.start();
   }
 
   // Check wether button is being held down
@@ -246,9 +254,9 @@ void loop() {
       multi_btn_hold = false;
 
     // Button is still being held down
-    } else if (timers.multiBtnHold->passed()) {
+    } else if (timers.multiBtnHold.passed()) {
       // Reset WiFi after timer 2 s
-      if (timers.multiBtnHold->n_passed == 4) {
+      if (timers.multiBtnHold.n_passed == 4) {
         rotor_ctrl.stop();
         wifi_led.blinkBlocking(4, 250ul);
         Serial.println("[BTN] held for 2s. Resetting WiFi credentials and restart.");
@@ -265,11 +273,11 @@ void loop() {
 
   // Update rotor values and send rotation message to clients every second update.
   // Update angular speed every 8th update.
-  if (in_station_mode && timers.rotorUpdate->passed() && !firmware.is_updating) {
-    rotor_ctrl.update(!(timers.rotorUpdate->n_passed % 8));
+  if (in_station_mode && timers.rotorUpdate.passed() && !firmware.is_updating) {
+    rotor_ctrl.update(!(timers.rotorUpdate.n_passed % 8));
 
     // Send rotation message every second update and only if clients are connected
-    if (RotorSocket::clients_connected && timers.rotorUpdate->n_passed % 2 == 0) {
+    if (RotorSocket::clients_connected && timers.rotorUpdate.n_passed % 2 == 0) {
       /* Send rotation message if either:
           1. voltage changed significantly compared to last message
           2. rotor started or stopped rotation
@@ -277,11 +285,11 @@ void loop() {
       */
       if ((abs(rotor_ctrl.rotor.last_adc_volts - adc_volts_prev) > 0.003) ||
           (rotor_ctrl.is_rotating != is_rotating_prev) ||
-          (timers.rotorMessage->passed())) {
+          (timers.rotorMessage.passed())) {
         rotor_ctrl.messenger.sendLastRotation(true);
         adc_volts_prev = rotor_ctrl.rotor.last_adc_volts;
         is_rotating_prev = rotor_ctrl.is_rotating;
-        timers.rotorMessage->start();
+        timers.rotorMessage.start();
       }      
     }
   }
@@ -292,7 +300,7 @@ void loop() {
   }
 
   // Watch active speed ramp
-  if (in_station_mode && rotor_ctrl.smooth_speed_active && timers.speedRamp->passed()) {
+  if (in_station_mode && rotor_ctrl.smooth_speed_active && timers.speedRamp.passed()) {
     rotor_ctrl.watchSmoothSpeedRamp();
   }
 
@@ -314,7 +322,7 @@ void loop() {
   // ******************************
 
   // Check for loss of WiFi connection -> stop rotor, try to reconnect
-  if (in_station_mode && timers.checkWiFi->passed()) {
+  if (in_station_mode && timers.checkWiFi.passed()) {
     if (!WiFi.isConnected()) {
       // Stop rotor
       if (rotor_ctrl.is_rotating) {
@@ -323,7 +331,7 @@ void loop() {
 
       // Start reconnect timeout
       if (!is_reconnecting) {
-        timers.reconnectTimeout->start();
+        timers.reconnectTimeout.start();
         is_reconnecting = true;
       }
 
@@ -342,7 +350,7 @@ void loop() {
   }
 
   // Reboot ESP after reconnect timeout
-  if (in_station_mode && is_reconnecting && timers.reconnectTimeout->passed()) {
+  if (in_station_mode && is_reconnecting && timers.reconnectTimeout.passed()) {
     Serial.println("[WiFi] Reconnecting failed! Restarting ESP.");
     delay(1000);
     ESP.restart();
@@ -354,7 +362,7 @@ void loop() {
   // ******************************
 
   // Update the screen
-  if (has_screen && timers.updateScreen->passed()) {
+  if (has_screen && timers.updateScreen.passed()) {
     screen.update();
   }
 
@@ -363,13 +371,13 @@ void loop() {
 
 
   // Clean old websocket connections
-  if (in_station_mode && timers.cleanSockets->passed()) {
+  if (in_station_mode && timers.cleanSockets.passed()) {
     websocket.cleanupClients();
   }
 
 
   // Reboot ESP after a few days
-  if (in_station_mode && timers.reboot->passed() && !firmware.is_updating) {
+  if (in_station_mode && timers.reboot.passed() && !firmware.is_updating) {
     ESP.restart();
   }
 
@@ -378,19 +386,19 @@ void loop() {
   // ***** Updating  Firmware *****
   // ******************************
 
-  if (in_station_mode && timers.fwUpdateChecker->passed()) {
+  if (in_station_mode && timers.fwUpdateChecker.passed()) {
  
     // When update starts 
     if (!is_updating_prev && firmware.is_updating) {
       websocket.enable(false);
       wifi_led.startBlinking(500);
-      firmware.timeout->start();
+      firmware.timeout.start();
       is_updating_prev = true;
     }
 
     // During update
     if (firmware.is_updating) {
-      if (firmware.timeout->passed()) {
+      if (firmware.timeout.passed()) {
         Serial.println("[ESP] Update error: Connection lost during upload.");
         delay(1000);
         ESP.restart();
@@ -412,7 +420,7 @@ void loop() {
 
   // Scanning for networks
   if (!in_station_mode) {
-    if (scan_now || timers.networkScan->passed()) {
+    if (scan_now || timers.networkScan.passed()) {
       WiFiFunctions::startNetworkScan();
       scan_now = false;
     }
@@ -429,7 +437,7 @@ void loop() {
   // ****** Loop Cycle Time  ******
   // ******************************
 
-  if (timers.loopTimer->passed() && COUNT_LOOP_CYCLE_TIME) {
+  if (timers.loopTimer.passed() && COUNT_LOOP_CYCLE_TIME) {
     double loop_cycle = (float) ((micros() - loop_mus) / loopCounter) / 1000.0;
     Serial.print("[ESP] Loop cycle time: ");
     Serial.printf("%3.2f", loop_cycle);

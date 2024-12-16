@@ -15,9 +15,9 @@ namespace Firmware {
         String md5;
         bool is_updating;
         uint8_t upload_progress;
-        Timer *timeout;
+        Timer timeout;
         String token;
-        Timer *token_timeout;
+        Timer token_timeout;
 
         // Constrcutor
         Firmware() {};

@@ -2,11 +2,8 @@
 #include <BlinkingLED.h>
 #include <Timer.h>
 
-BlinkingLED::BlinkingLED(const uint8_t &pin, const uint8_t &normal, const unsigned long &interval) {
-    _pin = pin;
-    _normal = normal;
-    _interval = interval;
-    _tickTimer = new Timer(_interval);
+BlinkingLED::BlinkingLED(const uint8_t &pin, const uint8_t &normal, const unsigned long &interval)
+    :_pin(pin), _normal(normal), _interval(interval), _tickTimer(interval) {
     pinMode(_pin, OUTPUT);
     write(_normal);
 }
@@ -14,7 +11,7 @@ BlinkingLED::BlinkingLED(const uint8_t &pin, const uint8_t &normal, const unsign
 // => Set blink interval
 void BlinkingLED::setInterval(const unsigned long &interval) {
     _interval = interval;
-    _tickTimer->changeInterval(_interval);
+    _tickTimer.changeInterval(_interval);
 }
 
 // **********
@@ -121,7 +118,7 @@ void BlinkingLED::tick() {
         return;
     }
 
-    if (_tickTimer->passed()) {
+    if (_tickTimer.passed()) {
 
         if (_n_blinks > 0 || _continous) {
             write(!read());
