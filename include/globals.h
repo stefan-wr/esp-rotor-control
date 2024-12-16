@@ -26,9 +26,6 @@ const int sta_default_port = 80;
 const String sta_default_user = "rotor";
 const String sta_default_pw = "password";
 
-// Constants
-const float deg_to_rad_factor = M_PI / 180.0f;
-
 // *********
 // Externals
 // *********

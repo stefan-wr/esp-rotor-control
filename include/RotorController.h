@@ -2,125 +2,12 @@
 #define ROTORCONTROLLER_H
 
 #include <Arduino.h>
-#include <Adafruit_ADS1X15.h>
-#include <ESPAsyncWebServer.h>
 #include <Timer.h>
-#include <Preferences.h>
+#include <Rotation.h>
+#include <RotorMessenger.h>
 
 
 namespace Rotor {
-
-    class Rotation;
-    class Messenger;
-    class RotorController;
-
-    // Rotor Rotation Class
-    // ********************
-    // Handles the I/O stuff and calibration of the real rotor
-    class Rotation {
-    private:
-        // ADC configuration
-        Adafruit_ADS1115 adc;
-        const int adc_channel = 0;
-        bool ads_failed = false;
-        Preferences cal_prefs;  // PREFS for calibration parameters
-
-        // => Calculate gradient and offset from calibration factors
-        void applyCalibration();
-
-        // => Save calibration factors to PREFS
-        void saveCalibration();
-
-        // => Load calibration factors from PREFS and apply
-        void loadCalibration();
-
-    public:
-        // Last rotor values
-        unsigned long last_ms = 0.0;
-        int last_adc_value = 0;
-        float last_adc_volts = 0.0;
-        float last_angle = 0.0;
-        float last_angle_rad = 0.0;
-        
-        // Calibration parameters
-        struct {
-            float u1, u2, a1, a2;
-            float d_grad, u_0;
-            const float volt_div_factor = 1.5f;
-            float offset;
-        } calibration;
-
-        // Default construcutor
-        Rotation() {};
-
-        // => Initialistion, call from setup()
-        bool init();
-
-        // => Set calibration factors and apply and save
-        void calibrate(const float &u1, const float &u2,
-                       const float &a1, const float &a2);
-
-        // => Set constant angle-offset and save calibration
-        void setAngleOffset(const float &offset);
-
-        // => Return ADC status
-        bool getADCStatus() { return !ads_failed; }
-
-        // => Get current raw ADC value
-        int getADCValue();
-
-        // => Get current ADC voltage
-        float getADCVolts();
-
-        // => Get current rotor's azimuth angle
-        float getAngle();
-
-        // => Start rotation in given direction
-        void startRotation(const int &dir);
-
-        // => Stop rotor
-        void stopRotor();
-
-        // => Set DAC voltage on speed pin
-        void setSpeedDAC(const int &speed);
-
-        // => Read ADC and update last rotor position values
-        void update();        
-    };
-
-
-    // Rotor Messenger Class
-    // *********************
-    // Handles outgoing messages with rotor data
-    class Messenger {
-    private:
-        String msg_buffer;
-
-        // => Create rotation JSON message from last rotor values and save in msg_buffer
-        void setLastRotationMsg(const bool &with_angle);
-    public:
-        // Pointer to rotor instance defined in parent class
-        RotorController* rotor_ptr;
-
-        // Constructor
-        Messenger();
-
-        // => Send last rotation valueset
-        void sendLastRotation(const bool &with_angle);
-
-        // => Send new rotation values from ADC, always includes angle
-        void sendNewRotation();
-
-        // => Send max speed
-        void sendSpeed();
-
-        // => Send current calibration parameters
-        void sendCalibration();
-
-        // => Send auto rotation target
-        void sendTarget();
-    };
-    
 
     // Rotor Controller Class
     // **********************
@@ -135,8 +22,8 @@ namespace Rotor {
             int timeoutCounter = 0;
             const unsigned long timeout = 4000;
             const unsigned long counterInterval = 500;
-            Timer* counterTimer;
-            Timer* timer;
+            Timer counterTimer;
+            Timer timer;
         } auto_rot;
 
         // Rotor angle from previous angular speed calculation
@@ -195,7 +82,7 @@ namespace Rotor {
         void startRotation(const int dir);
 
         // => Stop rotor, distribute new state to clients
-        void stop();
+        void stop(const bool &distribute = true);
 
         // => Set max rotor speed, distribute new state to clients.
         // Is applied to DAC only if speed is not ramping up / down.

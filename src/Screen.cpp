@@ -177,8 +177,8 @@ namespace Screen {
 
         // Ticks
         for (float a = 0.0f; a < 360.0f; a += 30.0f ) {
-            compass.tick_sin = sin(a * deg_to_rad_factor);
-            compass.tick_cos = cos(a * deg_to_rad_factor);
+            compass.tick_sin = sin(a * DEG_TO_RAD);
+            compass.tick_cos = cos(a * DEG_TO_RAD);
             compass.tick_x1 = round(cx + compass.tick_sin * r);
             compass.tick_y1 = round(cy - compass.tick_cos * r);
             compass.tick_x2 = round(cx + compass.tick_sin * (r - 4));

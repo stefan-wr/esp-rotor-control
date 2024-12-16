@@ -1,246 +1,15 @@
 #include <Arduino.h>
-#include <ArduinoJson.h>
 #include <math.h>
 
 #include <globals.h>
+#include <Rotation.h>
+#include <RotorMessenger.h>
 #include <RotorController.h>
-#include <Adafruit_ADS1X15.h>
-#include <Timer.h>
-#include <ESPAsyncWebServer.h>
 #include <RotorSocket.h>        // Exposes Global: websocket
 
 
 namespace Rotor {
     const String directions[2] = {"CCW", "CW"};
-
-    // *****************************
-    // Define Rotation class members
-    // *****************************
-
-    // => Initialisation
-    bool Rotation::init() {
-        // Init rotation pins
-        pinMode(rot_pins[0], OUTPUT);
-        pinMode(rot_pins[1], OUTPUT);
-        stopRotor();
-
-        // Init speed pin
-        dacWrite(speed_pin, 0);
-
-        // Init ADS1115
-        // 16bit = 32768 values
-        // GAIN_ONE: +/- 4.096V
-        // -> 0.125 mV per ADC value
-        adc.setGain(GAIN_ONE);
-        if (!adc.begin(0x48)) {
-            Serial.println("[Rotor] Failed to initialise ADS1115!");
-            ads_failed = true;
-        }
-
-        // Load calibration factors
-        loadCalibration();
-
-        return !ads_failed;
-    }
-
-    // => Set calibration factors and apply and save
-    void Rotation::calibrate(const float &u1, const float &u2,
-                             const float &a1, const float &a2) {
-        calibration.u1 = u1;
-        calibration.u2 = u2;
-        calibration.a1 = a1;
-        calibration.a2 = a2;
-        applyCalibration();
-        saveCalibration();
-    }
-
-    // => Calculate gradient and offset from calibration factors
-    void Rotation::applyCalibration() {
-        calibration.d_grad = (calibration.a2 - calibration.a1) / (calibration.u2 - calibration.u1);
-        calibration.u_0 = calibration.a1 - ((calibration.a2 - calibration.a1) / (calibration.u2 - calibration.u1) * calibration.u1);
-    }
-
-    // => Save calibration factors to PREFS
-    void Rotation::saveCalibration() {
-        cal_prefs.begin("calPrefs", false);
-        cal_prefs.clear();
-        cal_prefs.putFloat("u1", calibration.u1);
-        cal_prefs.putFloat("u2", calibration.u2);
-        cal_prefs.putFloat("a1", calibration.a1);
-        cal_prefs.putFloat("a2", calibration.a2);
-        cal_prefs.putFloat("offset", calibration.offset);
-        cal_prefs.end();
-    }
-
-    // => Load calibration factors from PREFS and apply, create storage if it doesn't already exist.
-    void Rotation::loadCalibration() {
-        bool prefs_exists = cal_prefs.begin("calPrefs", true);
-        calibration.u1 = cal_prefs.getFloat("u1", 0.317f);
-        calibration.u2 = cal_prefs.getFloat("u2", 4.095f);
-        calibration.a1 = cal_prefs.getFloat("a1", 30.0f);
-        calibration.a2 = cal_prefs.getFloat("a2", 445.0f);
-        calibration.offset = cal_prefs.getFloat("offset", 0.0f);
-        cal_prefs.end();
-        applyCalibration();
-        if (!prefs_exists) {
-            saveCalibration();
-        }
-    }
-
-    // => Set constant angle-offset and save calibration
-    void Rotation::setAngleOffset(const float &offset) {
-        calibration.offset = offset;
-        saveCalibration();
-    }
-
-    // => Start rotation in given direction
-    void Rotation::startRotation(const int &dir) {
-        digitalWrite(rot_pins[dir], LOW);
-    }
-
-    // => Stop rotor
-    void Rotation::stopRotor() {
-        digitalWrite(rot_pins[0], HIGH);
-        digitalWrite(rot_pins[1], HIGH);
-    }
-
-    // => Set DAC voltage on speed pin
-    void Rotation::setSpeedDAC(const int &speed) {
-        if (speed == 0) {
-            dacDisable(speed_pin);
-        } else {
-            dacWrite(speed_pin, (uint8_t) std::round(speed * 2.55f));
-        }
-    }
-
-    // => Get current raw ADC value
-    int Rotation::getADCValue() {
-        update();
-        return last_adc_value;
-    }
-
-    // => Get current ADC voltage
-    float Rotation::getADCVolts() {
-        update();
-        return last_adc_volts;
-    }
-
-    // => Get rotor's current azimuth angle
-    float Rotation::getAngle() {
-        update();
-        return last_angle;
-    }
-
-    // => Read ADC and update last rotor position values
-    void Rotation::update() {
-        if (!ads_failed) {
-            // Read ADC and compute volts
-            last_adc_value = adc.readADC_SingleEnded(adc_channel);
-            last_ms = millis();
-            last_adc_volts = adc.computeVolts(last_adc_value);
-
-            // Calculate angle using calibration
-            last_angle = calibration.d_grad * last_adc_volts * calibration.volt_div_factor
-                       + calibration.u_0 + calibration.offset;
-            last_angle_rad = last_angle * deg_to_rad_factor;
-        }
-    }    
-
-
-
-
-
-
-    // ************************
-    // Define Messenger members
-    // ************************
-
-    Messenger::Messenger() {
-        // Set message buffer size on the heap
-        msg_buffer.reserve(100);
-    }
-
-    // => Create JSON message from last rotor values and save in msg_buffer
-    void Messenger::setLastRotationMsg(const bool &with_angle) {
-        if (rotor_ptr != NULL) {
-            // Buffers
-            msg_buffer = "ROTOR|";
-            StaticJsonDocument<100> doc;
-
-            // Rotation & direction | always included in msg
-            if (!rotor_ptr->is_rotating) {
-                doc["rotation"] = 0;
-            } else if (rotor_ptr->direction) {
-                doc["rotation"] = 1;
-            } else {
-                doc["rotation"] = -1;
-            }
-
-            // Target | only included in msg if angle is not included and rotor is on auto-rotating
-            if (!with_angle && rotor_ptr->is_auto_rotating) {
-                doc["target"] = round(rotor_ptr->auto_rotation_target * 100.0) / 100.0;
-            }
-
-            // Angle | only included in msg if specified
-            if (with_angle) {
-                doc["adc_v"] = round(rotor_ptr->rotor.last_adc_volts
-                                     * rotor_ptr->rotor.calibration.volt_div_factor
-                                     * 1000.0) / 1000.0;
-                doc["angle"] = round(rotor_ptr->rotor.last_angle * 100.0) / 100.0;
-            }
-
-            // Set msg into buffer
-            serializeJson(doc, msg_buffer);
-        }
-    }
-
-    // => Send last rotation values
-    void Messenger::sendLastRotation(const bool &with_angle) {
-        setLastRotationMsg(with_angle);
-        websocket.textAll(msg_buffer);
-    }
-
-    // => Send new rotation values from ADC, always includes angle
-    void Messenger::sendNewRotation() {
-        rotor_ptr->rotor.update();
-        sendLastRotation(true);
-    }
-
-    // => Send max speed
-    void Messenger::sendSpeed() {
-        msg_buffer = "ROTOR|";
-        StaticJsonDocument<16> doc;
-        doc["speed"] = rotor_ptr->max_speed;
-        serializeJson(doc, msg_buffer);
-        websocket.textAll(msg_buffer);
-    }
-
-    // => Send current calibration parameters
-    void Messenger::sendCalibration() {
-        msg_buffer = "CALIBRATION|";
-        StaticJsonDocument<96> doc;
-        doc["a1"] = round(rotor_ptr->rotor.calibration.a1 * 10000.0) / 10000.0;
-        doc["u1"] = round(rotor_ptr->rotor.calibration.u1 * 10000.0) / 10000.0;
-        doc["a2"] = round(rotor_ptr->rotor.calibration.a2 * 10000.0) / 10000.0;
-        doc["u2"] = round(rotor_ptr->rotor.calibration.u2 * 10000.0) / 10000.0;
-        doc["offset"] = rotor_ptr->rotor.calibration.offset;
-        serializeJson(doc, msg_buffer);
-        websocket.textAll(msg_buffer);
-    }
-
-    // => Send auto rotation target
-    void Messenger::sendTarget() {
-        msg_buffer = "ROTOR|";
-        StaticJsonDocument<32> doc;
-        doc["target"] = round(rotor_ptr->auto_rotation_target * 100.0) / 100.0;
-        serializeJson(doc, msg_buffer);
-        websocket.textAll(msg_buffer);
-    }    
-
-
-
-
-
 
     // ******************************
     // Define RotorController members
@@ -254,8 +23,8 @@ namespace Rotor {
         // Init variables for calculating angular speed
         previous.last_angle = rotor.last_angle;
         previous.last_ms = rotor.last_ms;
-        auto_rot.timer = new Timer(auto_rot.timeout);
-        auto_rot.counterTimer = new Timer(auto_rot.counterInterval);
+        auto_rot.timer.changeInterval(auto_rot.timeout);
+        auto_rot.counterTimer.changeInterval(auto_rot.counterInterval);
 
         messenger.rotor_ptr = this;     // Messenger gets pointer to this instance
         return rotorInitSuccess;
@@ -283,7 +52,7 @@ namespace Rotor {
     }
 
     // => Stop rotor, distribute new state to clients
-    void RotorController::stop() {
+    void RotorController::stop(const bool &distribute) {
         rotor.stopRotor();
         if (is_rotating) {
             is_rotating = false;
@@ -295,7 +64,11 @@ namespace Rotor {
                 setCurrentSpeed(max_speed);
             }
 
-            messenger.sendLastRotation(false);
+            // Distribute to clients
+            if (distribute) {
+                messenger.sendLastRotation(false);
+            }
+
             if (verbose) { Serial.println("[Rotor] Stopped rotation."); }
         } else {
             if (verbose) { Serial.println("[Rotor] Is already stationary."); }
@@ -368,7 +141,7 @@ namespace Rotor {
         // Target angle is in overlap region (from 0° to overlapBorder)
         // -> this means it's possible to reach it with +360°, too.
         if (use_overlap && target_angle <= overlap_border) {
-            // If distance is less than -180° (absolut distance > 180) -> flip it.
+            // If distance is less than -180° (absolute distance > 180) -> flip it.
             if (distance < -180.0f) {
                 distance += 360.0f;
             }
@@ -428,9 +201,9 @@ namespace Rotor {
 
         // Start auto rotation
         auto_rotation_target = current_angle + distance;
-        auto_rotation_target_rad = auto_rotation_target * deg_to_rad_factor;
-        auto_rot.timer->reset();
-        auto_rot.timer->start();
+        auto_rotation_target_rad = auto_rotation_target * DEG_TO_RAD;
+        auto_rot.timer.reset();
+        auto_rot.timer.start();
         auto_rot.timeoutCounter = 0;
         is_auto_rotating = true;
         startRotation(target_dir);
@@ -454,7 +227,7 @@ namespace Rotor {
             }
 
         // Initially, wait 4s -> then check if rotor stopped before reaching target.
-        } else if (!angular_speed && (auto_rot.timer->passed() || (auto_rot.timeoutCounter && auto_rot.counterTimer->passed()))) {
+        } else if (!angular_speed && (auto_rot.timer.passed() || (auto_rot.timeoutCounter && auto_rot.counterTimer.passed()))) {
             auto_rot.timeoutCounter++;
 
             // Stop rotation if rotor was checked to be stationary 4-times in a row
