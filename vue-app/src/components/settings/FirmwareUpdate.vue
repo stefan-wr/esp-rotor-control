@@ -73,6 +73,12 @@
                   <span class="txt-dark">{{ $t('commons.size') }}:</span>
                   <span>{{ settingsStore.getFirmwareKBytes }} KB</span>
                 </div>
+
+                <!-- Already installed info -->
+                <div v-if="settingsStore.settings.md5 === settingsStore.firmware.md5" class="border-box flex-hc gap-one">
+                  <Icon icon="fa-solid fa-circle-exclamation" class="large" />
+                  <span>{{ $t('settings.update.sameInfo') }}</span>
+                </div>
               </div>
 
               <!-- Buttons -->

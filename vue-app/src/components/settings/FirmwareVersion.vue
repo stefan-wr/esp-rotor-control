@@ -22,15 +22,27 @@
           <p class="txt-dark">{{ $t('settings.firmware.dscr') }}</p>
 
           <!-- Current Firmware -->
-          <div class="border-box flex-csp gap-one">
-            <span class="txt-dark">{{ $t('settings.firmware.installedVersion') }}</span>
-            <span class="version c-align">{{ settingsStore.settings.version }}</span>
+          <div class="border-box flex-vst gap-one">
+            <div class="flex-csp gap-one">
+              <span class="txt-dark">{{ $t('settings.firmware.installedVersion') }}</span>
+              <span class="version c-align">{{ settingsStore.settings.version }}</span>
+            </div>
+
+            <div class="flex-csp gap-one small">
+              <span class="txt-dark" style="align-self: start">MD5-Hash:</span>
+              <div class="firmware-name gap-half">
+                <span class="small txt-dark wrd-break" :title="'MD5-Hash: ' + settingsStore.settings.md5">
+                  #{{ settingsStore.settings.md5 }}
+                </span>
+              </div>
+            </div>
           </div>
 
           <!-- Available Firmwares -->
           <TransitionSlideIn
             @after-leave="contentWrap.applyHeight()"
             @enter="contentWrap.applyHeight()"
+            @after-enter="contentWrap.applyHeight()"
             :toggle="!!firmwares.length"
             ref="toggleCard"
           >
@@ -174,7 +186,11 @@ async function searchForUpdate() {
 
   try {
     // Get json of firmwares from server
-    const response = await fetch('https://www.wraase.de/rotorcontrol/firmwares.json');
+    const response = await fetch('https://www.wraase.de/rotorcontrol/firmwares.json', {
+      headers: {
+        "Cache-Control": "no-store"
+      }
+    });
     let responseJson = await response.json();
 
     // Check for array and not-emptyness

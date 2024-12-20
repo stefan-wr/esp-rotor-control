@@ -19,4 +19,6 @@ public:
     void send();
 };
 
+extern Favorites favorites;
+
 #endif //FAVORITES_H

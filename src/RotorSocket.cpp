@@ -7,6 +7,7 @@
 #include <Settings.h>
 #include <Favorites.h>
 #include <Screen.h>             // Exposes Global: screen
+#include <RotorSocket.h>
 
 #define SOCKET_URL "/ws"
 
@@ -18,7 +19,7 @@ AsyncWebSocket websocket(SOCKET_URL);
 
 namespace RotorSocket {
   // Number of connected socket clients
-  int clients_connected;
+  uint8_t clients_connected;
 
   // Forward-declare functions
   void socketReceive(char* msg, const size_t &len);
@@ -122,7 +123,7 @@ namespace RotorSocket {
 
     // ----- ROTOR -----
     // -----------------
-    if (identifier == "ROTOR") {
+    if (identifier == MSG_ID_ROTOR) {
       // Deserialize JSON
       StaticJsonDocument<50> doc;
       DeserializationError err = deserializeJson(doc, msg + sep_idx + 1);
@@ -157,7 +158,7 @@ namespace RotorSocket {
         } else if (val > 100) {
           rotor_ctrl.setMaxSpeed(100);
         } else {
-          rotor_ctrl.setMaxSpeed(val.as<const int>());
+          rotor_ctrl.setMaxSpeed(val.as<const uint8_t>());
         }
       }
 
@@ -177,7 +178,7 @@ namespace RotorSocket {
 
     // ----- CALIBRATION -----
     // -----------------------
-    if (identifier == "CALIBRATION") {
+    if (identifier == MSG_ID_CALIBRATION) {
       // Deserialize JSON
       StaticJsonDocument<100> doc;
       DeserializationError err = deserializeJson(doc, msg + sep_idx + 1);
@@ -210,7 +211,7 @@ namespace RotorSocket {
 
     // ----- SETTINGS -----
     // --------------------
-    if (identifier == "SETTINGS") {
+    if (identifier == MSG_ID_SETTINGS) {
       // Deserialize JSON
       StaticJsonDocument<48> doc;
       DeserializationError err = deserializeJson(doc, msg + sep_idx + 1);
@@ -241,7 +242,7 @@ namespace RotorSocket {
 
     // ----- FAVORITES -----
     // ---------------------
-    if(identifier == "FAVORITES") {
+    if(identifier == MSG_ID_FAVORITES) {
       // For favorites, just save the JSON message with
       // the identifier rejoined by inserting back '|' into msg
       msg[sep_idx] = '|';
@@ -250,7 +251,7 @@ namespace RotorSocket {
 
     // ----- LOCK -----
     // ----------------
-    if (identifier == "LOCK") {
+    if (identifier == MSG_ID_LOCK) {
       // For lock, just distribute message to all clients
       msg[sep_idx] = '|';
       lock_msg = (String) msg;

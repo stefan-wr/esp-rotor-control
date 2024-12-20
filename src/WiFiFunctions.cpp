@@ -126,16 +126,15 @@ namespace WiFiFunctions {
 
   // => Create HTML <li> item for a scanned network
   String networkItemHTML(int id, const String &ssid, const String &bssid, const int &rssi) {
-    String s = "";
-    s += "<li><form class=\"network-form\" action=\"/network\" onsubmit=\"setDotsById('nw-btn-" + String(id) + "')\">";
-    s += "<span class=\"l-align wrd-break\">" + ssid + "</span>";
-    s += "<span class=\"r-align small\">RSSI: " + String(rssi) + "</span>";
-    s += "<input type=\"password\" placeholder=\"Passwort eingeben\" name=\"pw\" required>";
-    s += "<button id=\"nw-btn-" + String(id) + "\" type=\"submit\" class=\"small\">Verbinden</button>";
-    s += "<input type=\"hidden\" name=\"ssid\" value=\"" + ssid + "\">";
-    s += "<input type=\"hidden\" name=\"bssid\" value=\"" + bssid + "\">";
-    s += "</form></li>";
-    return s;
+    int buffer_size = sizeof(networkItem) - 12 + ssid.length() * 2 + bssid.length() + 10 + 48;
+    char buffer[buffer_size];
+    int written = snprintf(buffer, buffer_size, networkItem, id, ssid.c_str(), rssi, id, ssid.c_str(), bssid.c_str());
+
+    if (written < buffer_size) {
+      return buffer;
+    } else {
+      return "<li>Unidentifiziertes Netzwerk</li>";
+    }
   }
 
 
@@ -149,7 +148,7 @@ namespace WiFiFunctions {
   // To be called from main loop
   void watchNetworkScan() {
     // Get scan state/result
-    int n = WiFi.scanComplete();
+    int16_t n = WiFi.scanComplete();
 
     if (n < 0) {
       // Scan in progress or not triggered
@@ -228,7 +227,7 @@ namespace WiFiFunctions {
 
     // Try repeatedly to connect to WiFi for 6 seconds
     // Reset when button pressed for two seconds
-    int n_try = 1;
+    uint8_t n_try = 1;
     Timer connect_timer(6000);  // 6 s
 
     // Connect WiFi, first try
@@ -339,7 +338,8 @@ namespace WiFiFunctions {
     initMDNS();
     
     // Start WiFI AP
-    const char* ap_ssid = (ap_ssid_name + "-" + esp_id).c_str();
+    char ap_ssid[63];
+    snprintf(ap_ssid, sizeof(ap_ssid), "%s-%s", ap_ssid_name, esp_id.c_str());
     if (!WiFi.softAP(ap_ssid, NULL)) {
       Serial.println("[WiFi] Error: Could not start AP!");
       return false;
@@ -399,11 +399,10 @@ namespace WiFiFunctions {
 
       if (success) {
         // Send message and reboot ESP
-        String msg = "Der Rotor Controller startet sich jetzt neu und versucht sich mit dem Netzwerk ";
-        msg += wifi_config.ssid;
-        msg += " {";
-        msg += wifi_config.bssid;
-        msg += "} zu verbinden.";
+        char msg[200];
+        snprintf(msg, sizeof(msg),
+                 "Der Rotor Controller startet sich jetzt neu und versucht sich mit dem Netzwerk %s {%s} zu verbinden.",
+                 wifi_config.ssid.c_str(), wifi_config.bssid.c_str());
         request->send(200, "text/plain", msg);
         delay(2000);
         ESP.restart();
@@ -424,7 +423,7 @@ namespace WiFiFunctions {
         // Unpack parameters, server config
         rotor_server.config.user = request->getParam("user")->value();
         rotor_server.config.password = request->getParam("pw")->value();
-        rotor_server.config.port = request->getParam("port")->value().toInt();
+        rotor_server.config.port = (uint16_t) request->getParam("port")->value().toInt();
 
         Serial.print("Received server config: (User) ");
         Serial.print(rotor_server.config.user);

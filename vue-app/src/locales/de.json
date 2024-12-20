@@ -131,6 +131,7 @@
       "dropzone": "Datei hier ablegen oder drücken zum Durchsuchen.",
       "updateBtn": "Ausführen",
       "updateBtnDscr": "Update starten.",
+      "sameInfo": "Diese Firmware is bereits installiert!",
       "error1": "Es darf nur genau eine Datei ausgewählt werden!",
       "error2": "Diese Firmware-Datei ist keine .bin Datei.",
       "error3": "Diese Firmware-Datei ist leer.",

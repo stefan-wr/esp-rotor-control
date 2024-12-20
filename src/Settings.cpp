@@ -6,14 +6,20 @@
 #include <WiFiFunctions.h>
 #include <RotorSocket.h>
 
+#define SETTINGS_BUFFER_SIZE 256
 
 namespace Settings {
     String settings_buffer;
 
+    // => Reserve message buffer
+    void initBuffer() {
+        settings_buffer.reserve(SETTINGS_BUFFER_SIZE);
+    }
+
     // => Send general settings to clients
     void sendSettings() {
-        settings_buffer.reserve(200);
-        settings_buffer = "SETTINGS|";
+        settings_buffer = MSG_ID_SETTINGS;
+        settings_buffer += "|"; 
 
         StaticJsonDocument<192> doc;
         doc["version"] = version;
@@ -22,6 +28,7 @@ namespace Settings {
         doc["rssi"] = (String)WiFi.RSSI();
         doc["hasScreen"] = has_screen;
         doc["useScreen"] = use_screen;
+        doc["md5"] = ESP.getSketchMD5();
 
         serializeJson(doc, settings_buffer);
         websocket.textAll(settings_buffer);
@@ -29,8 +36,8 @@ namespace Settings {
 
     // => Send screen setting to clients
     void sendScreen() {
-        settings_buffer.reserve(30);
-        settings_buffer = "SETTINGS|";
+        settings_buffer = MSG_ID_SETTINGS;
+        settings_buffer += "|"; 
 
         StaticJsonDocument<16> doc;
         doc["useScreen"] = use_screen;

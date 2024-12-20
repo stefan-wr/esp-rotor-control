@@ -24,7 +24,7 @@ namespace Screen {
         String alert_txt;
         bool disabled = false;
 
-        int page = 0;
+        uint8_t page = 0;
 
         // Variables for drawing compass
         struct {
@@ -61,6 +61,9 @@ namespace Screen {
         
         // => Set a title bar on screen
         void setTitleBar(const int &gap, const int icon, const String &title);
+
+        // => Set a progress bar
+        void setProgressBar(const uint16_t &x, const uint16_t &y, const uint16_t &w, const uint16_t &h, uint8_t &progress, uint16_t color);
 
         // => Draw compass with radius r, centered at (cx, cy)
         void drawCompass(const uint16_t &cx, const uint16_t &cy, const float &r, uint16_t color);

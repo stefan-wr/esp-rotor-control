@@ -40,7 +40,7 @@ namespace RotorServer {
     if (!config_prefs.begin(CONFIG_PREFS_KEY, true) && verbose) {
       Serial.println("[Server] Could not load server configuration! Use default configuration instead.");
     }
-    config.port = config_prefs.getInt("port", sta_default_port);
+    config.port = config_prefs.getUShort("port", sta_default_port);
     config.user = config_prefs.getString("user", sta_default_user);
     config.password = config_prefs.getString("password", sta_default_pw);
     updateHttpCredentials();
@@ -53,7 +53,7 @@ namespace RotorServer {
       Serial.println("[Server] Error: Could not save server configuration!");
       return false;
     };
-    config_prefs.putInt("port", config.port);
+    config_prefs.putUShort("port", config.port);
     config_prefs.putString("user", config.user);
     config_prefs.putString("password", config.password);
     config_prefs.end();

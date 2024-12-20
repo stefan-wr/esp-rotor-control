@@ -52,6 +52,7 @@ export const useSettingsStore = defineStore('settings', () => {
         rssi: '--',
         hasScreen: false,
         useScreen: false,
+        md5: '--'
     });
 
     // *************

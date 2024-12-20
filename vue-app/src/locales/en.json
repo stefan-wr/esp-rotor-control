@@ -135,7 +135,8 @@
       "error2": "This firmware file is not a .bin file.",
       "error3": "This firmware file is empty.",
       "error4": "This firmware file is too large (> 1.280 KB).",
-      "error5": "The MD5 hash of this file could not be determined."
+      "error5": "The MD5 hash of this file could not be determined.",
+      "sameInfo": "This firmware is already installed!"
     },
     "fontSize": {
       "title": "Font Size",

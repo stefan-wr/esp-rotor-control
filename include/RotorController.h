@@ -17,11 +17,11 @@ namespace Rotor {
         // Auto rotation variables
         struct {
             const int max_angle = 449;
-            const int min_distance = 2;
+            const uint8_t min_distance = 2;
             const float tolerance = 0.7f;
-            int timeoutCounter = 0;
+            uint8_t timeout_counter = 0;
             const unsigned long timeout = 4000;
-            const unsigned long counterInterval = 500;
+            const unsigned long counter_interval = 500;
             Timer counterTimer;
             Timer timer;
         } auto_rot;
@@ -48,7 +48,7 @@ namespace Rotor {
         float getSpeedRampFactor(const float x, const float gradient);
 
         // => Set current rotor speed (DAC), doesn't distribute to clients
-        void setCurrentSpeed(const int spd);
+        void setCurrentSpeed(const uint8_t spd);
 
 
     public:
@@ -56,11 +56,10 @@ namespace Rotor {
         bool is_rotating = false;
         bool is_auto_rotating = false;
         float auto_rotation_target;         // Target angle in degrees
-        float auto_rotation_target_rad;     // Target angle in radians
         bool smooth_speed_active = false;
-        int direction = 0;                  // 0: CCW, 1: CW
-        int max_speed = 0;                  // 0% to 100%
-        int current_speed = 0;              // 0% to max_speed
+        uint8_t direction = 0;              // 0: CCW, 1: CW
+        uint8_t max_speed = 0;              // 0% to 100%
+        uint8_t current_speed = 0;          // 0% to max_speed
         float angular_speed = 0.0f;         // in °/s
 
         // Settings
@@ -79,14 +78,14 @@ namespace Rotor {
         bool init();
 
         // => Start rotating in given direction, distribute new state to clients
-        void startRotation(const int dir);
+        void startRotation(const uint8_t dir);
 
         // => Stop rotor, distribute new state to clients
         void stop(const bool &distribute = true);
 
         // => Set max rotor speed, distribute new state to clients.
         // Is applied to DAC only if speed is not ramping up / down.
-        void setMaxSpeed(const int spd);
+        void setMaxSpeed(const uint8_t spd);
 
         // => Set calibration parameters, distribute new state to clients
         void setCalibration(const float u1, const float u2,

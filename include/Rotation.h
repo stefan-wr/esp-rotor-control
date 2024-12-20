@@ -32,10 +32,9 @@ namespace Rotor {
     public:
         // Last rotor values
         unsigned long last_ms = 0.0;
-        int last_adc_value = 0;
+        uint16_t last_adc_value = 0;
         float last_adc_volts = 0.0;
         float last_angle = 0.0;
-        float last_angle_rad = 0.0;
         
         // Calibration parameters
         struct {
@@ -62,7 +61,7 @@ namespace Rotor {
         bool getADCStatus() { return !ads_failed; }
 
         // => Get current raw ADC value
-        int getADCValue();
+        uint16_t getADCValue();
 
         // => Get current ADC voltage
         float getADCVolts();
@@ -71,13 +70,13 @@ namespace Rotor {
         float getAngle();
 
         // => Start rotation in given direction
-        void startRotation(const int &dir);
+        void startRotation(const uint8_t &dir);
 
         // => Stop rotor
         void stopRotor();
 
         // => Set DAC voltage on speed pin
-        void setSpeedDAC(const int &speed);
+        void setSpeedDAC(const uint8_t &speed);
 
         // => Read ADC and update last rotor position values
         void update();        

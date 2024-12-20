@@ -188,8 +188,8 @@ namespace Screen {
         }
 
         // Draw compass needle
-        compass.needle_sin = sin(rotor_ctrl.rotor.last_angle_rad);
-        compass.needle_cos = cos(rotor_ctrl.rotor.last_angle_rad);
+        compass.needle_sin = sin(rotor_ctrl.rotor.last_angle * DEG_TO_RAD);
+        compass.needle_cos = cos(rotor_ctrl.rotor.last_angle * DEG_TO_RAD);
         compass.needle_x1 = round(cx + compass.needle_sin * (r - 5));
         compass.needle_y1 = round(cy - compass.needle_cos * (r - 5));
         compass.needle_x2 = round(cx - compass.needle_sin * (r * 0.4f));
@@ -199,8 +199,8 @@ namespace Screen {
 
         // Draw compass target indicator
         if (rotor_ctrl.is_auto_rotating) {
-            compass.target_sin = sin(rotor_ctrl.auto_rotation_target_rad);
-            compass.target_cos = cos(rotor_ctrl.auto_rotation_target_rad);
+            compass.target_sin = sin(rotor_ctrl.auto_rotation_target * DEG_TO_RAD);
+            compass.target_cos = cos(rotor_ctrl.auto_rotation_target * DEG_TO_RAD);
             compass.target_x1 = round(cx + compass.target_sin * (r - 4));
             compass.target_y1 = round(cy - compass.target_cos * (r - 4));
             compass.target_x2 = round(cx + compass.target_sin * (r * 0.5f));
@@ -464,12 +464,21 @@ namespace Screen {
 
     // => Set screen during firmware update
     // ------------------------------------
+    // => Set a progress bar
+    void Screen::setProgressBar(const uint16_t &x, const uint16_t &y, const uint16_t &w, const uint16_t &h, uint8_t &progress, uint16_t color) {
+        const uint8_t pad = 3;
+        screen->drawRect(x, y, w, h, color);
+        screen->fillRect(x + pad, y + pad, (int16_t) (w - (2 * pad)) / 100.0f * progress, h - (2 * pad), color);
+    }
+
     void Screen::showUpdateScreen() {
-        setFullscreenText("Updating Firmware");
-        moveCursor(0, 16);
-        char buffer[4];
-        sprintf(buffer, "%d%%", firmware.upload_progress);
-        setHorizontallyCenteredText(screen->getCursorY(), (String) buffer);
+        setHorizontallyCenteredText(SCREEN_HALF_HEIGHT - 20, "Updating Firmware");
+
+        setProgressBar(10, SCREEN_HALF_HEIGHT - 6, SCREEN_WIDTH - 20, 12, firmware.upload_progress, WHITE);
+
+        char buffer[5];
+        snprintf(buffer, sizeof(buffer), "%d%%", firmware.upload_progress);
+        setHorizontallyCenteredText(SCREEN_HALF_HEIGHT + 12, (String) buffer);
     }
 
     // => Show a fullscreen alert

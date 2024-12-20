@@ -99,7 +99,7 @@ namespace Rotor {
     }
 
     // => Start rotation in given direction
-    void Rotation::startRotation(const int &dir) {
+    void Rotation::startRotation(const uint8_t &dir) {
         digitalWrite(rot_pins[dir], LOW);
     }
 
@@ -110,7 +110,7 @@ namespace Rotor {
     }
 
     // => Set DAC voltage on speed pin
-    void Rotation::setSpeedDAC(const int &speed) {
+    void Rotation::setSpeedDAC(const uint8_t &speed) {
         if (speed == 0) {
             dacDisable(speed_pin);
         } else {
@@ -119,7 +119,7 @@ namespace Rotor {
     }
 
     // => Get current raw ADC value
-    int Rotation::getADCValue() {
+    uint16_t Rotation::getADCValue() {
         update();
         return last_adc_value;
     }
@@ -147,7 +147,6 @@ namespace Rotor {
             // Calculate angle using calibration
             last_angle = calibration.d_grad * last_adc_volts * calibration.volt_div_factor
                        + calibration.u_0 + calibration.offset;
-            last_angle_rad = last_angle * DEG_TO_RAD;
         }
     }
 }

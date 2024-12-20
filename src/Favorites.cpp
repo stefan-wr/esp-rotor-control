@@ -36,3 +36,5 @@ void Favorites::set(char* msg) {
 void Favorites::send() {
     websocket.textAll(favs_buffer);
 }
+
+Favorites favorites;

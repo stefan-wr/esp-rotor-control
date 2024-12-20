@@ -7,6 +7,8 @@
 
 #include <Timer.h>
 
+#define TOKEN_LENGTH 32
+
 namespace Firmware {
 
     class Firmware {
@@ -26,7 +28,7 @@ namespace Firmware {
         void init();
 
         // => Generate a random token string, default length = 32
-        void generateToken(const int &len = 32);
+        void generateToken(const int &len = TOKEN_LENGTH);
     };
 
     // => Serial print update error
@@ -37,7 +39,7 @@ namespace Firmware {
 
     // => Upload handler for firmware upload via HTTP Post multipart/formdata
     void handleFirmwareUpload(AsyncWebServerRequest *request, String filename,
-                            size_t index, uint8_t *data, size_t len, bool final);
+                              size_t index, uint8_t *data, size_t len, bool final);
 
     // => Handler for when upload finished
     void handleFirmwareResponse(AsyncWebServerRequest *request);

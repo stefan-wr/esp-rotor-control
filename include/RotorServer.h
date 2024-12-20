@@ -34,7 +34,7 @@ namespace RotorServer {
 
         // Configuration
         struct {
-            int port = sta_default_port;
+            uint16_t port = sta_default_port;
             String user = sta_default_user;
             String password = sta_default_pw;
             const char* http_username = sta_default_user.c_str();

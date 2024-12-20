@@ -24,7 +24,7 @@ namespace Rotor {
         previous.last_angle = rotor.last_angle;
         previous.last_ms = rotor.last_ms;
         auto_rot.timer.changeInterval(auto_rot.timeout);
-        auto_rot.counterTimer.changeInterval(auto_rot.counterInterval);
+        auto_rot.counterTimer.changeInterval(auto_rot.counter_interval);
 
         messenger.rotor_ptr = this;     // Messenger gets pointer to this instance
         return rotorInitSuccess;
@@ -35,7 +35,7 @@ namespace Rotor {
     // --------
 
     // => Start rotating in given direction, distribute new state to clients
-    void RotorController::startRotation(const int dir) {
+    void RotorController::startRotation(const uint8_t dir) {
         if (!is_rotating) {
             direction = dir;
             is_rotating = true;
@@ -76,7 +76,7 @@ namespace Rotor {
     }
 
     // => Set max rotor speed, distribute new state to clients
-    void RotorController::setMaxSpeed(const int spd) {
+    void RotorController::setMaxSpeed(const uint8_t spd) {
         max_speed = spd;
         messenger.sendSpeed();
 
@@ -93,7 +93,7 @@ namespace Rotor {
     }
 
     // => Set current rotor speed, do not distribute
-    void RotorController::setCurrentSpeed(const int spd) {
+    void RotorController::setCurrentSpeed(const uint8_t spd) {
         current_speed = spd;
         rotor.setSpeedDAC(current_speed);
     }
@@ -201,10 +201,9 @@ namespace Rotor {
 
         // Start auto rotation
         auto_rotation_target = current_angle + distance;
-        auto_rotation_target_rad = auto_rotation_target * DEG_TO_RAD;
         auto_rot.timer.reset();
         auto_rot.timer.start();
-        auto_rot.timeoutCounter = 0;
+        auto_rot.timeout_counter = 0;
         is_auto_rotating = true;
         startRotation(target_dir);
     }
@@ -227,11 +226,11 @@ namespace Rotor {
             }
 
         // Initially, wait 4s -> then check if rotor stopped before reaching target.
-        } else if (!angular_speed && (auto_rot.timer.passed() || (auto_rot.timeoutCounter && auto_rot.counterTimer.passed()))) {
-            auto_rot.timeoutCounter++;
+        } else if (!angular_speed && (auto_rot.timer.passed() || (auto_rot.timeout_counter && auto_rot.counterTimer.passed()))) {
+            auto_rot.timeout_counter++;
 
             // Stop rotation if rotor was checked to be stationary 4-times in a row
-            if (auto_rot.timeoutCounter >= 4) {
+            if (auto_rot.timeout_counter >= 4) {
                 stop();
                 if (verbose) {
                     Serial.println("[Rotor] Auto-rotation aborted. Rotor stopped before reaching target.");
@@ -239,8 +238,8 @@ namespace Rotor {
             }
 
         // Reset stationary counter if angular speed is not zero  
-        } else if (angular_speed && auto_rot.timeoutCounter > 0) {
-            auto_rot.timeoutCounter = 0;
+        } else if (angular_speed && auto_rot.timeout_counter > 0) {
+            auto_rot.timeout_counter = 0;
         }
     }
 
@@ -248,7 +247,7 @@ namespace Rotor {
     // To be called continously from main loop if speed ramp is active
     // ***************************************************************
     void RotorController::watchSmoothSpeedRamp() {
-        int new_speed = getSmoothSpeed();
+        uint8_t new_speed = getSmoothSpeed();
 
         if (new_speed != current_speed) {
             setCurrentSpeed(new_speed);
@@ -292,7 +291,7 @@ namespace Rotor {
             // Constant speed
             speed_ramp_factor = 1.0f;
         }
-        return (int) (max_speed * speed_ramp_factor * speed_ramp.speed_distance_factor);
+        return (uint8_t) (max_speed * speed_ramp_factor * speed_ramp.speed_distance_factor);
     }
 
     // => Get smooth speed scaling factor, using tanh

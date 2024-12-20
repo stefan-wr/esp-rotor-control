@@ -8,6 +8,16 @@
 
 namespace WiFiFunctions {
 
+    const char PROGMEM networkItem[] =
+      "<li><form class=\"network-form\" action=\"/network\" onsubmit=\"setDotsById('nw-btn-%d')\">"
+      "<span class=\"l-align wrd-break\">%s</span>"
+      "<span class=\"r-align small\">RSSI: %d</span>"
+      "<input type=\"password\" placeholder=\"Passwort eingeben\" name=\"pw\" required>"
+      "<button id=\"nw-btn-%d\" type=\"submit\" class=\"small\">Verbinden</button>"
+      "<input type=\"hidden\" name=\"ssid\" value=\"%s\">"
+      "<input type=\"hidden\" name=\"bssid\" value=\"%s\">"
+      "</form></li>";
+
     // =============
     // Configuration
     // =============

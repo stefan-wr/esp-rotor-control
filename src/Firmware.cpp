@@ -33,7 +33,7 @@ namespace Firmware {
         char buffer[len + 1];
         buffer[len] = '\0';
         for(int i = 0; i < len; i++){
-            const int index =  (int) round((double) esp_random() / 4294967295.0 * 35);
+            const int index =  (int) round((double) esp_random() / UINT32_MAX * 35);
             buffer[i] = characters[index];
         }
         token = buffer;

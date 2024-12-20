@@ -13,7 +13,7 @@
 #include <WiFiFunctions.h>
 #include <RotorController.h>  // Exposes Global: rotor_ctrl
 #include <Settings.h>
-#include <Favorites.h>
+#include <Favorites.h>        // Exposes Global: favorites
 #include <Timer.h>
 #include <Screen.h>           // Exposes Global: screen
 #include <Firmware.h>         // Exposes Global: firmware
@@ -23,23 +23,22 @@
 #include <RotorServer.h>      // Exposes Global: rotor_server 
 
 #define HAS_SCREEN true
-#define COUNT_LOOP_CYCLE_TIME false
+//#define COUNT_LOOP_CYCLE_TIME
 
 // Software version
-const String version = "0.9.6";
+const String version = "0.9.7";
 
 // ESP ID
 String esp_id = "";
 
 // Create instances
-Favorites favorites;
 BlinkingLED wifi_led(wifi_led_pin, LOW, 250);
 
 // Create DNS Server
 DNSServer dns_server;
 
 // Buffer storing lock message. This default message resets lock on ESP restart
-String lock_msg = "LOCK|{\"isLocked\":false,\"by\":\"\"}";
+String lock_msg = MSG_ID_LOCK;
 
 // State variables
 bool in_station_mode = true;        // ESP is connected with WiFi -> STA mode
@@ -104,7 +103,7 @@ void setup() {
   boot_counter.printlnToSerial();
 
   // Firmware MD5 and size
-  Serial.print("[ESP] Firmware MD5:");
+  Serial.print("[ESP] Firmware MD5: ");
   Serial.println(ESP.getSketchMD5());
   Serial.print("[ESP] Firmware size: ");
   Serial.println(ESP.getSketchSize());
@@ -122,10 +121,15 @@ void setup() {
     Serial.print("[ESP] CPU frequency: ");
     Serial.print(getCpuFrequencyMhz());
     Serial.println(" MHz");
+    Serial.print("[Websocket] queue size: ");
+    Serial.println(WS_MAX_QUEUED_MESSAGES);
   }
 
   // Initialisations
   // ---------------
+
+  // Init Settings message buffer
+  Settings::initBuffer();
 
   // Initialise screen
   if (has_screen) {
@@ -152,7 +156,10 @@ void setup() {
 
   // Favorites & firmware
   favorites.init();
-  firmware.init();             
+  firmware.init();    
+
+  // Default lock message, resets lock on ESP boot
+  lock_msg += "|{\"isLocked\":false,\"by\":\"\"}";         
 
   // Start WiFi connection
   // ---------------------
@@ -187,36 +194,40 @@ void setup() {
 // ----------------------------------------------------------------------------------
 
 // Timers, that control how often each task in the mainloop is executed
-struct {                                      // Intervals
-  Timer networkScan{20000};      // 20 s
-  Timer checkWiFi{8000};         // 8 s
-  Timer reconnectTimeout{90000}; // 90 s
-  Timer reboot{86400000 * 3};    // 3 days
-  Timer multiBtnHold{500};       // 500 ms, 2Hz
-  Timer cleanSockets{1000};      // 1 s
-  Timer rotorUpdate{40};         // 40 ms, 25 Hz
-  Timer rotorMessage{1000};      // 1 s
-  Timer speedRamp{40};           // 40 ms, 25 Hz
-  Timer updateScreen{40};        // 40 ms, 25 Hz
-  Timer loopTimer{1000};         // 1 s
-  Timer fwUpdateChecker{50};     // 50 ms, 20 Hz
+struct {                          // Intervals
+  Timer networkScan{20000};       // 20 s
+  Timer checkWiFi{8000};          // 8 s
+  Timer reconnectTimeout{90000};  // 90 s
+  Timer reboot{86400000 * 3};     // 3 days
+  Timer multiBtnHold{500};        // 500 ms, 2Hz
+  Timer cleanSockets{1000};       // 1 s
+  Timer rotorUpdate{40};          // 40 ms, 25 Hz
+  Timer rotorMessage{1000};       // 1 s
+  Timer speedRamp{40};            // 40 ms, 25 Hz
+  Timer updateScreen{40};         // 40 ms, 25 Hz
+  Timer loopTimer{1000};          // 1 s
+  Timer fwUpdateChecker{50};      // 50 ms, 20 Hz
   Timer justBootedTimeout{8000};
 } timers;
 
 bool is_reconnecting = false;   // Is WiFi trying to reconnect
 float adc_volts_prev = -1;      // Previous loop ADC-Volts
 bool is_rotating_prev = false;  // Was rotor rotating in previous loop cycle
-int clients_connected_prev;     // N of clients connected in previous loop cycle
+uint8_t clients_connected_prev; // N of clients connected in previous loop cycle
 bool is_updating_prev = false;  // Was firmware updating in previous loop cycle
 bool just_booted = true;
 
+#ifdef COUNT_LOOP_CYCLE_TIME
 unsigned long loopCounter = 0;
 unsigned long loop_mus = micros();
+#endif
 
 
 
 void loop() {
-  if (COUNT_LOOP_CYCLE_TIME) loopCounter++;
+  #ifdef COUNT_LOOP_CYCLE_TIME
+  loopCounter++;
+  #endif
 
   if (timers.justBootedTimeout.n_passed < 2 && timers.justBootedTimeout.passed()) {
     just_booted = false;
@@ -437,7 +448,8 @@ void loop() {
   // ****** Loop Cycle Time  ******
   // ******************************
 
-  if (timers.loopTimer.passed() && COUNT_LOOP_CYCLE_TIME) {
+  #ifdef COUNT_LOOP_CYCLE_TIME
+  if (timers.loopTimer.passed()) {
     double loop_cycle = (float) ((micros() - loop_mus) / loopCounter) / 1000.0;
     Serial.print("[ESP] Loop cycle time: ");
     Serial.printf("%3.2f", loop_cycle);
@@ -445,4 +457,5 @@ void loop() {
     loopCounter = 0;
     loop_mus = micros();
   }
+  #endif
 }
