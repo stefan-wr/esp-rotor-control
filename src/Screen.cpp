@@ -440,21 +440,8 @@ namespace Screen {
         ly += 1 + gap;
         screen->setCursor(0, ly);
         if (true) {
-            // Current Speed
-            if (rotor_ctrl.smooth_speed_active) {
-                if (rotor_ctrl.current_speed) {
-                    screen->printf("S %3d%%", rotor_ctrl.current_speed);
-                } else {
-                    screen->printf("S %3d%%", 1);
-                }
-            } else {
-                // Max Speed
-                if (rotor_ctrl.max_speed) {
-                    screen->printf("S %3d%%", rotor_ctrl.max_speed);
-                } else {
-                    screen->printf("S %3d%%", 1);
-                }
-            }
+            uint8_t display_speed = rotor_ctrl.smooth_speed_active ? rotor_ctrl.current_speed : rotor_ctrl.max_speed;
+            screen->printf("S %3d%%", display_speed ? display_speed : 1);
         } else {
             // Angular Speed
             screen->printf("R %5.2f/s", rotor_ctrl.angular_speed);

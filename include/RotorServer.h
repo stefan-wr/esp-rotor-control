@@ -25,9 +25,6 @@ namespace RotorServer {
         // => Add routes to server
         void addRoutes();
 
-        // => Update http login variables
-        void updateHttpCredentials();
-
     public:
         // Server
         AsyncWebServer *server;
@@ -37,8 +34,6 @@ namespace RotorServer {
             uint16_t port = sta_default_port;
             String user = sta_default_user;
             String password = sta_default_pw;
-            const char* http_username = sta_default_user.c_str();
-            const char* http_password = sta_default_pw.c_str();
             bool authenticate = true;
         } config;
 

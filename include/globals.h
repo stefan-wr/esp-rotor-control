@@ -2,7 +2,6 @@
 #define GLOBALS_H
 
 #include <Arduino.h>
-#include <math.h>
 
 #define SERIAL_SPEED 115200
 

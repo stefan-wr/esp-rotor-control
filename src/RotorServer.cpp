@@ -21,8 +21,8 @@ namespace RotorServer {
   // @return False if not authenticated but required, else true
   bool authenticateRequest(AsyncWebServerRequest *request) {
     if (rotor_server.config.authenticate) { 
-      if (!request->authenticate(rotor_server.config.http_username,
-                                rotor_server.config.http_password)) {
+      if (!request->authenticate(rotor_server.config.user.c_str(),
+                                rotor_server.config.password.c_str())) {
         request->requestAuthentication();
         return false;
       }
@@ -43,7 +43,6 @@ namespace RotorServer {
     config.port = config_prefs.getUShort("port", sta_default_port);
     config.user = config_prefs.getString("user", sta_default_user);
     config.password = config_prefs.getString("password", sta_default_pw);
-    updateHttpCredentials();
     config_prefs.end();
   }
 
@@ -65,7 +64,6 @@ namespace RotorServer {
     config.port = sta_default_port;
     config.user = sta_default_user;
     config.password = sta_default_pw;
-    updateHttpCredentials();
     return saveConfig();
   }
 
@@ -77,15 +75,6 @@ namespace RotorServer {
     Serial.print(config.password);
     Serial.print(" | (Port) ");
     Serial.println(config.port);
-  }
-
-  // => Update http login variables
-  void RotorServer::updateHttpCredentials() {
-    config.http_username = config.user.c_str();
-    config.http_password = config.password.c_str();
-    if (config.password == "") {
-      config.authenticate = false;
-    }
   }
 
 
@@ -128,6 +117,7 @@ namespace RotorServer {
         if (!authenticateRequest(request)) { return; }
         AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gzip, index_html_gzip_len);
         response->addHeader("Content-Encoding", "gzip");
+        response->addHeader("cache-control", "private, max-age=86400");
         request->send(response);
       }
     });
@@ -177,15 +167,6 @@ namespace RotorServer {
       request->send(response);
     });
 
-    // Disconnect ESP from network
-    server->on("/disconnect", HTTP_GET, [](AsyncWebServerRequest* request) {
-      if (!authenticateRequest(request)) { return; }
-      request->send(200);
-      WiFiFunctions::resetCredentials();
-      delay(1000);
-      ESP.restart();
-    });
-
 
     // Reboot ESP
     server->on("/reboot", HTTP_GET, [](AsyncWebServerRequest* request) {
@@ -200,8 +181,8 @@ namespace RotorServer {
     server->on("/authenticate", HTTP_GET, [](AsyncWebServerRequest* request) {
       if (rotor_server.config.authenticate) {
         if (!rotor_server.authentications ||
-            !request->authenticate(rotor_server.config.http_username,
-                                  rotor_server.config.http_password)) {
+            !request->authenticate(rotor_server.config.user.c_str(),
+                                  rotor_server.config.password.c_str())) {
           rotor_server.authentications++;
           return request->requestAuthentication();
         }
@@ -211,11 +192,23 @@ namespace RotorServer {
     });
 
 
+    // URLS not available in demo mode
+    #ifndef DEMO_MODE
+    // Disconnect ESP from network
+    server->on("/disconnect", HTTP_GET, [](AsyncWebServerRequest* request) {
+      if (!authenticateRequest(request)) { return; }
+      request->send(200);
+      WiFiFunctions::resetCredentials();
+      delay(1000);
+      ESP.restart();
+    });
+
     // Request a firmware udate
     server->on("/request-update", HTTP_POST, Firmware::handleUpdateRequest);
 
     // Update firmware
-    server->on("/update", HTTP_POST, Firmware::handleFirmwareResponse, Firmware::handleFirmwareUpload);    
+    server->on("/update", HTTP_POST, Firmware::handleFirmwareResponse, Firmware::handleFirmwareUpload);   
+    #endif
   }
 }
 

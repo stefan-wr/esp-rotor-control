@@ -137,7 +137,6 @@ namespace WiFiFunctions {
     }
   }
 
-
   // => Start async scan for WiFi-networks
   void startNetworkScan() {
     Serial.println("[WiFi] Start async WiFi networks scan.");
@@ -150,29 +149,31 @@ namespace WiFiFunctions {
     // Get scan state/result
     int16_t n = WiFi.scanComplete();
 
-    if (n < 0) {
-      // Scan in progress or not triggered
-    } else if  (n == 0 ) {
-      // No networks found
+    // Scan in progress or not triggered
+    if (n < 0) return;
+
+    // No networks found
+    if  (n == 0 ) {
       networks_html = "<p>Keine verfügbaren Netzwerke gefunden.<br>Bitte warte etwas und lade dann diese Seite erneut.</p>";
-    } else if (n > 0) {
-      // At least one network found
+      return;
+    }
+
+    // At least one network found
+    if (n > 0) {
       // Show found networks on serial monitor
       if (verbose) {
-        if (n != 0) {
-          Serial.println("--------------------------------------");
-          for (int i = 0; i < n; ++i) {
-            Serial.print(i + 1);
-            Serial.print(": ");
-            Serial.print(WiFi.SSID(i));
-            Serial.print(" | ");
-            Serial.print(WiFi.BSSIDstr(i));
-            Serial.print(" (");
-            Serial.print(WiFi.RSSI(i));
-            Serial.println(")");
-          }
-          Serial.println("");
+        Serial.println("--------------------------------------");
+        for (int i = 0; i < n; ++i) {
+          Serial.print(i + 1);
+          Serial.print(": ");
+          Serial.print(WiFi.SSID(i));
+          Serial.print(" | ");
+          Serial.print(WiFi.BSSIDstr(i));
+          Serial.print(" (");
+          Serial.print(WiFi.RSSI(i));
+          Serial.println(")");
         }
+        Serial.println("");
       }
 
       // Create network HTML-list
@@ -184,6 +185,7 @@ namespace WiFiFunctions {
       WiFi.scanDelete();
     }
   }
+
 
   // =================================================
   // Initialise WiFi connection from saved parameters.
@@ -272,7 +274,6 @@ namespace WiFiFunctions {
     }
     */
 
-
     // Connection established
     Serial.print("[Try ");
     Serial.printf("%2d", n_try);
@@ -288,7 +289,6 @@ namespace WiFiFunctions {
   // Start AP server
   // ===============
 
-  
   // => HTML template processor
   String processor(const String &var) {
     if (var == "ALERT") {
