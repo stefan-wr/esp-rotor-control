@@ -52,7 +52,8 @@ import {
     faExternalLink,
     faDownload,
     faDisplay,
-    faFont
+    faFont,
+    faCircleQuestion
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -97,7 +98,8 @@ library.add(
     faExternalLink,
     faDownload,
     faDisplay,
-    faFont
+    faFont,
+    faCircleQuestion
 );
 
 

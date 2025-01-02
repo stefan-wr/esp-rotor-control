@@ -10,6 +10,7 @@
         :title="$t('settings.network.disconnectDscr')"
         ref="disconnectBtn"
         @click="disconnect($event)"
+        :disabled="demo"
       >
       <span v-if="!waitingForDisconnect">{{ $t('settings.network.disconnect') }}</span>
        <Icon icon="fa-solid fa-spinner" class="spin" v-else></Icon>
@@ -44,8 +45,11 @@ const router = useRouter();
 const disconnectBtn = ref(null);
 const waitingForDisconnect = ref(false);
 
+const demo = (import.meta.env.MODE === 'demo') ? true : false;
+
 // Request confirmation before sending disconnect request
 function disconnect(event) {
+  if (demo) return;
   if (confirm(t('settings.network.alert'))) {
     disconnectBtn.value.style.width = String(disconnectBtn.value.offsetWidth) + 'px';
     waitingForDisconnect.value = true;

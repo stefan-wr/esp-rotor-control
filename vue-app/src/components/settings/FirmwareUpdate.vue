@@ -96,6 +96,7 @@
                   class="btn-std-resp bold no-wrap-ellip flex-grow update-btn"
                   :title="$t('settings.update.updateBtnDscr')"
                   @click="startUpdate"
+                  :disabled="demo"
                 >
                   <Icon icon="fa-solid fa-check"></Icon>&nbsp;{{ $t('settings.update.updateBtn') }}
                 </button>
@@ -139,6 +140,8 @@ const { t } = useI18n();
 
 const settingsStore = useSettingsStore();
 const router = useRouter();
+
+const demo = (import.meta.env.MODE === 'demo') ? true : false;
 
 // Refs
 const toggleCard = ref(null);
@@ -265,6 +268,7 @@ function resetFirmwareValues() {
 
 // Start update
 function startUpdate() {
+  if (demo) return;
   router.push({ name: 'update' });
 }
 

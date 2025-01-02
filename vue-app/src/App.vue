@@ -1,4 +1,5 @@
 <template>
+  <Demo v-if="demo"/>  
   <div class="content">
     <Header />
     <RouterView />
@@ -8,6 +9,7 @@
 <script setup>
 import { RouterView } from 'vue-router';
 import Header from '@/components/Header.vue';
+import Demo from '@/components/Demo.vue';
 
 import { watch, onBeforeMount } from 'vue';
 import { useRotorStore } from '@/stores/rotor';
@@ -18,6 +20,8 @@ const { t } = useI18n();
 
 const rotorStore = useRotorStore();
 const uiStore = useUIStore();
+
+const demo = (import.meta.env.MODE === 'demo') ? true : false;
 
 // Show current rotor angle in browser tab title.
 watch(

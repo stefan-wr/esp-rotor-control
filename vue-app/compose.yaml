@@ -16,6 +16,14 @@ services:
       - .:/rotor-controller/vue-app
       - /rotor-controller/vue-app/node_modules
     command: ["npm", "run", "dev"]
+  dev-demo:
+    build: .
+    ports:
+      - 5173:5173
+    volumes:
+      - .:/rotor-controller/vue-app
+      - /rotor-controller/vue-app/node_modules
+    command: ["npm", "run", "dev-demo"]  
   build:
     build: .
     volumes:
@@ -23,3 +31,10 @@ services:
       - /rotor-controller/vue-app/node_modules
       - ./../lib/App:/rotor-controller/lib/App
     command: ["npm", "run", "build"]
+  build-demo:
+    build: .
+    volumes:
+      - .:/rotor-controller/vue-app
+      - /rotor-controller/vue-app/node_modules
+      - ./../lib/App:/rotor-controller/lib/App
+    command: ["npm", "run", "demo"]    
