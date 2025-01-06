@@ -17,11 +17,11 @@
       </ul>
 
       <div class="flex-vst gap-one">
-        <div class="small txt-dark flex-cc gap-half hide-m">
+        <!--div class="small txt-dark flex-cc gap-half hide-m">
           <RouterLink to="/licenses" class="a-hover-dark">Licenses</RouterLink>
           <span>|</span>
           <a class="a-hover-dark" href="#">Support</a>
-        </div>
+        </div-->
         <Compass
           v-if="uiStore.ui.activeSetting === 1"
           :isInteractive="false"
@@ -79,11 +79,11 @@
         <Calibration></Calibration>
       </div>
 
-      <div class="flex-cc gap-half small txt-dark show-m-smaller" style="width: 100%; margin-top: 1rem;">
+      <!--div class="flex-cc gap-half small txt-dark show-m-smaller" style="width: 100%; margin-top: 1rem;">
         <RouterLink to="/licenses" class="a-hover-dark">Licenses</RouterLink>
         <span>|</span>
         <a class="a-hover-dark" href="#">Support</a>
-      </div>
+      </div-->
     </div>
 
     <!-- Footer -->
