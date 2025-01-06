@@ -8,10 +8,12 @@
 const bool verbose = true;
 
 // I/O pins
-const uint8_t wifi_led_pin = 19;
-const uint8_t multi_button_pin = 32;
-const uint8_t rot_pins[2] = {33, 25};   // 0: ccw/left, 1: cw/right
-const uint8_t speed_pin = 26;
+const uint8_t wifi_led_pin = 19;        // LED
+const uint8_t multi_button_pin = 32;    // Push button
+
+// Rotation pins { CCW (left), CW (right) }
+const uint8_t rot_pins[2] = {33, 25};   // { Mini-DIN pin 2, Mini-DIN pin 1 }
+const uint8_t speed_pin = 26;           // Mini-DIN pin 3
 
 // AP mode server config
 const bool use_custom_ip = true;

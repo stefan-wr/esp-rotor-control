@@ -1,9 +1,9 @@
 ![RotorControl - ESP32 based remote rotator controller](assets/title.png)
 
 # RotorControl
-**RotorControl** is an ESP32 based project, designed to remotely control Yaesu G-800/1000/2800 rotators from any device using a browser. The control unit of the aformentioned Yaesu rotators has an external control plug at the back. This Mini-DIN plug allows other devices to read out the rotor position and to start and stop rotations. In this project we use an ESP32 to connect to the control unit via this plug and to steer the rotator. It also connects to a local WiFi network and hosts a [Vue.js](https://vuejs.org/) based web interface, which can be accessed by any modern browser.
+**RotorControl** is an ESP32 based project, designed to remotely control **Yaesu G-800/1000/2800** rotators from any device using a browser. The control unit of the aformentioned Yaesu rotators has an external control plug at the back. This Mini-DIN plug allows other devices to read out the rotor position and to start and stop rotations. In this project we use an ESP32 to connect to the control unit via this plug and to steer the rotator. It also connects to a local WiFi network and hosts a [Vue.js](https://vuejs.org/) based web interface, which can be accessed by any modern browser.
 
-### RotorControl includes the following features:
+### Features:
 
 - Remotely control the rotor from any device using a browser.  
 - Support for multiple users to control the same rotor:  
@@ -19,11 +19,23 @@
 - Use overlap area to optimize rotation distance.
 - Optional support for a mini display.
 
-### User Interface:
+### User Interface
 ![Screenshot of the RotorContrl user interface](assets/controller-rot.png)
 
+## Table of Contents
+* [Hardware](#hardware)
+  + [Pin Configuration](#pin-configuration)
+  + [Caveat (Maximum Speed)](#caveat-maximum-speed)
+* [Build & Flash Firmware](#build-flash-firmware)
+  + [Serial Monitor](#serial-monitor)
+* [Initial Setup](#initial-setup)
+  + [Connect to WiFi Network](#connect-to-wifi-network)
+  + [Open UI](#open-ui)
+* [Calibration](#calibration)
+* [Security](#security)
+
 ## Hardware
-To build your own RotorControl, you will need the following components:
+To build your own RotorControl, you need the following components:
 
 - ESP32 development board with 4MB flash memory.
 - ADS1115 ADC module.
@@ -36,11 +48,11 @@ To build your own RotorControl, you will need the following components:
 ### Pin Configuration
 | Hardware | Pin(s) |
 | -------- | --- |
-| LED | ESP Pin 19 |
+| LED+ | ESP Pin 19 |
 | Push Button | ESP Pin 32 & GND |
 | ADS1115 SCL | ESP Pin 22 |
 | ADS1115 SDA | ESP Pin 21 |
-| ADS1115 C0  | Voltage divider V_out | 
+| ADS1115 A0/C0  | Voltage divider V_out | 
 | SSD1306 SCL | ESP Pin 22 |
 | SSD1306 SDA | ESP Pin 21 |
 | Ext. control Mini-DIN Pin 1 | ESP Pin 25  |
@@ -54,7 +66,7 @@ To build your own RotorControl, you will need the following components:
 The control unit requires a control voltage between 0-5 V to adjust the rotor's speed. In this setup, we use the integrated DAC of the ESP32 to generate the control-voltage. However, since the DAC is limited to 3.3V, the maximum achievable speed with RotorControl is limited to approximately 60% of full speed, presuming linearity.
 
 
-## Build & Flash
+## Build & Flash Firmware
 Before compiling the firmware, you must first build the web UI. Detailed instructions for this process can be found in the [vue-app/README](./vue-app/README.md). Follow the steps there to prepare the UI for deployment.
 
 **The ESP32 firmware is built with [PlatformIO](https://platformio.org/).**
@@ -68,7 +80,7 @@ Adding `-D DEMO_MODE=1` to the `build_flags` section in `platformio.ini` compile
 ### Serial Monitor
 RotorControl offers an extensive log output over Serial. Connect to the ESP with a baud rate of 115200 to monitor the device.
 
-## Setup and connect to WiFi network
+## Initial Setup
 Upon first launch, RotorControl will boot into **AP mode** (AccesPoint mode). In this mode, the ESP creates its own WiFi network called `RotorControl-XXXXXXXXXXXX`. When RotorControl is **in AP mode, the LED lights up continously**.
 
 To set up RotorControl, connect your phone or laptop to that network and open a browser. Navigate to either `rotor.local` or `192.168.4.1`. In the interface that appears, you can first:
@@ -83,7 +95,7 @@ In **AP mode**, the ESP continously scans for available WiFi networks in the are
 Once you initiate the connection, the ESP switches to the default operating mode and attempts to connect to the selected WiFi network. In default mode, the LED indicates the status of the network connection:
 
 - The LED blinks with a 6-second delay, while the ESP tries to connect.
-- The LED will turn off and remain off, when the ESP is connected.
+- The LED will turn off and remains off, when the ESP is connected.
 
 If the LED continues blinking, it indicates a connection failure, likely due to an incorrect password.
 To reset the ESP to **AP mode**, press and hold the push button for a few seconds. The LED will blink rapidly four times to confirm the reset.
@@ -96,6 +108,6 @@ To ensure RotorControl displays the correct rotor position, calibration is requi
 To calibrate, go to `Settings > Calibration > Rotor Calibration` and choose either the guided, or manual calibration process. Before, ensure the physical control unit of the rotator is calibrated, too.
 
 ## Security
-While RotorControl can be used to control a rotator over the internet, it is strongly recommended to do so only via a VPN connection to your network.
+While RotorControl can be used to control a rotator over the internet, it is strongly recommended to do so only via a VPN connection to your network!
 
 Currently, the system lacks encryption, and the websocket connection used to send control commands from the UI to the ESP32 does not include authorization. As a result, if you expose RotorControl to the public internet, there is a risk that anyone could potentially gain control of your rotor.
