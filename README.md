@@ -42,7 +42,7 @@ To build your own RotorControl device, you need the following components:
 - **ESP32** development board with 4MB flash memory. [[↗]](https://www.az-delivery.de/en/products/esp-32-dev-kit-c-v4)
 - **ADS1115** ADC module. [[↗]](https://www.az-delivery.de/en/products/analog-digitalwandler-ads1115-mit-i2c-interface?_pos=1&_sid=02f9dc370&_ss=r)
 - 2/3 voltage divider to scale down 0-4.5 V to 0-3 V, e.g.\
-  $V_{\mathrm{in}} \leftrightarrow 1\;\mathrm{k}\Omega \leftrightarrow V_{\mathrm{out}} \leftrightarrow 2\;\mathrm{k}\Omega \leftrightarrow \mathrm{GND} $
+  $V_{\mathrm{in}} \leftrightarrow 1\mathrm{k}\Omega \leftrightarrow V_{\mathrm{out}} \leftrightarrow 2\mathrm{k}\Omega \leftrightarrow \mathrm{GND} $
 - One **LED** with a corresponding resistor.
 - One **push button**.
 - SSD1306 OLED display **(optional)**, 0.96" with 128x64 pixels. [[↗]](https://www.az-delivery.de/en/products/0-96zolldisplay?_pos=1&_sid=6660f1687&_ss=r)
