@@ -371,7 +371,6 @@ namespace WiFiFunctions {
 
     // Root URL
     // --------
-    
     server->on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
       alert = "";
       request->send(LittleFS, "/ap-index.html", String(), false, processor);
@@ -479,6 +478,8 @@ namespace WiFiFunctions {
     // ---------------
     server->onNotFound([](AsyncWebServerRequest *request){
       request->redirect(get_ip_url());
+      Serial.println(request->url());
+      Serial.println(request->host());
     });
 
 
@@ -489,7 +490,9 @@ namespace WiFiFunctions {
     server->serveStatic("/inter-700.woff2", LittleFS, "/inter-700.woff2");
     server->on("/favicon.ico",[](AsyncWebServerRequest *request){request->send(404);});
     */
-       // Fonts
+
+
+    // Fonts
     // -----
     server->on("/inter-regular.woff2", HTTP_GET, [](AsyncWebServerRequest* request) {
       AsyncWebServerResponse *response = request->beginResponse_P(200, "font/woff2", inter_regular_woff2, inter_regular_woff2_len);
@@ -526,18 +529,33 @@ namespace WiFiFunctions {
 
     // Captive Portal responses
     // ------------------------
-    // Required
     server->on("/connecttest.txt",[](AsyncWebServerRequest *request){request->redirect("http://logout.net");}); // windows 11 captive portal workaround
     server->on("/wpad.dat",[](AsyncWebServerRequest *request){request->send(404);});                            // honestly don't understand what this is but a 404 stops win 10 keep calling this repeatedly and panicking the esp32
     //-----
-    server->on("/generate_204",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});         // android captive portal redirect
-    server->on("/redirect",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});             // microsoft redirect
-    server->on("/hotspot-detect.html",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});  // apple call home
-    server->on("/canonical.html",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});       // firefox captive portal call home
-    server->on("/success.txt",[](AsyncWebServerRequest *request){request->send(200);});                       // firefox captive portal call home
-    server->on("/ncsi.txt",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});             // windows call home
+    server->on("/generate_204",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});   // android captive portal redirect
+    server->on("/redirect",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});       // microsoft redirect
+    server->on("/canonical.html",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());}); // firefox captive portal call home
+    server->on("/success.txt",[](AsyncWebServerRequest *request){request->send(200);});                 // firefox captive portal call home
+    server->on("/ncsi.txt",[](AsyncWebServerRequest *request){request->redirect(get_ip_url());});       // windows call home
+
+    // Apple iOS workaround
+    server->on("/hotspot-detect.html",[](AsyncWebServerRequest *request){
+      char captive_template[] = 
+        "<!DOCTYPE html>"
+        "<html><head><meta http-equiv=\"refresh\" content=\"0;url=http://%s\" /></head>"
+        "<body><div style=\"display:flex;justify-content:center;\">"
+        "<a href=\"http://%s\" style=\"font-family:sans-serif;font-size:2em;padding:1em;text-align:center\">"
+        "RotorControl Setup"
+        "</a></div></body></html>";
+      char captive_buffer[sizeof(captive_template) + 26]; // 26 = 2x length of IPv4 address - 2x lenght of "%s"
+      snprintf(captive_buffer, sizeof(captive_buffer), captive_template, get_ip_url().c_str(), get_ip_url().c_str());
+      AsyncWebServerResponse *response = request->beginResponse(200, "text/html", captive_buffer);
+      request->send(response);
+    });
+
 
     // Start server
+    // ------------
     server->begin();
     Serial.println("[Server] started in AP mode.\n\r");
 
