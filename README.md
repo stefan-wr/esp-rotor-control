@@ -50,7 +50,7 @@ To build your own RotorControl device, you need the following components:
 
 ### Pin Configuration
 The project uses the following pin configuration. Some of these pins can be changed in `include/globals.h`.
-| Hardware | Pin(s) |
+| Hardware Pin | ESP Pin |
 | -------- | --- |
 | LED $+$ | ESP Pin 19 |
 | Push Button | ESP Pin 32 & GND |
