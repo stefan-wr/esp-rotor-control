@@ -4866,7 +4866,7 @@ const uint8_t android_chrome_512x512_png[] PROGMEM = {
 */
 
 
-/*Li
+/*
 License for inter_regular_woff2 and inter_700_woff2.
 ----------------------------------------------------
 
