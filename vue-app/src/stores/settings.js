@@ -52,7 +52,8 @@ export const useSettingsStore = defineStore('settings', () => {
         rssi: '--',
         hasScreen: false,
         useScreen: false,
-        md5: '--'
+        md5: '--',
+        bootMinutes: '1786'
     });
 
     // *************
@@ -126,6 +127,19 @@ export const useSettingsStore = defineStore('settings', () => {
         }
         return true;
     });
+
+    // Get human readable on-time string
+    const getOnTimeHumanized = computed(() => {
+        if (settings.bootMinutes === '--') {
+            return null
+        }
+        const bootMinutes = Number(settings.bootMinutes)
+        return {
+            'days': Math.floor(bootMinutes / 1440),
+            'hours': Math.floor((bootMinutes % 1440) / 60),
+            'minutes': Math.floor(bootMinutes % 60)
+        }  
+    })
 
     // *************
     //    Actions
@@ -290,6 +304,7 @@ export const useSettingsStore = defineStore('settings', () => {
         getLockMsg,
         getScreenMsg,
         getFirmwareKBytes,
+        getOnTimeHumanized,
         isFirmwareValid,
         isValidFavoritesArray,
         addFavorite,

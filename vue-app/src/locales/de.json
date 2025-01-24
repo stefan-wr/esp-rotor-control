@@ -109,7 +109,14 @@
       "title": "Neustart",
       "dscr": "Startet den RotorControl neu. Die Netzwerkeinstellungen bleiben erhalten.",
       "btn": "Neu starten",
-      "btnDscr": "Startet den RostorControl neu."
+      "btnDscr": "Startet den RostorControl neu.",
+      "lastBoot": "Letzter Neustart",
+      "lastBootWrap": "vor {lastBootString}",
+      "justNow": "gerade eben",
+      "days": "0 Tagen | 1 Tag | {count} Tagen",
+      "hours": "0 Stunden | 1 Stunde | {count} Stunden",
+      "minutes": "0 Minuten | 1 Minute | {count} Minuten",
+      "and": "und"
     },
     "firmware": {
       "title": "Firmware Version",

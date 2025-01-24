@@ -123,7 +123,14 @@
       "title": "Reboot",
       "dscr": "Reboots the RotorControl device. Network settings will be retained.",
       "btn": "Reboot",
-      "btnDscr": "Reboots the RotorControl device."
+      "btnDscr": "Reboots the RotorControl device.",
+      "lastBoot": "Last reboot",
+      "lastBootWrap": "{lastBootString} ago",
+      "justNow": "just now",
+      "days": "0 days | 1 day | {count} days",
+      "hours": "0 hours | 1 hour | {count} hours",
+      "minutes": "0 minutes | 1 minute | {count} minutes",
+      "and": "and"
     },
     "update": {
       "title": "Firmware Update",

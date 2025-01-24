@@ -21,7 +21,7 @@ namespace Settings {
         settings_buffer = MSG_ID_SETTINGS;
         settings_buffer += "|"; 
 
-        StaticJsonDocument<192> doc;
+        StaticJsonDocument<256> doc;
         doc["version"] = version;
         doc["espID"] = esp_id;
         doc["ssid"] = WiFiFunctions::wifi_config.ssid;
@@ -29,6 +29,7 @@ namespace Settings {
         doc["hasScreen"] = has_screen;
         doc["useScreen"] = use_screen;
         doc["md5"] = ESP.getSketchMD5();
+        doc["bootMinutes"] = floor(millis() / 60000);
 
         serializeJson(doc, settings_buffer);
         websocket.textAll(settings_buffer);
@@ -41,6 +42,18 @@ namespace Settings {
 
         StaticJsonDocument<16> doc;
         doc["useScreen"] = use_screen;
+
+        serializeJson(doc, settings_buffer);
+        websocket.textAll(settings_buffer); 
+    }
+
+    // => Send on-time to clients
+    void sendBootTime() {
+        settings_buffer = MSG_ID_SETTINGS;
+        settings_buffer += "|"; 
+
+        StaticJsonDocument<48> doc;
+        doc["bootMinutes"] = floor(millis() / 60000);
 
         serializeJson(doc, settings_buffer);
         websocket.textAll(settings_buffer); 

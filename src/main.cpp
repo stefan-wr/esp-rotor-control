@@ -26,7 +26,7 @@
 //#define COUNT_LOOP_CYCLE_TIME
 
 // Software version
-const String version = "0.9.8";
+const String version = "0.9.9";
 
 // ESP ID
 String esp_id = "";
@@ -103,6 +103,9 @@ void setup() {
   boot_counter.printlnToSerial();
 
   // Firmware MD5 and size
+  #ifdef DEMO_MODE
+  Serial.println("[ESP] Firmware built in DEMO mode.");
+  #endif
   Serial.print("[ESP] Firmware MD5: ");
   Serial.println(ESP.getSketchMD5());
   Serial.print("[ESP] Firmware size: ");
@@ -207,6 +210,7 @@ struct {                          // Intervals
   Timer updateScreen{40};         // 40 ms, 25 Hz
   Timer loopTimer{1000};          // 1 s
   Timer fwUpdateChecker{50};      // 50 ms, 20 Hz
+  Timer onTime{1000 * 60};        // 1 min
   Timer justBootedTimeout{8000};
 } timers;
 
@@ -390,6 +394,12 @@ void loop() {
   // Reboot ESP after a few days
   if (in_station_mode && timers.reboot.passed() && !firmware.is_updating) {
     ESP.restart();
+  }
+
+
+  // Send on time regularly
+  if (in_station_mode && RotorSocket::clients_connected && timers.onTime.passed()) {
+    Settings::sendBootTime();
   }
 
 

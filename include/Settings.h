@@ -12,6 +12,9 @@ namespace Settings {
 
     // => Send screen setting to clients
     void sendScreen();
+
+    // => Send on-time to clients
+    void sendBootTime();
 }
 
 #endif //SETTINGS_H
