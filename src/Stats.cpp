@@ -65,7 +65,7 @@ namespace Stats {
     }
 
     // => Print counter to Serial
-    void Counter::printToSerial() {
+    void Counter::printToSerial() const {
         Serial.print(_value);
         if (_factor > 0) {
             Serial.print(" + ");
@@ -77,7 +77,7 @@ namespace Stats {
         }
     }
 
-    void Counter::printlnToSerial() {
+    void Counter::printlnToSerial() const {
         printToSerial();
         Serial.print("\n\r");
     }

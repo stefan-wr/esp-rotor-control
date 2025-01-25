@@ -68,7 +68,7 @@ namespace RotorServer {
   }
 
   // => Print current server config to Serial
-  void RotorServer::printConfig() {
+  void RotorServer::printConfig() const {
     Serial.print("[Server] config from PREFS: (User) ");
     Serial.print(config.user);
     Serial.print(" | (PW) ");

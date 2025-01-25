@@ -42,10 +42,10 @@ namespace Rotor {
         } speed_ramp;
 
         // => Get current speed when ramping up / down speed during auto-rotation
-        int getSmoothSpeed();
+        int getSmoothSpeed() const;
 
         // => Get smooth speed scaling factor, using tanh
-        float getSpeedRampFactor(const float x, const float gradient);
+        float getSpeedRampFactor(const float x, const float gradient) const;
 
         // => Set current rotor speed (DAC), doesn't distribute to clients
         void setCurrentSpeed(const uint8_t spd);

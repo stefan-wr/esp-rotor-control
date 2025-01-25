@@ -21,7 +21,7 @@ void Favorites::load() {
 }
 
 // Save favorites to FS
-void Favorites::save() {
+void Favorites::save() const {
     writeToFS(FAVORITES_PATH, favs_buffer);
 }
 
@@ -33,7 +33,7 @@ void Favorites::set(char* msg) {
 }
 
 // Send favorites to clients
-void Favorites::send() {
+void Favorites::send() const {
     websocket.textAll(favs_buffer);
 }
 

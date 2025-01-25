@@ -99,18 +99,18 @@ namespace Rotor {
     }
 
     // => Start rotation in given direction
-    void Rotation::startRotation(const uint8_t &dir) {
+    void Rotation::startRotation(const uint8_t &dir) const {
         digitalWrite(rot_pins[dir], LOW);
     }
 
     // => Stop rotor
-    void Rotation::stopRotor() {
+    void Rotation::stopRotor() const {
         digitalWrite(rot_pins[0], HIGH);
         digitalWrite(rot_pins[1], HIGH);
     }
 
     // => Set DAC voltage on speed pin
-    void Rotation::setSpeedDAC(const uint8_t &speed) {
+    void Rotation::setSpeedDAC(const uint8_t &speed) const {
         if (speed == 0) {
             dacDisable(speed_pin);
         } else {

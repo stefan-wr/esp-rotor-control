@@ -32,7 +32,7 @@ public:
 
     // => Blink LED n number of times with given interval. Blocking.
     // Does not stop async blinking.
-    void blinkBlocking(const int &n, unsigned long interval = 0ul);
+    void blinkBlocking(const int &n, unsigned long interval = 0ul) const;
 
     // **********
 
@@ -57,7 +57,7 @@ public:
     void normal();
 
     // => Toggle LED, does not stop blinking
-    void toggle();
+    void toggle() const;
 
     // **********
 
@@ -82,12 +82,12 @@ public:
     // **********
 
     // Helpers
-    int read() { return digitalRead(_pin); }
-    void write(const uint8_t &state) { digitalWrite(_pin, state); }
+    int read() const { return digitalRead(_pin); }
+    void write(const uint8_t &state) const { digitalWrite(_pin, state); }
     void setNormal(const uint8_t &normal) { _normal = normal; }
-    uint8_t getNormal() { return _normal; }
-    unsigned long getInterval() { return _interval; }
-    unsigned long getTimeLeft() { return _interval * _n_blinks; }
+    uint8_t getNormal() const { return _normal; }
+    unsigned long getInterval() const { return _interval; }
+    unsigned long getTimeLeft() const { return _interval * _n_blinks; }
 };
 
 #endif //BLINKINGLED_H

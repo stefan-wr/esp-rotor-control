@@ -27,14 +27,14 @@ namespace Stats {
         void reset();
 
         // Getters and setters
-        uint32_t get() { return _value; }
-        uint32_t value() { return _value; }
-        uint32_t getFactor() {return _factor; }
-        uint32_t factor()  { return _factor; }
+        uint32_t get() const { return _value; }
+        uint32_t value() const { return _value; }
+        uint32_t getFactor() const {return _factor; }
+        uint32_t factor() const  { return _factor; }
 
         // => Print counter to Serial
-        void printToSerial();
-        void printlnToSerial();
+        void printToSerial() const;
+        void printlnToSerial() const;
 
         // => Add to value
         bool add(uint32_t summand);

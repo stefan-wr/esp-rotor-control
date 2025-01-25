@@ -30,7 +30,7 @@ void BlinkingLED::blink(const int &n, const unsigned long &interval) {
 
 // => Blink LED n number of times with given interval. Blocking.
 // Does not stop async blinking.
-void BlinkingLED::blinkBlocking(const int &n, unsigned long interval) {
+void BlinkingLED::blinkBlocking(const int &n, unsigned long interval) const {
     for (int i = 0; i < n * 2; i++) {
         toggle();
         if (interval) {
@@ -80,7 +80,7 @@ void BlinkingLED::normal() {
 }
 
 // => Toggle LED, does not stop blinking
-void BlinkingLED::toggle() {
+void BlinkingLED::toggle() const {
     write(!read());
 }
 

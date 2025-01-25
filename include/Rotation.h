@@ -70,13 +70,13 @@ namespace Rotor {
         float getAngle();
 
         // => Start rotation in given direction
-        void startRotation(const uint8_t &dir);
+        void startRotation(const uint8_t &dir) const;
 
         // => Stop rotor
-        void stopRotor();
+        void stopRotor() const;
 
         // => Set DAC voltage on speed pin
-        void setSpeedDAC(const uint8_t &speed);
+        void setSpeedDAC(const uint8_t &speed) const;
 
         // => Read ADC and update last rotor position values
         void update();        

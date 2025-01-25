@@ -47,7 +47,7 @@ namespace RotorServer {
         // => Reset server config
         bool resetConfig();
         // => Print current server config to Serial
-        void printConfig();
+        void printConfig() const;
 
         // Constructor
         RotorServer() {};

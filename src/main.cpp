@@ -55,7 +55,7 @@ Timer multi_btn_press_debounce_timer(100);
 
 // => Interrupt for button press
 void IRAM_ATTR multiButtonPressAction() {
-  // Debounce 250 ms
+  // Debounce 250 ms, .passed() resets timer
   if (multi_btn_press_debounce_timer.passed() && !multi_btn_hold) {
     multi_btn_pressed = true;
   }
@@ -211,7 +211,7 @@ struct {                          // Intervals
   Timer loopTimer{1000};          // 1 s
   Timer fwUpdateChecker{50};      // 50 ms, 20 Hz
   Timer onTime{1000 * 60};        // 1 min
-  Timer justBootedTimeout{8000};
+  Timer justBootedTimeout{8000};  // 8 s
 } timers;
 
 bool is_reconnecting = false;   // Is WiFi trying to reconnect

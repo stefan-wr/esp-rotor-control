@@ -266,7 +266,7 @@ namespace Rotor {
 
     // => Get current speed when ramping up/down speed
     // ***********************************************
-    int RotorController::getSmoothSpeed() {
+    int RotorController::getSmoothSpeed() const {
         // Max speed is already 0
         if (max_speed == 0) { return max_speed; }
 
@@ -296,7 +296,7 @@ namespace Rotor {
 
     // => Get smooth speed scaling factor, using tanh
     // https://math.stackexchange.com/questions/846743/example-of-a-smooth-step-function-that-is-constant-below-0-and-constant-above/846747#846747
-    float RotorController::getSpeedRampFactor(const float x, const float gradient) {
+    float RotorController::getSpeedRampFactor(const float x, const float gradient) const {
         return (0.5f * (1.0f + std::tanh(((2 * x - 1.0f) * gradient) / (std::sqrt((1.0f - x) * x)))));
     }
 
