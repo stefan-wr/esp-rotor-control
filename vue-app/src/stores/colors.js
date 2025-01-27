@@ -19,6 +19,9 @@ export default function useColors() {
                 'text-color-darker': '#b5c4c9',
                 'text-color-accent': '#162f36',
 
+                'demo-text-color': 'var(--content-color-0)',
+                'demo-text-color-hover': 'var(--content-color-2)',
+
                 'hr-color-1': 'var(--content-color-1)',
                 'hr-color-2': 'var(--content-color-2)',
 
@@ -63,6 +66,9 @@ export default function useColors() {
                 'text-color': '#e7e7e7',
                 'text-color-darker': '#a4b6bb',
                 'text-color-accent': '#132030',
+
+                'demo-text-color': 'var(--text-color-darker)',
+                'demo-text-color-hover': 'var(--text-color)',
 
                 'hr-color-1': 'var(--content-color-1)',
                 'hr-color-2': 'var(--content-color-2)',
@@ -109,6 +115,9 @@ export default function useColors() {
                 'text-color-darker': '#a3a3a3',
                 'text-color-accent': '#0f0f0f',
 
+                'demo-text-color': 'var(--text-color-darker)',
+                'demo-text-color-hover': 'var(--text-color)',
+
                 'hr-color-1': 'var(--content-color-1)',
                 'hr-color-2': 'var(--content-color-2)',
 
@@ -153,6 +162,9 @@ export default function useColors() {
                 'text-color': '#353535',
                 'text-color-darker': '#525252',
                 'text-color-accent': '#ebebeb',
+
+                'demo-text-color': 'var(--text-color)',
+                'demo-text-color-hover': 'var(--text-color-darker)',
 
                 'hr-color-1': 'var(--content-color-0)',
                 'hr-color-2': 'var(--content-color-2)',

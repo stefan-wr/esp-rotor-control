@@ -28,14 +28,14 @@ const showDemo = ref(true);
 <style lang="css" scoped>
 .demo {
   padding: 1em;
-  color: var(--content-color-0);
+  color: var(--demo-text-color);
 }
 
 .icon {
   cursor: pointer;
 
   &:hover {
-    color: var(--content-color-2);
+    color: var(--demo-text-color-hover);
   }
 }
 
