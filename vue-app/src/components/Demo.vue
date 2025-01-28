@@ -25,7 +25,7 @@ import { ref } from 'vue';
 const showDemo = ref(true);
 </script>
 
-<style lang="css" scoped>
+<style lang="scss" scoped>
 .demo {
   padding: 1em;
   color: var(--demo-text-color);

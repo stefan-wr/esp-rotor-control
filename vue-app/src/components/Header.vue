@@ -2,10 +2,7 @@
   <header id="header" class="flex-hc gap-one">
     <span
       class="led"
-      :class="{
-        connected: !umbrellaStore.hasLostConnection,
-        disconnected: umbrellaStore.hasLostConnection
-      }"
+      :class="[umbrellaStore.hasLostConnection ? 'disconnected' : 'connected']"
       :title="ledTitle"
     ></span>
     <h1

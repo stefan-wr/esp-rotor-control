@@ -1,16 +1,17 @@
 <template>
   <footer id="footer" class="border-box flex-cc">
     <span class="small">
-      Hardware-ID: {{ settingsStore.settings.espID }} -
-      RotorControl UI v{{ version }} - made by
-      <a href="https://github.com/stefan-wr">Stefan Wraase</a>
+      Hardware-ID: {{ settingsStore.settings.espID }} - RotorControl UI v{{ version }} - made by
+      <a href="https://github.com/stefan-wr" target="_blank" rel="noopener noreferrer">Stefan&nbsp;Wraase</a>
+      -
+      <a href="https://github.com/stefan-wr/esp-rotor-control" target="_blank" rel="noopener noreferrer">GitHub</a>
     </span>
   </footer>
 </template>
 
 <script setup>
 import { useSettingsStore } from '../stores/settings';
-import { version } from "@root/package.json"
+import { version } from '@root/package.json';
 
 const settingsStore = useSettingsStore();
 </script>

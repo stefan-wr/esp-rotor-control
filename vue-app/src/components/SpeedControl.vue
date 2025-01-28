@@ -18,7 +18,7 @@
         <div v-for="n in 11" class="no-select"></div>
       </div>
       <label class="xxlarge range-lbl r-align" for="speed">
-        {{ speedLabel }}<span class="smaller">&nbsp;%</span>
+        {{ rotorStore.rotor.speed ? rotorStore.rotor.speed : 1 }}<span class="smaller">&nbsp;%</span>
       </label>
     </div>
   </CardCollapsable>
@@ -27,7 +27,6 @@
 <script setup>
 import CardCollapsable from '@/components/CardCollapsable.vue';
 
-import { computed } from 'vue';
 import { useEventListener } from '@vueuse/core';
 
 import { useUmbrellaStore } from '@/stores/umbrella';
@@ -40,18 +39,21 @@ const settingsStore = useSettingsStore();
 const rotorStore = useRotorStore();
 const uiStore = useUIStore();
 
-// Speed label, display 0 as 1%
-const speedLabel = computed(() => {
-  if (rotorStore.rotor.speed == 0) {
-    return 1;
-  } else {
-    return rotorStore.rotor.speed;
+// Block key-hold on slider
+function preventRepeat(event) {
+  if (event.repeat) {
+    event.preventDefault();
   }
-});
+}
 
 // Event listener for setting speed with up/down arrow keys
 function speedKeyEventListener(event) {
-  if (!event.repeat && uiStore.ui.kbscEnabled && event.target.tagName !== 'INPUT' && !settingsStore.isLockedByElse) {
+  if (
+    !event.repeat && 
+    uiStore.ui.kbscEnabled && 
+    !settingsStore.isLockedByElse &&
+    event.target.tagName !== 'INPUT'
+  ) {
     switch (event.key) {
       case 'ArrowUp':
         if (rotorStore.rotor.speed < 100) {
@@ -68,13 +70,6 @@ function speedKeyEventListener(event) {
         event.preventDefault();
         break;
     }
-  }
-}
-
-// Block key-hold on slider
-function preventRepeat(event) {
-  if (event.repeat) {
-    event.preventDefault();
   }
 }
 

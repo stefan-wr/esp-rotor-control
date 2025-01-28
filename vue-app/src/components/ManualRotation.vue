@@ -118,20 +118,18 @@ function startRotationKeyEventListener(event) {
     !settingsStore.isLockedByElse &&
     event.target.tagName !== 'INPUT'
   ) {
-    switch (event.key) {
-      case 'ArrowLeft':
-        rotateLeft();
-        break;
-      case 'ArrowRight':
-        rotateRight();
-        break;
-    }
+    event.key === 'ArrowLeft' ? rotateLeft() : {};
+    event.key === 'ArrowRight' ? rotateRight() : {};
   }
 }
 
 // Lift left/right arrow keys: stop rotation event listener
 function stopRotationKeyEventListener(event) {
-  if (uiStore.ui.kbscEnabled && !settingsStore.isLockedByElse && event.target.tagName !== 'INPUT') {
+  if (
+    uiStore.ui.kbscEnabled &&
+    !settingsStore.isLockedByElse &&
+    event.target.tagName !== 'INPUT'
+  ) {
     if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
       stopRotation();
     }

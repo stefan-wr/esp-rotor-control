@@ -171,13 +171,13 @@ a {
   
 .show-s-only {
     @media only screen and (min-width: calc($break-s + 1px)) {
-      display: none !important;;
+      display: none !important;
     }
 }
   
 .show-m-smaller {
     @media only screen and (min-width: calc($break-m + 1px)) {
-      display: none !important;;
+      display: none !important;
     }
   }
 
@@ -404,8 +404,8 @@ button,
     background: var(--button-color);
     color: var(--button-text-color);
     cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
+
+    @extend .no-select
 }
 
 @media (hover: hover) {
@@ -416,10 +416,10 @@ button,
 }
 
 .btn-pressed {
-    transform: scale(0.95);
     filter: brightness(130%);
 }
 
+.btn-pressed,
 button:enabled:active,
 .button:active {
     transform: scale(0.95);
