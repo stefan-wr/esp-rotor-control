@@ -1,5 +1,5 @@
 <template>
-  <CardCollapsable :title="$t('manualRotation.title')">
+  <CardCollapsable id="manual-rotation" :title="$t('manualRotation.title')">
     <template #icon><Icon icon="fa-solid fa-arrows-spin"></Icon></template>
     <div class="flex-hc gap-one buttons-wrap">
       <button

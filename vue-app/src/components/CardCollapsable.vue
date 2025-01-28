@@ -1,5 +1,5 @@
 <template>
-  <div class="card border-box l-align" :class="{ 'card-show': uiStore.ui.cards[props.title] }">
+  <div class="card border-box l-align" :class="{ 'card-show': uiStore.ui.cards[props.id] }">
     <div class="flex-csp gap-half medium">
       <slot name="icon"></slot>
       <span class="card-title bold flex-grow">{{ title }}</span>
@@ -11,7 +11,7 @@
       >
         <svg viewBox="0 0 300 300">
           <path
-            :class="{ 'caret-rot': !uiStore.ui.cards[props.title] }"
+            :class="{ 'caret-rot': !uiStore.ui.cards[props.id] }"
             class="caret-path"
             d="M136.874,96.18C144.4,89.634 155.6,89.634 163.126,96.18C186.786,116.76 237.15,160.568 269.744,188.919C274.465,193.026 276.141,199.632 273.949,205.492C271.757,211.353 266.157,215.237 259.899,215.237C202.495,215.237 97.505,215.237 40.101,215.237C33.843,215.237 28.243,211.353 26.051,205.492C23.859,199.632 25.535,193.026 30.256,188.919C62.85,160.568 113.214,116.76 136.874,96.18Z"
             style="fill: var(--text-color)"
@@ -38,7 +38,14 @@ import { useUIStore } from '../stores/ui';
 const uiStore = useUIStore();
 
 const props = defineProps({
-  title: String
+  title: {
+    type: String,
+    required: true
+  },
+  id: {
+    type: String,
+    required: true
+  }
 });
 
 // Element ref
@@ -59,16 +66,16 @@ const hasTransitionClass = ref(false);
  * This avoids resizing of hidden content to affect the collapsed card
  */
 function toggleCollapse() {
-  if (uiStore.ui.cards[props.title]) {
+  if (uiStore.ui.cards[props.id]) {
     // Hide
-    uiStore.ui.cards[props.title] = false;
+    uiStore.ui.cards[props.id] = false;
     setTimeout(() => {
       hasTransitionClass.value = false;
       cardContent.value.style.height = `${cardContent.value.offsetHeight}px`;
     }, 200);
   } else {
     // Show
-    uiStore.ui.cards[props.title] = true;
+    uiStore.ui.cards[props.id] = true;
     cardContent.value.style.height = null;
     hasTransitionClass.value = true;
   }
@@ -78,7 +85,7 @@ function toggleCollapse() {
  *  card content to the exact height of the content -1px.
  */
 function setSlideMargin() {
-  if (!uiStore.ui.cards[props.title]) {
+  if (!uiStore.ui.cards[props.id]) {
     cardContent.value.style.marginTop = `${cardContent.value.offsetHeight * -1}px`;
   }
 }
@@ -86,12 +93,12 @@ function setSlideMargin() {
 onMounted(() => {
   setSlideMargin();
   // Add collapse-content toggle to uiStore on first mount
-  if (!Object.hasOwn(uiStore.ui.cards, props.title)) {
-    uiStore.ui.cards[props.title] = true;
+  if (!Object.hasOwn(uiStore.ui.cards, props.id)) {
+    uiStore.ui.cards[props.id] = true;
   }
 
   // Add transition class 200ms after mount if content is not collapsed
-  if (uiStore.ui.cards[props.title]) {
+  if (uiStore.ui.cards[props.id]) {
     setTimeout(() => {
       hasTransitionClass.value = true;
     }, 200);
