@@ -39,38 +39,40 @@
 ## Hardware
 To build your own RotorControl device, you need the following components:
 
-- **ESP32** development board with 4MB flash memory. [[↗]](https://www.az-delivery.de/en/products/esp-32-dev-kit-c-v4)
-- **ADS1115** ADC module. [[↗]](https://www.az-delivery.de/en/products/analog-digitalwandler-ads1115-mit-i2c-interface?_pos=1&_sid=02f9dc370&_ss=r)
+- **ESP32** development board with 4MB flash memory (WROOM 32, NodeMCU, DevKitC V4). [[↗]](https://www.az-delivery.de/en/products/esp-32-dev-kit-c-v4)
+- **ADS1115** 16 bit ADC module. [[↗]](https://www.az-delivery.de/en/products/analog-digitalwandler-ads1115-mit-i2c-interface?_pos=1&_sid=02f9dc370&_ss=r)
 - 2/3 voltage divider to scale down 0-4.5 V to 0-3 V, e.g.\
   $V_{\mathrm{in}} \leftrightarrow 1\mathrm{k}\Omega \leftrightarrow V_{\mathrm{out}} \leftrightarrow 2\mathrm{k}\Omega \leftrightarrow \mathrm{GND} $
 - One **LED** with a corresponding resistor.
 - One **push button**.
-- SSD1306 OLED display **(optional)**, 0.96" with 128x64 pixels. [[↗]](https://www.az-delivery.de/en/products/0-96zolldisplay?_pos=1&_sid=6660f1687&_ss=r)
 - **6-pin MINI-Din** cable and a corresponding plug or socket. [[↗]](https://www.reichelt.com/de/en/shop/product/build-in_mini-din_jack_6-pin-235714?country=de&CCTYPE=private&LANGUAGE=en#closemodal)
+- SSD1306 OLED display **(optional)**, 0.96" with 128x64 pixels. [[↗]](https://www.az-delivery.de/en/products/0-96zolldisplay?_pos=1&_sid=6660f1687&_ss=r)
+
+The links are only suggestions; various suppliers offer these parts.
 
 ### Pin Configuration
 The project uses the following pin configuration. Some of these pins can be changed in `include/globals.h`.
-| Hardware Pin | ESP Pin |
-| -------- | --- |
-| LED $+$ | ESP Pin 19 |
-| Push Button | ESP Pin 32 & GND |
-| ADS1115 SCL | ESP Pin 22 |
-| ADS1115 SDA | ESP Pin 21 |
-| ADS1115 A0/C0  | Voltage divider $V_\mathrm{out}$ | 
-| SSD1306 SCL | ESP Pin 22 |
-| SSD1306 SDA | ESP Pin 21 |
-| Ext. control Mini-DIN Pin 1 | ESP Pin 25  |
-| Ext. control Mini-DIN Pin 2 | ESP Pin 33  |
-| Ext. control Mini-DIN Pin 3 | ESP Pin 26  |
-| Ext. control Mini-DIN Pin 4 | Voltage divider $V_\mathrm{in}$  |
-| Ext. control Mini-DIN Pin 5 | GND  |
-| Ext. control Mini-DIN Pin 6 | N/C  |
+| Hardware Pin | ESP Pin | Description / Function |
+| ------------ | ------- | ----------- |
+| LED $+$ | ESP Pin 19 | Status LED |
+| Push Button | ESP Pin 32 & GND |Used to reset WiFi & toggle display. |
+| ADS1115 SCL | ESP Pin 22 | ADC I²C Serial Clock |
+| ADS1115 SDA | ESP Pin 21 | ADC I²C Serial Data |
+| ADS1115 A0/C0  | Voltage divider $V_\mathrm{out}$ | ADC input, must not exceed 3.3 V |
+| SSD1306 SCL | ESP Pin 22 | Display I²C Serial Clock |
+| SSD1306 SDA | ESP Pin 21 | Display I²C Serial Data |
+| Ext. control Mini-DIN Pin 1 | ESP Pin 25  | Rotate CW  |
+| Ext. control Mini-DIN Pin 2 | ESP Pin 33  | Rotate CCW |
+| Ext. control Mini-DIN Pin 3 | ESP Pin 26 (DAC) | Speed control:<br>Control unit accepts 0 to 5V.<br>ESP DAC delivers 0 to 3.3 V. |
+| Ext. control Mini-DIN Pin 4 | Voltage divider $V_\mathrm{in}$ | Positional voltage:<br> Control unit outputs 0 to 4.5 V. |
+| Ext. control Mini-DIN Pin 5 | GND  | Ground |
+| Ext. control Mini-DIN Pin 6 | N/C  | - |
 
 > [!CAUTION]
 > Directly connecting Mini-DIN Pin 4 from the control unit's external control socket to any GPIO pin on the ESP32 or to an ADS1115 channel without a voltage divider will cause damage to these components!
 
 > [!NOTE]
-> The control unit requires a control voltage between 0-5 V to adjust the rotor's speed. In this setup, we use the integrated DAC of the ESP32 to generate the control-voltage. However, since the DAC is limited to 3.3V, the maximum achievable speed with RotorControl is limited to approximately 60% of full speed.
+> The control unit requires a control voltage from 0-5 V to adjust the rotor's speed. In this setup, we use the integrated DAC of the ESP32 to generate the control-voltage. However, since the DAC is limited to 3.3V, the maximum achievable speed with RotorControl is limited to approximately 60% of full speed.
 
 
 
