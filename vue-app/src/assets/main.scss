@@ -61,7 +61,10 @@ html {
     --compass-degrees-color: var(--content-color-3);
 
     --button-color: var(--accent-color);
+    --button-color-hover: var(--accent-color);
+    --button-brightness-hover: 130%;
     --button-text-color: var(--text-color-accent);
+    --button-text-color-hover: var(--text-color-accent);
 
     --input-color: var(--text-color);
     --input-text-color: var(--text-color-accent);
@@ -409,14 +412,18 @@ button,
 }
 
 @media (hover: hover) {
-    button:hover,
-    .button:hover {
-        filter: brightness(130%);
+    button:enabled:hover,
+    .button:enabled:hover {
+        background-color: var(--button-color-hover);
+        color: var(--button-text-color-hover);
+        filter: brightness(var(--button-brightness-hover));
     }
 }
 
 .btn-pressed {
-    filter: brightness(130%);
+    background-color: var(--button-color-hover);
+    color: var(--button-text-color-hover);
+    filter: brightness(var(--button-brightness-hover));
 }
 
 .btn-pressed,

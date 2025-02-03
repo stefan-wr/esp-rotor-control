@@ -42,7 +42,10 @@ export default function useColors() {
                 'compass-degrees-color': '#12262c',
 
                 'button-color': 'var(--accent-color)',
-                'button-text-color': 'var(-text-color-accent)',
+                'button-text-color': 'var(--text-color-accent)',
+                'button-brightness-hover': '130%',
+                'button-color-hover': 'var(--accent-color)',
+                'button-text-color-hover': 'var(--text-color-accent)',
 
                 'input-color': 'var(--text-color)',
                 'input-text-color': 'var(--text-color-accent)'
@@ -80,17 +83,20 @@ export default function useColors() {
                 'footer-text-color': 'var(--content-color-3)',
                 'footer-text-color-hover': 'var(--text-color)',
 
-                'compass-color': 'var(--content-color-3)',
+                'compass-color': 'rgb(196, 196, 196)',
                 'compass-background-color': 'rgb(63, 71, 75)',
-                'compass-cross-color': 'var(--text-color-darker)',
+                'compass-cross-color': 'rgb(146, 146, 146)',
                 'compass-center-color': 'var(--content-color-2)',
                 'compass-needle-color': 'var(--text-color)',
-                'compass-req-needle-color': 'rgb(206, 119, 48)',
-                'compass-cardinals-color': 'var(--text-color-darker)',
+                'compass-req-needle-color': 'rgba(221, 110, 36, 0.9)',
+                'compass-cardinals-color': 'var(--content-color-3)',
                 'compass-degrees-color': 'var(--text-color-darker)',
 
-                'button-color': 'var(--accent-color)',
-                'button-text-color': 'var(-text-color-accent)',
+                'button-color': 'var(--compass-background-color)',
+                'button-text-color': 'var(--text-color)',
+                'button-brightness-hover': '100%',
+                'button-color-hover': 'var(--accent-color)',
+                'button-text-color-hover': 'var(--text-color-accent)',
 
                 'input-color': 'var(--text-color)',
                 'input-text-color': 'var(--text-color-accent)'
@@ -138,7 +144,10 @@ export default function useColors() {
                 'compass-degrees-color': 'var(--text-color-darker)',
 
                 'button-color': 'var(--accent-color)',
-                'button-text-color': 'var(-text-color-accent)',
+                'button-text-color': 'var(--text-color-accent)',
+                'button-brightness-hover': '140%',
+                'button-color-hover': 'var(--accent-color)',
+                'button-text-color-hover': 'var(--text-color-accent)',
                 
                 'input-color': 'var(--text-color)',
                 'input-text-color': 'var(--text-color-accent)'
@@ -186,7 +195,10 @@ export default function useColors() {
                 'compass-degrees-color': 'var(--text-color-darker)',
 
                 'button-color': 'var(--accent-color)',
-                'button-text-color': 'var(-text-color-accent)',
+                'button-text-color': 'var(--text-color-accent)',
+                'button-brightness-hover': '130%',
+                'button-color-hover': 'var(--accent-color)',
+                'button-text-color-hover': 'var(--text-color-accent)',
                 
                 'input-color': 'var(--text-color)',
                 'input-text-color': 'var(--content-color-0)'
@@ -234,7 +246,10 @@ export default function useColors() {
                 'compass-degrees-color': 'var(--text-color-accent)',
 
                 'button-color': 'var(--accent-color)',
-                'button-text-color': 'var(-text-color-accent)',
+                'button-text-color': 'var(--text-color-accent)',
+                'button-brightness-hover': '100%',
+                'button-color-hover': '#d4ffff',
+                'button-text-color-hover': 'var(--text-color-accent)',
 
                 'input-color': 'var(--text-color)',
                 'input-text-color': 'var(--text-color-accent)'
@@ -282,7 +297,10 @@ export default function useColors() {
                 'compass-degrees-color': 'var(--text-color-darker)',
 
                 'button-color': 'var(--accent-color)',
-                'button-text-color': 'var(-text-color-accent)',
+                'button-text-color': 'var(--text-color-accent)',
+                'button-brightness-hover': '100%',
+                'button-color-hover': '#7d8594',
+                'button-text-color-hover': 'var(--text-color-accent)',
 
                 'input-color': 'var(--content-color-3)',
                 'input-text-color': 'var(--text-color)'
