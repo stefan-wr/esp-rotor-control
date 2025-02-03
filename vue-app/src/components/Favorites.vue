@@ -57,6 +57,7 @@
             :max="maxAngle"
             pattern="\d*"
             :placeholder="$t('commons.angle')"
+            ref="angleInput"
             v-model="newAngle"
             @keypress="restrictAngleInput($event)"
             @paste.prevent=""
@@ -183,6 +184,7 @@ const rotorStore = useRotorStore();
 // V-Models
 const newName = ref('');
 const newAngle = ref('');
+const angleInput = ref(null);
 
 // Toggle between card description and 'add new favorite form'
 // -----------------------------------------------------------

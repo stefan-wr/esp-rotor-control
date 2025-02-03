@@ -44,9 +44,16 @@ $slide-speed: 0.2s;
   }
 }
 
-/* Touch devices */
+/* Touch devices (no hover support) */
 @mixin touch() {
   @media (hover: none) {
       @content;
+  }
+}
+
+/* Pointer devices (hover support) */
+@mixin pointer()  {
+  @media (hover: hover) {
+    @content;
   }
 }

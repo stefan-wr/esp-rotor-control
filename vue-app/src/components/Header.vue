@@ -96,7 +96,7 @@ const ledTitle = computed(() => {
   opacity: 0.8;
   transition: opacity 0.1s;
 
-  &:hover {
+  &:hover, &:focus-visible {
     opacity: 1;
   }
 }

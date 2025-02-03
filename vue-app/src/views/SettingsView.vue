@@ -213,9 +213,12 @@ main {
     padding: 0.25em 0.6em;
   }
 
-  &:hover {
-    background-color: var(--content-color-2);
-    filter: unset;
+  @include pointer { 
+    &:hover, &:focus-visible {
+      background-color: var(--content-color-2);
+      color: var(--text-color);
+      filter: unset;
+    }
   }
 
   &:active {
@@ -224,10 +227,6 @@ main {
 
   &:disabled {
     filter: unset;
-  }
-
-  &:hover {
-    color: var(--text-color);
   }
 }
 

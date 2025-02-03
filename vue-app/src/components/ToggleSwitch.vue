@@ -7,6 +7,8 @@
       :class="{ disabled: disabled }"
       :checked="toggle"
       :disabled="disabled"
+      tabindex="-1"
+      switch
     />
     <span
       class="switch-slider"

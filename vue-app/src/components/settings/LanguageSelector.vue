@@ -54,9 +54,12 @@ const uiStore = useUIStore();
     background-color 0.1s,
     color 0.1s;
 
-  &:hover {
-    background-color: var(--content-color-3);
-    filter: unset;
+  @include pointer { 
+    &:hover, &:focus-visible {
+      background-color: var(--content-color-3);
+      color: var(--text-color);
+      filter: unset;
+    }
   }
 
   &:active {
@@ -65,10 +68,6 @@ const uiStore = useUIStore();
 
   &:disabled {
     filter: unset;
-  }
-
-  &:hover {
-    color: var(--text-color);
   }
 }
 

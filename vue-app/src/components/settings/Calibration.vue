@@ -58,14 +58,9 @@ import CardToggleContentTransition from '@/components/CardToggleContentTransitio
 import CalibrationAutomatic from '@/components/settings/CalibrationAutomatic.vue';
 import CalibrationManual from '@/components/settings/CalibrationManual.vue';
 
-import { useSettingsStore } from '@/stores/settings';
 import { useRotorStore } from '@/stores/rotor';
-import { useUmbrellaStore } from '@/stores/umbrella';
-
 import { ref } from 'vue';
 
-const settingsStore = useSettingsStore();
-const umbrellaStore = useUmbrellaStore();
 const rotorStore = useRotorStore();
 
 // Toggle between manual- and auto calibration tabs
@@ -95,30 +90,30 @@ function setTabActive(tab) {
 /* Tabs */
 .cal-tab {
   background-color: var(--content-color-1);
-  color: var(--text-color);
   border: none;
   border-radius: calc($border-box-bradius / 2) calc($border-box-bradius / 2) 0 0;
-  transition:
-    background-color 0.1s,
-    opacity 0.1s;
   min-height: $button-height;
   padding: 0.5em 1em;
+  flex-grow: 0;
+  transition:
+    background-color 0.1s,
+    flex-grow 0.2s;
 
   span {
     display: inline-block;
     transform: scale(85%);
-    transition:
-      transform 0.1s,
-      opacity 0.1s;
+    transition: transform 0.1s;
   }
 
   &:hover {
     filter: none;
-    transform: scale(100%);
+    transform: none;
     background-color: var(--content-color-3);
+  }
 
+  &:not(.cal-tab-active):hover,
+  &:not(.cal-tab-active):focus-visible {
     span {
-      opacity: 1;
       transform: scale(92.5%);
     }
   }
@@ -126,16 +121,13 @@ function setTabActive(tab) {
 
 .cal-tab-active {
   background-color: var(--content-color-3);
+  cursor: default;
+  flex-grow: 0.1;
 
   span {
     transform: scale(100%);
     color: var(--text-color);
-  }
-
-  &:hover {
-    span {
-      transform: scale(100%);
-    }
+    font-weight: bold;
   }
 }
 

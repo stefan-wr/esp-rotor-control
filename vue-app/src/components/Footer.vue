@@ -31,7 +31,7 @@ const settingsStore = useSettingsStore();
   a {
     text-decoration: underline;
 
-    &:hover {
+    &:hover, &:focus-visible {
       color: var(--footer-text-color-hover);
     }
   }
