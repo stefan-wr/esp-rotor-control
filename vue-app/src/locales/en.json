@@ -157,7 +157,9 @@
         "Ostsee": "Baltic Sea",
         "Nordlicht": "Northern Lights",
         "Krolock": "Krolock",
-        "Kitzsteinhorn": "Glacier"
+        "Kitzsteinhorn": "Glacier",
+        "Yaesu": "Yaesu",
+        "Pyrop": "Pyrope"
       }
     },
     "compass": {

@@ -16,7 +16,21 @@
           @click="uiStore.setColorTheme(key)"
           :disabled="uiStore.isActiveColorTheme(key)"
         >
-          <span class="no-wrap-ellip flex-grow">{{ $t('settings.colorThemes.themes.' + theme.name) }}</span>
+
+          <div
+            class="flex-vc color-box"
+            :style="{
+              backgroundColor: theme.vars['content-color-1'],
+              boxShadow: '0.2em 0.2em ' + theme['vars']['content-color-0']
+            }"
+          >
+            <div :style="{ backgroundColor: theme['vars']['content-color-3'] }"></div>
+            <div :style="{ backgroundColor: theme['vars']['accent-color'] }"></div>
+          </div>
+
+          <span class="no-wrap-ellip flex-grow">{{
+            $t('settings.colorThemes.themes.' + theme.name)
+          }}</span>
           <Transition name="icon-trans">
             <Icon
               v-if="uiStore.isActiveColorTheme(key)"
@@ -37,18 +51,31 @@ const uiStore = useUIStore();
 </script>
 
 <style lang="scss" scoped>
+.color-box {
+  gap: 0.3em;
+  padding: 0.3em;
+  border-radius: 0.4em;
+  margin-right: 0.2em;
+
+  & > div {
+    height: 0.45em;
+    width: 1.2em;
+    border-radius: 2em;
+  }
+}
+
 .color-themes {
   flex-wrap: wrap;
 }
 
 .theme {
-  min-width: 0px;
+  min-width: 20ch;
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 48%;
   text-align: left;
-  padding-top: 0.7em;
-  padding-bottom: 0.7em;
+  padding-top: 0.6em;
+  padding-bottom: 0.6em;
   background-color: var(--content-color-1);
   transition:
     background-color 0.1s,
