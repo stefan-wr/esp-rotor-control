@@ -167,7 +167,8 @@
       "dscr": "Aktiviere / Deaktiviere einzelne Elemente der Positionsanzeige.",
       "degrees": "Gradzahlen",
       "cardinals": "Himmelsrichtungen",
-      "favorites": "Favoritenpunkte"
+      "favorites": "Favoritenpunkte",
+      "box": "Infobox"
     },
     "keyboard": {
       "title": "Tastatursteuerung",

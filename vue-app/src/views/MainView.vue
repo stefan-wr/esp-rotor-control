@@ -6,7 +6,7 @@
       :hasCardinals="uiStore.ui.hasCardinalLabels"
       :hasDegrees="uiStore.ui.hasDegreeLabels"
       :hasCorners="true"
-      :hasBox="true"
+      :hasBox="uiStore.ui.hasBox"
     ></Compass>
     <aside class="flex-vst gap-one">
       <ManualRotation></ManualRotation>

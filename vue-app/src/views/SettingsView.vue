@@ -20,7 +20,7 @@
           <a class="a-hover-dark" href="#">Support</a>
         </div!-->
         <Compass
-          v-if="uiStore.ui.activeSetting === 1"
+          v-if="uiStore.ui.activeSetting === 'ui'"
           :isInteractive="false"
           :hasFavorites="uiStore.ui.hasFavoritesDots"
           :hasCardinals="uiStore.ui.hasCardinalLabels"
@@ -30,7 +30,7 @@
           class="hide-m"
         ></Compass>
         <Compass
-          v-if="uiStore.ui.activeSetting === 3"
+          v-if="uiStore.ui.activeSetting === 'calibration'"
           :isInteractive="false"
           :hasFavorites="false"
           :hasCardinals="true"

@@ -117,9 +117,15 @@ onUpdated(() => {
 }
 
 .card-hide-btn {
-  background: transparent;
-  color: var(--text-color);
+  background: none;
   padding: 0.3em;
+
+  @include pointer {
+    &:hover, &:focus-visible {
+      background: var(--content-color-1);
+      filter: brightness(100%);
+    }
+  }
 }
 
 .card-hide-btn svg {

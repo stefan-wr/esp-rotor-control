@@ -167,7 +167,8 @@
       "dscr": "Enable / Disable individual elements on the azimuth indicator.",
       "degrees": "Degree labels",
       "cardinals": "Cardinal directions",
-      "favorites": "Favorites"
+      "favorites": "Favorites",
+      "box": "Information box"
     },
     "keyboard": {
       "title": "Keyboard Shortcuts",

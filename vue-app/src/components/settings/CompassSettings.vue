@@ -30,6 +30,13 @@
             @toggle="uiStore.ui.hasFavoritesDots = !uiStore.ui.hasFavoritesDots"
           ></ToggleSwitch>
         </div>
+        <div class="border-box flex-cst gap-one">
+          <p class="flex-grow" style="">{{ $t('settings.compass.box') }}</p>
+          <ToggleSwitch
+            :toggle="uiStore.ui.hasBox"
+            @toggle="uiStore.ui.hasBox = !uiStore.ui.hasBox"
+          ></ToggleSwitch>
+        </div>
       </div>
     </template>
   </SettingCard>
