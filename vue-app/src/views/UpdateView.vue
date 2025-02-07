@@ -195,7 +195,7 @@ async function uploadFirmware() {
 
 // Return to settings page
 function returnToSettings() {
-  router.push({ name: 'settings' });
+  router.push({ name: 'system' });
 }
 
 // Start upload when component mounts

@@ -189,10 +189,6 @@ a {
     font-weight: bold;
 }
 
-.txt-light {
-    opacity: $text-light-opacity;
-}
-
 .txt-dark {
     color: var(--text-color-darker);
 }
@@ -266,13 +262,14 @@ a {
     text-overflow: ellipsis;
 }
 
+.monospace {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Non-selectable */
 .no-select {
     -webkit-user-select: none;
     user-select: none;
-}
-
-.monospace {
-    font-variant-numeric: tabular-nums;
 }
 
 /* Flexbox Utilities */
@@ -351,6 +348,10 @@ a {
     display: flex;
     align-items: stretch;
     justify-content: center;
+}
+
+.flex-self-start {
+    align-self: flex-start;
 }
 
 .gap-one,
@@ -479,7 +480,7 @@ input:disabled {
 }
 
 .input-std-resp {
-    @media (hover: none) {
+    @include touch {
         font-size: 1.1rem !important;
 
         @include medium {

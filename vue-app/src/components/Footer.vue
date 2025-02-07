@@ -5,6 +5,8 @@
       <a href="https://github.com/stefan-wr" target="_blank" rel="noopener noreferrer">Stefan&nbsp;Wraase</a>
       -
       <a href="https://github.com/stefan-wr/esp-rotor-control" target="_blank" rel="noopener noreferrer">GitHub</a>
+      -
+      <RouterLink :to="{path: 'licenses'}">Licenses</RouterLink>
     </span>
   </footer>
 </template>

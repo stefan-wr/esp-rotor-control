@@ -1,6 +1,6 @@
 {
   "name": "rotorcontrol-ui",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "private": true,
   "type": "module",
   "scripts": {
@@ -24,6 +24,7 @@
     "pinia": "^2.3.0",
     "vue": "^3.5.13",
     "vue-i18n": "^10.0.5",
+    "vue-markdown-render": "^2.2.1",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {

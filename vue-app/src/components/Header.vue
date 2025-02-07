@@ -18,7 +18,7 @@
     </h1>
     <nav class="flex-hc gap" v-if="!uiStore.ui.disableHeaderLinks">
       <RouterLink to="/" class="view-tab" disabled>Controller</RouterLink>
-      <RouterLink to="/settings" class="view-tab">
+      <RouterLink :to="{ name: uiStore.ui.activeSetting }" class="view-tab">
         <Icon icon="fa-solid fa-gear" class="show-s-only"></Icon>
         <span class="hide-s">{{ $t('commons.settings') }}</span>
       </RouterLink>
