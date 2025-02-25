@@ -52,7 +52,7 @@ namespace Rotor {
     }
 
     // => Stop rotor, distribute new state to clients
-    void RotorController::stop(const bool &distribute) {
+    void RotorController::stop(const bool distribute) {
         rotor.stopRotor();
         if (is_rotating) {
             is_rotating = false;

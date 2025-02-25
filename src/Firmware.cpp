@@ -28,7 +28,7 @@ namespace Firmware {
     }
 
     // => Generate a random token string, default length = 32
-    void Firmware::generateToken(const int &len) {
+    void Firmware::generateToken(const int len) {
         const char* characters = "abcdefghijklm0123456789nopqrstuvwxyz";
         char buffer[len + 1];
         buffer[len] = '\0';

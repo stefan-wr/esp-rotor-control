@@ -82,7 +82,7 @@ namespace Screen {
     }
 
     // => Move cursor coordinates by (nx, ny)
-    void Screen::moveCursor(const int16_t &nx, const int16_t &ny) {
+    void Screen::moveCursor(const int16_t nx, const int16_t ny) {
         screen->setCursor(screen->getCursorX() + nx, screen->getCursorY() + ny);
     }
 
@@ -104,7 +104,7 @@ namespace Screen {
     // Needs the width and height of the text on screen from getTextDimenions().
     // @param txt_w: width of text
     // @param txt_h: height of text
-    void Screen::setCenteredTextCursor(const uint16_t &txt_w, const uint16_t &txt_h) {
+    void Screen::setCenteredTextCursor(const uint16_t txt_w, const uint16_t txt_h) {
         screen->setCursor((SCREEN_WIDTH - txt_w) / 2, (SCREEN_HEIGHT - txt_h) / 2);
     }
 
@@ -153,7 +153,7 @@ namespace Screen {
     // @param gap: gap in pixels between text and underline
     // @param icon: number of CP437 symbol to be used as icon, -1 for no icon
     // @param title: title text
-    void Screen::setTitleBar(const int &gap, const int icon, const String &title) {
+    void Screen::setTitleBar(const int gap, const int icon, const String &title) {
         screen->setCursor(0, 0);
         int cx_offset = 0;
 
@@ -170,7 +170,7 @@ namespace Screen {
 
     // => Draw compass with radius r, centered at (cx, cy)
     // ---------------------------------------------------
-    void Screen::drawCompass(const uint16_t &cx, const uint16_t &cy, const float &r, uint16_t color) {
+    void Screen::drawCompass(const uint16_t cx, const uint16_t cy, const float r, uint16_t color) {
         // Compass outline
         screen->fillCircle(cx, cy, r, color);
         screen->fillCircle(cx, cy, r - 2, !color);
@@ -452,7 +452,7 @@ namespace Screen {
     // => Set screen during firmware update
     // ------------------------------------
     // => Set a progress bar
-    void Screen::setProgressBar(const uint16_t &x, const uint16_t &y, const uint16_t &w, const uint16_t &h, uint8_t &progress, uint16_t color) {
+    void Screen::setProgressBar(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, uint8_t progress, uint16_t color) {
         const uint8_t pad = 3;
         screen->drawRect(x, y, w, h, color);
         screen->fillRect(x + pad, y + pad, (int16_t) (w - (2 * pad)) / 100.0f * progress, h - (2 * pad), color);

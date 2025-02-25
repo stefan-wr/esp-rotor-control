@@ -51,11 +51,11 @@ namespace Rotor {
         bool init();
 
         // => Set calibration factors and apply and save
-        void calibrate(const float &u1, const float &u2,
-                       const float &a1, const float &a2);
+        void calibrate(const float u1, const float u2,
+                       const float a1, const float a2);
 
         // => Set constant angle-offset and save calibration
-        void setAngleOffset(const float &offset);
+        void setAngleOffset(const float offset);
 
         // => Return ADC status
         bool getADCStatus() { return !ads_failed; }
@@ -70,13 +70,13 @@ namespace Rotor {
         float getAngle();
 
         // => Start rotation in given direction
-        void startRotation(const uint8_t &dir) const;
+        void startRotation(const uint8_t dir) const;
 
         // => Stop rotor
         void stopRotor() const;
 
         // => Set DAC voltage on speed pin
-        void setSpeedDAC(const uint8_t &speed) const;
+        void setSpeedDAC(const uint8_t speed) const;
 
         // => Read ADC and update last rotor position values
         void update();        

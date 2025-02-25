@@ -40,7 +40,7 @@ namespace Screen {
         void clearScreen();
 
         // => Move cursor coordinates by (nx, ny)
-        void moveCursor(const int16_t &nx, const int16_t &ny);
+        void moveCursor(const int16_t nx, const int16_t ny);
 
         // => Print degree char
         void printDegree();
@@ -50,7 +50,7 @@ namespace Screen {
 
         // => Set cursor so that text to be printed next is centered on full screen.
         // Needs the width and height of the text on screen from getTextDimenions().
-        void setCenteredTextCursor(const uint16_t &txt_w, const uint16_t &txt_h);
+        void setCenteredTextCursor(const uint16_t txt_w, const uint16_t txt_h);
         void setCenteredTextCursor(const String &txt);
 
         // => Set a horizontally centered text
@@ -60,13 +60,13 @@ namespace Screen {
         void setFullscreenText(const String &txt);
         
         // => Set a title bar on screen
-        void setTitleBar(const int &gap, const int icon, const String &title);
+        void setTitleBar(const int gap, const int icon, const String &title);
 
         // => Set a progress bar
-        void setProgressBar(const uint16_t &x, const uint16_t &y, const uint16_t &w, const uint16_t &h, uint8_t &progress, uint16_t color);
+        void setProgressBar(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h, uint8_t progress, uint16_t color);
 
         // => Draw compass with radius r, centered at (cx, cy)
-        void drawCompass(const uint16_t &cx, const uint16_t &cy, const float &r, uint16_t color);
+        void drawCompass(const uint16_t cx, const uint16_t cy, const float r, uint16_t color);
 
         // => Draw sidebar with additional information
         void drawSidebar();
@@ -99,10 +99,15 @@ namespace Screen {
         void showUpdateScreen();
         
     public:
-        Adafruit_SSD1306 *screen;
+        Adafruit_SSD1306 *screen = nullptr;
 
         // Constructor
         Screen() {};
+
+        // Deconstructor
+        ~Screen() {
+            delete screen;
+        }
         
         // => Initialise screen
         bool init();

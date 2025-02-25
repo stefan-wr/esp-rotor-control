@@ -17,22 +17,22 @@ private:
 
 public:
     // Constructor
-    BlinkingLED(const uint8_t &pin, const uint8_t &normal, const unsigned long &interval);
+    BlinkingLED(const uint8_t pin, const uint8_t normal, const unsigned long interval);
 
     // => Set blink interval
-    void setInterval(const unsigned long &interval);
+    void setInterval(const unsigned long interval);
 
     // **********
 
     // => Set number of times LED should blink, non-blocking
-    void blink(const int &n);
+    void blink(const int n);
 
     // => Set number of times LED should blink with given interval, non-blocking
-    void blink(const int &n, const unsigned long &interval);
+    void blink(const int n, const unsigned long interval);
 
     // => Blink LED n number of times with given interval. Blocking.
     // Does not stop async blinking.
-    void blinkBlocking(const int &n, unsigned long interval = 0ul) const;
+    void blinkBlocking(const int n, unsigned long interval = 0ul) const;
 
     // **********
 
@@ -40,7 +40,7 @@ public:
     void startBlinking();
 
     // => Start blinking continously with given interval
-    void startBlinking(const unsigned long &interval);
+    void startBlinking(const unsigned long interval);
 
     // => Stop all blinking, set default state
     void stopBlinking();
@@ -83,8 +83,8 @@ public:
 
     // Helpers
     int read() const { return digitalRead(_pin); }
-    void write(const uint8_t &state) const { digitalWrite(_pin, state); }
-    void setNormal(const uint8_t &normal) { _normal = normal; }
+    void write(const uint8_t state) const { digitalWrite(_pin, state); }
+    void setNormal(const uint8_t normal) { _normal = normal; }
     uint8_t getNormal() const { return _normal; }
     unsigned long getInterval() const { return _interval; }
     unsigned long getTimeLeft() const { return _interval * _n_blinks; }

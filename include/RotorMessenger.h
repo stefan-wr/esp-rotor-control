@@ -16,7 +16,7 @@ namespace Rotor {
         String msg_buffer;
 
         // => Create rotation JSON message from last rotor values and save in msg_buffer
-        void setLastRotationMsg(const bool &with_angle);
+        void setLastRotationMsg(const bool with_angle);
 
     public:
         // Pointer to rotor instance, declared in parent class
@@ -26,7 +26,7 @@ namespace Rotor {
         Messenger();
 
         // => Send last rotation valueset
-        void sendLastRotation(const bool &with_angle);
+        void sendLastRotation(const bool with_angle);
 
         // => Send new rotation values from ADC, always includes angle
         void sendNewRotation();

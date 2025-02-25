@@ -28,7 +28,7 @@ namespace Firmware {
         void init();
 
         // => Generate a random token string, default length = 32
-        void generateToken(const int &len = TOKEN_LENGTH);
+        void generateToken(const int len = TOKEN_LENGTH);
     };
 
     // => Serial print update error

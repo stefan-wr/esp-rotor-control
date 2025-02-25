@@ -22,7 +22,7 @@ namespace RotorSocket {
   uint8_t clients_connected;
 
   // Forward-declare functions
-  void socketReceive(char* msg, const size_t &len);
+  void socketReceive(char* msg, const size_t len);
   void onSocketEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len);
 
   // => Add event handler to socket
@@ -104,7 +104,7 @@ namespace RotorSocket {
   // Socket receive function
   // ***********************
 
-  void socketReceive(char* msg, const size_t &len) {
+  void socketReceive(char* msg, const size_t len) {
     // Separate message from identifier, separated by '|'
     int sep_idx;  // Index of separator
     for(sep_idx = 0; sep_idx < len; ++sep_idx) {

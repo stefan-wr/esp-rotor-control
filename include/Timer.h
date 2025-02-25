@@ -26,7 +26,7 @@ public:
     void changeInterval(unsigned long new_interval);
     
     // => Return wether timer has expired. Restart timer if true.
-    bool passed(const bool &restart = true);    
+    bool passed(const bool restart = true);    
 };
 
 #endif //TIMER_H

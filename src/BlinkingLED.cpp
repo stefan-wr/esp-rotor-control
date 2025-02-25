@@ -2,14 +2,14 @@
 #include <BlinkingLED.h>
 #include <Timer.h>
 
-BlinkingLED::BlinkingLED(const uint8_t &pin, const uint8_t &normal, const unsigned long &interval)
+BlinkingLED::BlinkingLED(const uint8_t pin, const uint8_t normal, const unsigned long interval)
     :_pin(pin), _normal(normal), _interval(interval), _tickTimer(interval) {
     pinMode(_pin, OUTPUT);
     write(_normal);
 }
 
 // => Set blink interval
-void BlinkingLED::setInterval(const unsigned long &interval) {
+void BlinkingLED::setInterval(const unsigned long interval) {
     _interval = interval;
     _tickTimer.changeInterval(_interval);
 }
@@ -17,20 +17,20 @@ void BlinkingLED::setInterval(const unsigned long &interval) {
 // **********
 
 // => Set number of times LED should blink, non-blocking
-void BlinkingLED::blink(const int &n) {
+void BlinkingLED::blink(const int n) {
     reset();
     _n_blinks = n * 2;
 }
 
 // => Set number of times LED should blink with given interval, non-blocking
-void BlinkingLED::blink(const int &n, const unsigned long &interval) {
+void BlinkingLED::blink(const int n, const unsigned long interval) {
     setInterval(interval);
     blink(n);
 }
 
 // => Blink LED n number of times with given interval. Blocking.
 // Does not stop async blinking.
-void BlinkingLED::blinkBlocking(const int &n, unsigned long interval) const {
+void BlinkingLED::blinkBlocking(const int n, unsigned long interval) const {
     for (int i = 0; i < n * 2; i++) {
         toggle();
         if (interval) {
@@ -49,7 +49,7 @@ void BlinkingLED::startBlinking() {
 }
 
 // => Start blinking continously with given interval
-void BlinkingLED::startBlinking(const unsigned long &interval) {
+void BlinkingLED::startBlinking(const unsigned long interval) {
     setInterval(interval);
     startBlinking();
 }

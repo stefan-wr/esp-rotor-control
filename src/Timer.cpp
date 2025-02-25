@@ -29,7 +29,7 @@ void Timer::changeInterval(unsigned long new_interval) {
 }
 
 // => Test wether timer has passed. Restart timer if it did.
-bool Timer::passed(const bool &restart) {
+bool Timer::passed(const bool restart) {
     unsigned long current_ms = millis();
 
     // Timer has passed after interval, or after millis() have overflown.

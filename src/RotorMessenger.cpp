@@ -20,7 +20,7 @@ namespace Rotor {
     }
 
     // => Create JSON message from last rotor values and save in msg_buffer
-    void Messenger::setLastRotationMsg(const bool &with_angle) {
+    void Messenger::setLastRotationMsg(const bool with_angle) {
         if (rotor_ptr != NULL) {
             // Buffers
             msg_buffer = MSG_ID_ROTOR;
@@ -55,7 +55,7 @@ namespace Rotor {
     }
 
     // => Send last rotation values
-    void Messenger::sendLastRotation(const bool &with_angle) {
+    void Messenger::sendLastRotation(const bool with_angle) {
         setLastRotationMsg(with_angle);
         websocket.textAll(msg_buffer);
     }

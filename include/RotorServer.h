@@ -27,7 +27,7 @@ namespace RotorServer {
 
     public:
         // Server
-        AsyncWebServer *server;
+        AsyncWebServer *server = nullptr;
 
         // Configuration
         struct {
@@ -50,7 +50,9 @@ namespace RotorServer {
         void printConfig() const;
 
         // Constructor
-        RotorServer() {};
+        RotorServer() {}
+        // Deconstructor
+        ~RotorServer() { delete server; }
         // => Init server
         void init();
     };

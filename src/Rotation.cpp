@@ -78,8 +78,8 @@ namespace Rotor {
     }
 
     // => Set calibration factors and apply and save
-    void Rotation::calibrate(const float &u1, const float &u2,
-                             const float &a1, const float &a2) {
+    void Rotation::calibrate(const float u1, const float u2,
+                             const float a1, const float a2) {
         calibration.u1 = u1;
         calibration.u2 = u2;
         calibration.a1 = a1;
@@ -93,13 +93,13 @@ namespace Rotor {
     // ======
 
     // => Set constant angle-offset and save calibration
-    void Rotation::setAngleOffset(const float &offset) {
+    void Rotation::setAngleOffset(const float offset) {
         calibration.offset = offset;
         saveCalibration();
     }
 
     // => Start rotation in given direction
-    void Rotation::startRotation(const uint8_t &dir) const {
+    void Rotation::startRotation(const uint8_t dir) const {
         digitalWrite(rot_pins[dir], LOW);
     }
 
@@ -110,7 +110,7 @@ namespace Rotor {
     }
 
     // => Set DAC voltage on speed pin
-    void Rotation::setSpeedDAC(const uint8_t &speed) const {
+    void Rotation::setSpeedDAC(const uint8_t speed) const {
         if (speed == 0) {
             dacDisable(speed_pin);
         } else {

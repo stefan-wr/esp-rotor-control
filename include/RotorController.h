@@ -81,7 +81,7 @@ namespace Rotor {
         void startRotation(const uint8_t dir);
 
         // => Stop rotor, distribute new state to clients
-        void stop(const bool &distribute = true);
+        void stop(const bool distribute = true);
 
         // => Set max rotor speed, distribute new state to clients.
         // Is applied to DAC only if speed is not ramping up / down.
