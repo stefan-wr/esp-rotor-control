@@ -52,7 +52,8 @@
       "NNW": "NNW"
     },
     "position": "Position",
-    "target": "Target Position",
+    "targetPosition": "Target Position",
+    "target": "Target",
     "time": "Time",
     "timeDscr": "Current system time"
   },
@@ -168,7 +169,8 @@
       "degrees": "Degree labels",
       "cardinals": "Cardinal directions",
       "favorites": "Favorites",
-      "box": "Information box"
+      "box": "Information box",
+      "preferRequestAngle": "More prominent target"
     },
     "keyboard": {
       "title": "Keyboard Shortcuts",

@@ -1,51 +1,43 @@
 <template>
   <div class="compass border-box flex-vst gap-one">
     <div id="compass-svg">
+
       <!-- Corner Labels -->
       <!-- ============= -->
+      <div v-if="props.hasCorners">
 
-      <!-- Rotation -->
-      <div
-        v-if="rotorStore.rotor.rotation === -1 && props.hasCorners"
-        class="rotation-lbl corner-lbl bold medium no-select"
-      >
-        <div class="rotate-ccw">
-          <Icon icon="fa-solid fa-rotate-left"></Icon>
+        <!-- Rotation (TL)-->
+        <div class="rotation-lbl corner-lbl bold medium no-select">
+          <div v-if="rotorStore.rotor.rotation === -1" class="rotate-cw" style="animation-direction: reverse;">
+            <Icon icon="fa-solid fa-rotate-left"></Icon>
+          </div>
+
+          <span v-if="rotorStore.rotor.rotation === 0 ">
+            STOP
+          </span>
+
+          <div v-if="rotorStore.rotor.rotation === 1" class="rotate-cw">
+            <Icon icon="fa-solid fa-rotate-right"></Icon>
+          </div>
         </div>
-      </div>
 
-      <div
-        v-if="rotorStore.rotor.rotation === 0 && props.hasCorners"
-        class="rotation-lbl corner-lbl bold medium no-select"
-      >
-        STOP
-      </div>
-
-      <div
-        v-if="rotorStore.rotor.rotation === 1 && props.hasCorners"
-        class="rotation-lbl corner-lbl bold medium no-select"
-      >
-        <div class="rotate-cw">
-          <Icon icon="fa-solid fa-rotate-right"></Icon>
+        <!-- Overlap (TR) -->
+        <div
+          v-if="rotorStore.isOverlap"
+          id="overlap-lbl"
+          class="corner-lbl medium bold no-select"
+        >
+          OL
         </div>
-      </div>
 
-      <!-- Overlap -->
-      <div
-        v-if="rotorStore.isOverlap && props.hasCorners"
-        id="overlap-lbl"
-        class="corner-lbl medium bold no-select"
-      >
-        OL
-      </div>
-
-      <!-- Lock-->
-      <div
-        v-if="settingsStore.lock.isLocked && props.hasCorners"
-        id="lock-lbl"
-        class="corner-lbl medium bold no-select"
-      >
-        <Icon icon="fa-solid fa-lock"></Icon>
+        <!-- Lock (BR) -->
+        <div
+          v-if="settingsStore.lock.isLocked"
+          id="lock-lbl"
+          class="corner-lbl medium bold no-select"
+        >
+          <Icon icon="fa-solid fa-lock"></Icon>
+        </div>
       </div>
 
       <!-- Compass SVG -->
@@ -55,8 +47,7 @@
         ref="compass"
         @click="requestAngle"
         :class="{
-          'mouse-inside':
-            uiStore.ui.isMouseInCompass && !settingsStore.isLockedByElse && props.isInteractive,
+          'mouse-inside': uiStore.ui.showRequestNeedle && !settingsStore.isLockedByElse && props.isInteractive,
           'locked': settingsStore.isLockedByElse && props.isInteractive
         }"
         viewBox="0 30 1000 940"
@@ -104,7 +95,7 @@
             id="cmp-favorites-ring"
             cx="500"
             cy="500"
-            :r="favoritesRingRadius + 2"
+            :r="favoritesRingRadius + 1"
             :stroke="favoritesRingColor"
             stroke-width="4"
             fill="none"
@@ -114,15 +105,10 @@
             v-for="fav in settingsStore.favorites.array"
             :key="fav.id"
             class="cmp-favorite-dot"
-            :class="{
-              'cmp-lbl-disabled': settingsStore.isLockedByElse && props.isInteractive,
-              'cmp-lbl-enabled': !settingsStore.isLockedByElse && props.isInteractive
-            }"
-            @click="
-              if (!settingsStore.isLockedByElse) {
-                umbrellaStore.sendTarget(fav.angle);
-              }
-            "
+            @click="sendTargetIfAllowed(fav.angle)"
+            @keydown.enter="sendTargetIfAllowed(fav.angle)"
+            @keyup.space="sendTargetIfAllowed(fav.angle)"
+            @keydown.space.prevent=""
           >
             <title>{{ fav.name }}</title>
             <circle
@@ -133,9 +119,14 @@
             />
             <text
               class="no-select"
+              :class="{
+                'cmp-lbl-disabled': settingsStore.isLockedByElse && props.isInteractive,
+                'cmp-lbl-enabled': !settingsStore.isLockedByElse && props.isInteractive
+              }"
               :x="favoriteXCoordinate(fav.angle)"
               :y="favoriteYCoordinate(fav.angle) + 2"
               style="fill: var(--text-color-accent)"
+              :tabindex="!settingsStore.isLockedByElse && props.isInteractive ? 0 : -1"
               dominant-baseline="middle"
             >
               {{ fav.id }}
@@ -172,10 +163,7 @@
           id="cmp-req-needle"
           style="fill: var(--compass-req-needle-color)"
           :style="{ transform: 'rotate(' + uiStore.ui.requestAngle + 'deg)' }"
-          :class="{
-            'hide-opacity':
-              !uiStore.ui.isMouseInCompass || settingsStore.isLockedByElse || !props.isInteractive
-          }"
+          :class="{ 'hide-opacity': !uiStore.ui.showRequestNeedle || settingsStore.isLockedByElse || !props.isInteractive }"
         >
           <path d="M500,120 L 515,160 L 515,700 L 500,700 L 485,700 L 485,160" />
         </g>
@@ -191,8 +179,9 @@
         <!-- Center Circle -->
         <!-- ------------- -->
         <g id="cmp-center" class="no-select">
-          <circle cx="500" cy="500" r="90" style="fill: var(--compass-center-color)" />
+          <circle cx="500" cy="500" r="90" style="fill: var(--compass-center-color);" />
 
+          <!-- Cardinal Direction -->
           <text
             x="500px"
             y="452px"
@@ -202,20 +191,35 @@
             {{ $t('compass.cardinals.' + rotorStore.cardinal) }}
           </text>
 
+          <!-- Main Label -->
           <text
+            v-if="!uiStore.ui.preferRequestAngle || !uiStore.ui.showRequestNeedle || settingsStore.isLockedByElse"
             class="bold"
             x="500px"
             y="500px"
-            style="fill: var(--text-color)"
+            style="fill: var(--text-color); font-size: 49px;"
             dominant-baseline="middle"
           >
             {{ rotorStore.angle }}°
           </text>
 
           <text
+            v-if="uiStore.ui.preferRequestAngle && uiStore.ui.showRequestNeedle && !settingsStore.isLockedByElse"
+            class="bold monospace"
+            x="500px"
+            y="500px"
+            style="fill: var(--text-color); font-size: 44px;"
+            dominant-baseline="middle"
+          >
+            {{ uiStore.ui.requestAngle.toFixed(1) }}°
+          </text>
+
+          <!-- Second Label -->
+          <text
+            v-if="!uiStore.ui.preferRequestAngle"
             :class="{
               'hide-opacity':
-                !uiStore.ui.isMouseInCompass || settingsStore.isLockedByElse || !props.isInteractive
+                !uiStore.ui.showRequestNeedle || settingsStore.isLockedByElse || !props.isInteractive
             }"
             x="500px"
             y="548"
@@ -223,6 +227,20 @@
             dominant-baseline="middle"
           >
             {{ uiStore.ui.requestAngle.toFixed(1) }}°
+          </text>
+
+          <text
+            v-if="uiStore.ui.preferRequestAngle"
+            :class="{
+              'hide-opacity':
+                !uiStore.ui.showRequestNeedle || settingsStore.isLockedByElse || !props.isInteractive
+            }"
+            x="500px"
+            y="548"
+            style="fill: var(--compass-req-needle-color)"
+            dominant-baseline="middle"
+          >
+            {{ $t('compass.target') }}
           </text>
         </g>
 
@@ -238,21 +256,9 @@
             v-for="deg in degreeLabels"
             :x="deg.x"
             :y="deg.y"
-            @click="
-              if (!settingsStore.isLockedByElse && props.isInteractive) {
-                umbrellaStore.sendTarget(deg.angle);
-              }
-            "
-            @keydown.enter="
-              if (!settingsStore.isLockedByElse && props.isInteractive) {
-                umbrellaStore.sendTarget(deg.angle);
-              }
-            "
-            @keyup.space="
-              if (!settingsStore.isLockedByElse && props.isInteractive) {
-                umbrellaStore.sendTarget(deg.angle);
-              }
-            "
+            @click="sendTargetIfAllowed(deg.angle)"
+            @keydown.enter="sendTargetIfAllowed(deg.angle)"
+            @keyup.space="sendTargetIfAllowed(deg.angle)"
             @keydown.space.prevent=""
             :class="{
               'cmp-lbl-disabled': settingsStore.isLockedByElse && props.isInteractive,
@@ -267,27 +273,9 @@
       </svg>
     </div>
 
-    <!-- Box -->
-    <!-- --- -->
-    <div class="compass-labels border-box" v-if="props.hasBox">
-      <div class="flex-vc gap-half">
-        <span class="small txt-dark">{{ $t('compass.position') }}</span>
-        <span class="label-value large bold monospace">{{ rotorStore.angle1D }}°</span>
-      </div>
-      <div class="flex-vc gap-half">
-        <span class="small txt-dark">{{ $t('compass.target') }}</span>
-        <span class="label-value large bold monospace">{{ target }}</span>
-      </div>
-      <div class="flex-vc gap-half">
-        <span class="small txt-dark">{{ $t('compass.time') }}</span>
-        <span
-          class="label-value medium bold monospace flex-cc no-select"
-          :title="$t('compass.timeDscr')"
-        >
-          {{ currentTime }}
-        </span>
-      </div>
-    </div>
+    <!-- Info Box -->
+    <!-- -------- -->
+    <CompassInfoBox v-if="props.hasBox"></CompassInfoBox>
   </div>
 </template>
 
@@ -297,6 +285,8 @@
 
 
 <script setup>
+import CompassInfoBox from '@/components/CompassInfoBox.vue';
+
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useEventListener, useMouseInElement } from '@vueuse/core';
 
@@ -376,37 +366,6 @@ const cardinalLabels = [
   { dir: 'NW', x: 263, y: 313, rot: -45 }
 ];
 
-// Target position, null replaced with dashes
-const target = computed(() => {
-  if (rotorStore.rotor.target == null) {
-    return '--';
-  }
-  return String(rotorStore.rotor.target) + '°';
-});
-
-// Current time label
-// ------------------
-const today = ref(new Date());
-const currentTime = computed(() => {
-  let time = String(today.value.getHours()).padStart(2, '0') + ':';
-  time += String(today.value.getMinutes()).padStart(2, '0') + ':';
-  time += String(today.value.getSeconds()).padStart(2, '0');
-  return time;
-});
-
-// Enable Update time with mount
-let intervalId;
-onMounted(() => {
-  intervalId = setInterval(() => {
-    today.value = new Date();
-  }, 100);
-});
-
-// Disable update time on unmount
-onUnmounted(() => {
-  clearInterval(intervalId);
-});
-
 // Change ring color if rotor is locked by someone else
 // ----------------------------------------------------
 const ringColor = computed(() => {
@@ -417,14 +376,15 @@ const ringColor = computed(() => {
   }
 });
 
-// Get and set request angle from mouse position in compass
-// --------------------------------------------------------
+// Get and set request angle from mouse/touch position in compass
+// ==============================================================
 const angleFactor = 180 / Math.PI;
 const radiusFactor = 0.5 - 0.09;
 
-function setRequestAngle(event) {
-  // Do nothing if compass is not interactive
-  if (!props.isInteractive) return;
+// Mousemove
+// ---------
+function setRequestAngleMouse(event) {
+  if (settingsStore.isLockedByElse) return;
 
   // Transform mouse position from inside compass
   // bounding-rectangle to polar coordinates.
@@ -433,21 +393,81 @@ function setRequestAngle(event) {
   const y = -(event.offsetY - rect.height / 2);
   const radius = Math.sqrt(x * x + y * y);
 
-  // Check wether mouse is outside of compass circle
-  if (radius < rect.width * radiusFactor) {
-    uiStore.ui.isMouseInCompass = true;
-    let angle = Math.atan2(x, y) * angleFactor;
-    if (angle < 0) {
-      angle = 360 + angle;
-    }
-    uiStore.ui.requestAngle = angle;
-  } else {
+  // Do nothing if mouse is outside of compass circle
+  if (radius >= rect.width * radiusFactor) {
     uiStore.ui.isMouseInCompass = false;
+    uiStore.ui.showRequestNeedle = false;
+    return
+  }
+
+  // Mouse is in compass -> show request needle
+  uiStore.ui.isMouseInCompass = true;
+  uiStore.ui.showRequestNeedle = true;
+
+  // Calc. and set request angle
+  let angle = Math.atan2(x, y) * angleFactor;
+  uiStore.ui.requestAngle = angle < 0 ? angle + 360 : angle;
+}
+
+// Touchmove
+// ---------
+function setRequestAngleTouch(event) {
+  // Ignore multi-touch events & do nothing if locked.
+  if (event.touches.length !== 1 || settingsStore.isLockedByElse) {
+    uiStore.ui.showRequestNeedle = false;
+    uiStore.ui.isMouseInCompass = false;
+    return;
+  }
+
+  // Transform touch view-port position
+  // to polar coordinates inside compass.
+  const rect = compass.value.getBoundingClientRect();
+  const x = event.touches[0].clientX - rect.left - rect.width / 2;
+  const y = -(event.touches[0].clientY - rect.top - rect.height / 2);
+  const radius = Math.sqrt(x * x + y * y);
+
+  // Do nothing if touch is outside of compass circle
+  if (radius >= rect.width * radiusFactor) {
+    uiStore.ui.isMouseInCompass = false;
+    uiStore.ui.showRequestNeedle = false;
+    return;
+  }
+
+  // Touch is in compass
+  uiStore.ui.isMouseInCompass = true;
+
+  // Prevent page scrolling and show request needle 
+  // only when called from 'touchmove' event type.
+  if (event.type === 'touchmove') {
+    event.preventDefault();
+    uiStore.ui.showRequestNeedle = true
+  }
+
+  // Calc. and set request angle
+  let angle = Math.atan2(x, y) * angleFactor;
+  uiStore.ui.requestAngle = angle < 0 ? angle + 360 : angle;
+}
+
+// Touchend
+// --------
+function cmpTouchEnd(event) {
+  if (!settingsStore.isLockedByElse && uiStore.ui.isMouseInCompass) {
+    event.preventDefault();   // prevent click event
+    requestAngle();
+    uiStore.ui.isMouseInCompass = false;
+    uiStore.ui.showRequestNeedle = false;
   }
 }
 
-// Register event listener
-useEventListener(compass, 'mousemove', setRequestAngle);
+// Register event listeners
+// ------------------------
+if (props.isInteractive) {
+  useEventListener(compass, 'mousemove', setRequestAngleMouse);
+  useEventListener(compass, 'touchstart', setRequestAngleTouch);
+  useEventListener(compass, 'touchmove', setRequestAngleTouch, {passive: false});
+  useEventListener(compass, 'touchend', cmpTouchEnd);
+  useEventListener(compass, 'touchcancel', (event) => event.preventDefault());
+}
 
 // Watch when mouse moves outside compass element to hide request needle
 const mouse = reactive(useMouseInElement(compass));
@@ -457,22 +477,32 @@ watch(
   (isOutside) => {
     if (isOutside) {
       uiStore.ui.isMouseInCompass = false;
+      uiStore.ui.showRequestNeedle = false;
     }
   }
 );
 
+
 // Request auto rotation from mouse click in compass
 // -------------------------------------------------
 function requestAngle() {
-  if (!settingsStore.isLockedByElse && props.isInteractive) {
+  console.log("AHA")
+  if (!settingsStore.isLockedByElse && props.isInteractive && uiStore.ui.isMouseInCompass) {
+    // Make request needle flicker
     const needle = document.getElementById('cmp-req-needle');
     needle.style.filter = 'brightness(120%)';
     setTimeout(() => {
       needle.style.filter = 'unset';
     }, 100);
-    if (uiStore.ui.isMouseInCompass) {
-      umbrellaStore.sendTarget(uiStore.ui.requestAngle.toFixed(1));
-    }
+
+    // Send target request
+    umbrellaStore.sendTarget(uiStore.ui.requestAngle.toFixed(1));
+  }
+}
+
+function sendTargetIfAllowed(angle) {
+  if (!settingsStore.isLockedByElse && props.isInteractive) {
+    umbrellaStore.sendTarget(angle);
   }
 }
 
@@ -533,8 +563,8 @@ const favoritesRingColor = computed(() => {
   cursor: not-allowed;
 }
 
-/* Needles & OL-Indicator */
-/* ====================== */
+/* Needles & OL-Ring */
+/* ================= */
 #cmp-needle,
 #cmp-req-needle,
 #cmp-target-needle {
@@ -546,15 +576,22 @@ const favoritesRingColor = computed(() => {
   transition: transform 0.1s linear;
 }
 
-#cmp-target-needle {
-  opacity: 0.3;
-}
-
 #cmp-req-needle {
   transition: opacity 0.1s;
+}
 
-  @include touch {
-    opacity: 0;
+#cmp-target-needle {
+  opacity: 0.2;
+  animation: 1s ease infinite alternate target-blink;
+  backdrop-filter: blur(10px);
+
+  @keyframes target-blink {
+    0% {
+      opacity: 0.2;
+    }
+    100% {
+      opacity: 0.35;
+    }
   }
 }
 
@@ -573,10 +610,6 @@ const favoritesRingColor = computed(() => {
     text-anchor: middle;
     font-size: 34px;
     transform: opacity 0.1s;
-  }
-
-  text:nth-child(3) {
-    font-size: 49px;
   }
 }
 
@@ -638,10 +671,6 @@ const favoritesRingColor = computed(() => {
     animation: 5s linear infinite rotate-cw;
   }
 
-  .rotate-ccw {
-    animation: 5s linear reverse infinite rotate-cw;
-  }
-
   @keyframes rotate-cw {
     0% {
       transform: rotate(0deg);
@@ -666,9 +695,9 @@ const favoritesRingColor = computed(() => {
   width: 2em;
   color: var(--alert-color);
   border-color: var(--alert-color);
-  animation: 1s ease infinite alternate blink;
+  animation: 1s ease infinite alternate lock-blink;
 
-  @keyframes blink {
+  @keyframes lock-blink {
     0% {
       color: var(--text-color);
       border-color: var(--text-color);
@@ -677,22 +706,6 @@ const favoritesRingColor = computed(() => {
       color: var(--alert-color);
       border-color: var(--alert-color);
     }
-  }
-}
-
-/* Bottom Box */
-/* ========== */
-.compass-labels {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  align-items: center;
-  gap: 1em;
-
-  .label-value {
-    min-height: 2rem;
-    min-width: 5.5rem;
-    align-self: center;
   }
 }
 </style>

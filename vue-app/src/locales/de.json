@@ -52,7 +52,8 @@
       "NNW": "NNW"
     },
     "position": "Position",
-    "target": "Zielposition",
+    "targetPosition": "Zielposition",
+    "target": "Ziel",
     "time": "Uhrzeit",
     "timeDscr": "Die aktuelle Systemzeit"
   },
@@ -168,7 +169,8 @@
       "degrees": "Gradzahlen",
       "cardinals": "Himmelsrichtungen",
       "favorites": "Favoritenpunkte",
-      "box": "Infobox"
+      "box": "Infobox",
+      "preferRequestAngle": "Zielposition stärker hervorheben"
     },
     "keyboard": {
       "title": "Tastatursteuerung",

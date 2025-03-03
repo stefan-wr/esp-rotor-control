@@ -32,11 +32,15 @@ export const useUIStore = defineStore('ui', () => {
         hasCardinalLabels: useStorage('has-cardinal-labels', true),
         hasFavoritesDots: useStorage('has-favorites-dots', true),
         hasBox: useStorage('has-box', true),
+        preferRequestAngle: useStorage('prefer-request-angle', false),
+
+        isMouseInCompass: false,
+        showRequestNeedle: false,
         requestAngle: 0,
         targetAngle: 0,
+
         useOverlap: useStorage('use-overlap', true),
-        useSmoothSpeed: useStorage('use-smooth-speed', true),
-        isMouseInCompass: false
+        useSmoothSpeed: useStorage('use-smooth-speed', true)
     });
 
     // *************

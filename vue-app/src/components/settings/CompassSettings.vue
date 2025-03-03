@@ -37,6 +37,13 @@
             @toggle="uiStore.ui.hasBox = !uiStore.ui.hasBox"
           ></ToggleSwitch>
         </div>
+        <div class="border-box flex-cst gap-one">
+          <p class="flex-grow">{{ $t('settings.compass.preferRequestAngle') }}</p>
+          <ToggleSwitch
+            :toggle="uiStore.ui.preferRequestAngle"
+            @toggle="uiStore.ui.preferRequestAngle = !uiStore.ui.preferRequestAngle"
+          ></ToggleSwitch>
+        </div>
       </div>
     </template>
   </SettingCard>
