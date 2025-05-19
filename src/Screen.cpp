@@ -48,8 +48,10 @@ namespace Screen {
         // Clear screen and configure charset
         clearScreen();
         screen->display();
-        screen->dim(true);
         screen->cp437(true);
+
+        // Dim screen - on some SSD1306 screens this disables the screen entirely
+        //screen->dim(true);
 
         // Show splash screen at ESP setup until timer expires
         showSplashScreen();
