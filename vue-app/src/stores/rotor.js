@@ -40,7 +40,13 @@ export const useRotorStore = defineStore('rotor', () => {
 
     // Get cardinal direction
     const cardinal = computed(() => {
-        const ci = Math.round(rotor.angle / (360 / cardinals.length));
+        // Convert any angle to compass range from 0° to 360°
+        let cmp_angle = rotor.angle % 360
+        if (cmp_angle < 0) {
+            cmp_angle += 360;
+        }
+        // Get cardinal index
+        const ci = Math.round(cmp_angle / (360 / cardinals.length));
         return cardinals[ci % cardinals.length];
     });
 

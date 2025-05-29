@@ -26,7 +26,7 @@
 //#define COUNT_LOOP_CYCLE_TIME
 
 // Software version
-const String version = "0.10.1";
+const String version = "0.10.2";
 
 // ESP ID
 String esp_id = "";
